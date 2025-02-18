@@ -1,23 +1,26 @@
-import { AppBar, Toolbar, Typography, IconButton, Tab, Tabs, CircularProgress } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Tab,
+  Tabs,
+  CircularProgress,
+} from "@mui/material";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "../hooks/UseWallet";
 
-
-const Header = () => {
+const Header = memo(() => {
   const [navValue, setNavValue] = useState<string | false>(false);
-  const { 
-    connected,
-    connecting,
-    walletInfo,
-  } = useWallet();
+  const { connected, connecting, walletInfo } = useWallet();
 
   // URLが変更されたときにタブの値を更新
   useEffect(() => {
-    if (location.pathname.includes("/sender")) {
+    if (location.pathname.includes("/bulksender")) {
       setNavValue("BulkSender");
     } else if (location.pathname.includes("/app1")) {
       setNavValue("app1");
@@ -34,7 +37,7 @@ const Header = () => {
 
   // ウォレットボタンの内容を決定
   const getWalletButtonContent = () => {
-    if(!connected && !connecting) {
+    if (!connected && !connecting) {
       return (
         <>
           <AccountBalanceWalletIcon sx={{ mr: 1 }} />
@@ -52,14 +55,9 @@ const Header = () => {
     }
 
     if (connected) {
-      return (
-        <>
-          {walletInfo?.shortAddress}  
-        </>
-      );
+      return <>{walletInfo?.shortAddress}</>;
     }
   };
-
 
   return (
     <>
@@ -89,7 +87,7 @@ const Header = () => {
               "& .MuiTab-root:not(.Mui-selected):hover": { color: "#47dded", opacity: 0.7 },
             }}
           >
-            <Tab value="BulkSender" label="BulkSender" component={Link} to="/sender" />
+            <Tab value="BulkSender" label="BulkSender" component={Link} to="/bulksender" />
             <Tab value="app1" label="app1" component={Link} to="/app1" />
             <Tab value="app2" label="app2" component={Link} to="/app2" />
           </Tabs>
@@ -108,12 +106,12 @@ const Header = () => {
               gap: connected ? "0px" : "8px", // ✅ 接続時は間隔をなくす
             }}
           >
-             {getWalletButtonContent()}
+            {getWalletButtonContent()}
           </WalletMultiButton>
         </Toolbar>
       </AppBar>
     </>
   );
-}
+});
 
 export default Header;
