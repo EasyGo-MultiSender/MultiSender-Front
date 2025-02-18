@@ -1,28 +1,22 @@
-import {
-  AppBar,
-  Toolbar,
-  Typography,
-  IconButton,
-  Button,
-  DialogTitle,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  Tab,
-  Tabs,
-} from "@mui/material";
+import { AppBar, Toolbar, Typography, IconButton, Tab, Tabs, CircularProgress } from "@mui/material";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { useWallet } from "../hooks/UseWallet";
+
 
 const Header = () => {
-  const [isConnectDialogOpen, setConnectDialogOpen] = useState(false);
-  const [navValue, setNavValue] = useState("");
+  const [navValue, setNavValue] = useState<string | false>(false);
+  const { 
+    connected,
+    connecting,
+    walletInfo,
+  } = useWallet();
 
   // URLが変更されたときにタブの値を更新
   useEffect(() => {
-    // パスから対応するタブの値を設定
     if (location.pathname.includes("/sender")) {
       setNavValue("BulkSender");
     } else if (location.pathname.includes("/app1")) {
@@ -30,18 +24,48 @@ const Header = () => {
     } else if (location.pathname.includes("/app2")) {
       setNavValue("app2");
     } else {
-      setNavValue(""); // その他のパスの場合
+      setNavValue("");
     }
-  }, [location.pathname]); // パスが変更されたときだけ実行
+  }, [location.pathname]);
 
   const navHandleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setNavValue(newValue);
   };
+
+  // ウォレットボタンの内容を決定
+  const getWalletButtonContent = () => {
+    if(!connected && !connecting) {
+      return (
+        <>
+          <AccountBalanceWalletIcon sx={{ mr: 1 }} />
+          Connect Wallet
+        </>
+      );
+    }
+    if (connecting) {
+      return (
+        <>
+          <CircularProgress size={20} sx={{ mr: 1 }} />
+          Connecting...
+        </>
+      );
+    }
+
+    if (connected) {
+      return (
+        <>
+          {walletInfo?.shortAddress}  
+        </>
+      );
+    }
+  };
+
+
   return (
     <>
       <AppBar position="fixed" sx={{ backgroundColor: "#17062e" }}>
         <Toolbar>
-          {/* アイコンを押すとurlのルートに飛ぶようにしておく */}
+          {/* アイコンを押すとトップページに遷移 */}
           <IconButton edge="start" color="inherit" aria-label="menu" component={Link} to="/">
             <RocketLaunchIcon sx={{ color: "#47dded" }} />
           </IconButton>
@@ -49,6 +73,7 @@ const Header = () => {
           <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 3 }}>
             AppName
           </Typography>
+
           <Tabs
             value={navValue}
             onChange={navHandleChange}
@@ -59,18 +84,9 @@ const Header = () => {
               position: "absolute",
               left: "50%",
               transform: "translateX(-50%)",
-              // タブのインジケーター（下線）の色を変更
-              "& .MuiTabs-indicator": {
-                backgroundColor: "#47dded", // または好みの色
-              },
-              // 選択されたタブのテキストの色を変更
-              "& .Mui-selected": {
-                color: "#47dded", // または好みの色
-              },
-              "& .MuiTab-root:not(.Mui-selected):hover": {
-                color: "#47dded",
-                opacity: 0.7,
-              },
+              "& .MuiTabs-indicator": { backgroundColor: "#47dded" },
+              "& .Mui-selected": { color: "#47dded" },
+              "& .MuiTab-root:not(.Mui-selected):hover": { color: "#47dded", opacity: 0.7 },
             }}
           >
             <Tab value="BulkSender" label="BulkSender" component={Link} to="/sender" />
@@ -78,42 +94,26 @@ const Header = () => {
             <Tab value="app2" label="app2" component={Link} to="/app2" />
           </Tabs>
 
-          <Button
-            variant="contained"
-            sx={{
-              backgroundColor: "#98d0fe",
+          {/* ✅ ウォレット接続状態に応じてアイコンを非表示 */}
+          <WalletMultiButton
+            style={{
+              backgroundColor: "#78c1fd",
               color: "#06234e",
               transition: "all 0.2s ease",
-              "&:hover": {
-                backgroundColor: "#4eaefc",
-              },
+              padding: "8px 15px",
+              fontSize: "16px",
+              height: "42px",
+              display: "flex",
+              alignItems: "center",
+              gap: connected ? "0px" : "8px", // ✅ 接続時は間隔をなくす
             }}
-            onClick={() => setConnectDialogOpen(true)}
           >
-            Connect
-          </Button>
+             {getWalletButtonContent()}
+          </WalletMultiButton>
         </Toolbar>
       </AppBar>
-
-      {/* 仮置き */}
-      <Dialog
-        open={isConnectDialogOpen}
-        onClose={() => setConnectDialogOpen(false)}
-        aria-labelledby="dialog-title"
-        aria-describedby="dialog-description"
-      >
-        <DialogTitle id="dialog-title">Popup Title</DialogTitle>
-        <DialogContent>
-          <DialogContentText id="dialog-description">
-            ここにポップアップ内のコンテンツや情報を記述します。
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConnectDialogOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
     </>
   );
-};
+}
 
 export default Header;
