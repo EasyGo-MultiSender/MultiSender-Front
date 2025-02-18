@@ -1,16 +1,8 @@
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import Top from "./pages/Top";
-import NotFound from "./pages/NotFound";
+import { router } from "./routes/router";
+import { RouterProvider } from "react-router-dom";
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Top />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-  );
+  return <RouterProvider router={router} />;
 }
 
 export default App;
