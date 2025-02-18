@@ -1,6 +1,9 @@
+import Header from "../../components/Header";
+
 const NotFound = () => {
     return (
       <div>
+        <Header/>
         <h1 className="text-2xl font-bold text-red-500">404 Not Found</h1>
         <p>Oops! The page you are looking for does not exist.</p>
       </div>
