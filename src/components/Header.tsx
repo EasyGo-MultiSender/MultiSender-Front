@@ -14,11 +14,26 @@ import {
 } from "@mui/material";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const Header = () => {
   const [isConnectDialogOpen, setConnectDialogOpen] = useState(false);
   const [navValue, setNavValue] = useState("");
+
+  // URLが変更されたときにタブの値を更新
+  useEffect(() => {
+    // パスから対応するタブの値を設定
+    if (location.pathname.includes("/sender")) {
+      setNavValue("BulkSender");
+    } else if (location.pathname.includes("/app1")) {
+      setNavValue("app1");
+    } else if (location.pathname.includes("/app2")) {
+      setNavValue("app2");
+    } else {
+      setNavValue(""); // その他のパスの場合
+    }
+  }, [location.pathname]); // パスが変更されたときだけ実行
+
   const navHandleChange = (_event: React.SyntheticEvent, newValue: string) => {
     setNavValue(newValue);
   };
@@ -40,11 +55,27 @@ const Header = () => {
             textColor="inherit"
             indicatorColor="secondary"
             aria-label="secondary tabs example"
-            sx={{ margin:  "auto" }}
+            sx={{
+              position: "absolute",
+              left: "50%",
+              transform: "translateX(-50%)",
+              // タブのインジケーター（下線）の色を変更
+              "& .MuiTabs-indicator": {
+                backgroundColor: "#47dded", // または好みの色
+              },
+              // 選択されたタブのテキストの色を変更
+              "& .Mui-selected": {
+                color: "#47dded", // または好みの色
+              },
+              "& .MuiTab-root:not(.Mui-selected):hover": {
+                color: "#47dded",
+                opacity: 0.7,
+              },
+            }}
           >
-            <Tab value="one" label="Item One" />
-            <Tab value="two" label="Item Two" />
-            <Tab value="three" label="Item Three" />
+            <Tab value="BulkSender" label="BulkSender" component={Link} to="/sender" />
+            <Tab value="app1" label="app1" component={Link} to="/app1" />
+            <Tab value="app2" label="app2" component={Link} to="/app2" />
           </Tabs>
 
           <Button
