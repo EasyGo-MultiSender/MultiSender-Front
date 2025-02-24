@@ -1,3 +1,6 @@
+import { Buffer } from 'buffer'
+window.Buffer = Buffer
+
 import {
   AppBar,
   Toolbar,
@@ -6,13 +9,14 @@ import {
   Tab,
   Tabs,
   CircularProgress,
+  Box,
 } from "@mui/material";
 import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import { Link } from "react-router-dom";
 import { memo, useEffect, useState } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useWallet } from "../hooks/UseWallet";
+import { useWallet } from "../hooks/useWallet";
 
 const Header = memo(() => {
   const [navValue, setNavValue] = useState<string | false>(false);
@@ -60,8 +64,8 @@ const Header = memo(() => {
   };
 
   return (
-    <>
-      <AppBar position="fixed" sx={{ backgroundColor: "#17062e" }}>
+    <Box>
+      <AppBar position="fixed" sx={{ backgroundColor: "#17062e", height: "12vh" }}>
         <Toolbar>
           {/* アイコンを押すとトップページに遷移 */}
           <IconButton edge="start" color="inherit" aria-label="menu" component={Link} to="/">
@@ -110,7 +114,7 @@ const Header = memo(() => {
           </WalletMultiButton>
         </Toolbar>
       </AppBar>
-    </>
+    </Box>
   );
 });
 
