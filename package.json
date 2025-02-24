@@ -15,7 +15,7 @@
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@metaplex-foundation/js": "^0.20.1",
     "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
-    "@mui/icons-material": "^6.4.4",
+    "@mui/icons-material": "^6.4.5",
     "@mui/material": "^6.4.4",
     "@solana/spl-token": "^0.4.12",
     "@solana/spl-token-metadata": "^0.1.6",
