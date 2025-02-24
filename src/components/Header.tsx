@@ -1,3 +1,4 @@
+// src/components/Header.tsx
 import { Buffer } from 'buffer'
 window.Buffer = Buffer
 
@@ -17,12 +18,12 @@ import { Link } from "react-router-dom";
 import { memo, useEffect, useState } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "../hooks/useWallet";
+import { NetworkSelector } from "./NetworkSelector"; // Add this import
 
 const Header = memo(() => {
   const [navValue, setNavValue] = useState<string | false>(false);
   const { connected, connecting, walletInfo } = useWallet();
 
-  // URLが変更されたときにタブの値を更新
   useEffect(() => {
     if (location.pathname.includes("/bulksender")) {
       setNavValue("BulkSender");
@@ -39,7 +40,6 @@ const Header = memo(() => {
     setNavValue(newValue);
   };
 
-  // ウォレットボタンの内容を決定
   const getWalletButtonContent = () => {
     if (!connected && !connecting) {
       return (
@@ -67,7 +67,6 @@ const Header = memo(() => {
     <Box>
       <AppBar position="fixed" sx={{ backgroundColor: "#17062e", height: "12vh" }}>
         <Toolbar>
-          {/* アイコンを押すとトップページに遷移 */}
           <IconButton edge="start" color="inherit" aria-label="menu" component={Link} to="/">
             <RocketLaunchIcon sx={{ color: "#47dded" }} />
           </IconButton>
@@ -96,7 +95,9 @@ const Header = memo(() => {
             <Tab value="app2" label="app2" component={Link} to="/app2" />
           </Tabs>
 
-          {/* ✅ ウォレット接続状態に応じてアイコンを非表示 */}
+          {/* Add NetworkSelector before WalletMultiButton */}
+          <NetworkSelector />
+
           <WalletMultiButton
             style={{
               backgroundColor: "#78c1fd",
@@ -107,7 +108,7 @@ const Header = memo(() => {
               height: "42px",
               display: "flex",
               alignItems: "center",
-              gap: connected ? "0px" : "8px", // ✅ 接続時は間隔をなくす
+              gap: connected ? "0px" : "8px",
             }}
           >
             {getWalletButtonContent()}
