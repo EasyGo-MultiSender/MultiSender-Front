@@ -1,3 +1,4 @@
+// src/providers/WalletProvider.tsx
 import { FC, ReactNode, useMemo } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
@@ -14,9 +15,20 @@ interface Props {
 }
 
 export const WalletConnectionProvider: FC<Props> = ({ children }) => {
-  // Network configuration
-  const network = (import.meta.env.VITE_SOLANA_NETWORK as WalletAdapterNetwork) || WalletAdapterNetwork.Devnet;
-  const endpoint = import.meta.env.VITE_RPC_URL || clusterApiUrl(network);
+  // Get network from localStorage or fallback to env/default
+  const savedNetwork = window.localStorage.getItem('network') as WalletAdapterNetwork;
+  
+  const network = savedNetwork || 
+    (import.meta.env.VITE_SOLANA_NETWORK as WalletAdapterNetwork) || 
+    (import.meta.env.VITE_SOLANA_DEV_NETWORK as WalletAdapterNetwork) || 
+    WalletAdapterNetwork.Devnet;
+
+  const savedEndpoint = window.localStorage.getItem('endpoint');
+  
+  // Use saved endpoint or fallback to appropriate env variable based on network
+  const endpoint = savedEndpoint || 
+    (network === WalletAdapterNetwork.Mainnet ? import.meta.env.VITE_RPC_ENDPOINT : import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT) || 
+    clusterApiUrl(network);
 
   // Configure available wallets
   const wallets = useMemo(
@@ -24,7 +36,7 @@ export const WalletConnectionProvider: FC<Props> = ({ children }) => {
       new PhantomWalletAdapter(),
       new SolflareWalletAdapter(),
     ],
-    [network]
+    [network] // Update when network changes
   );
 
   return (
