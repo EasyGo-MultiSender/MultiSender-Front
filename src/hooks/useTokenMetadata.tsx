@@ -26,6 +26,14 @@ export interface TokenMetadata {
   programId?: PublicKey;
 }
 
+/* ---------------------------------------------------
+/  作成ロジックの流れ
+/  1. @solana/spl-token の token-list(オフチェーン)からtokenのmetadataを取得
+/  2. @metaplex-foundation/js の findByMintを使って、programId が TOKEN_PROGRAM_ID のmetadataを取得
+/  3. @solana/spl-token-metadata の unpackToken2022Metadata を使って、programId が TOKEN_2022_PROGRAM_ID のmetadataを取得
+/  4. それぞれのmetadataを統合して TokenMetadata 型にまとめる
+/  --------------------------------------------------- */
+
 export const useTokenMetadata = (connection: Connection) => {
   const [metadataCache, setMetadataCache] = useState<Map<string, TokenMetadata>>(new Map());
 
@@ -52,14 +60,28 @@ export const useTokenMetadata = (connection: Connection) => {
         console.log("Symbol:", nftOrSft.symbol);
         console.log("Uri:", nftOrSft.uri);
 
-        // 必要に応じて TokenMetadata 型にまとめる
-        // ここでは簡単に programId は省略しています
+        // uriが画像かjsonかによって処理を分岐
+        // 画像の場合はそのまま返す
+        if (nftOrSft.uri.includes(".png") || nftOrSft.uri.includes(".jpg")) {
+          const TokenUri = nftOrSft.uri;
+          return { mint: mintPubkey, name: nftOrSft.name, symbol: nftOrSft.symbol, uri: TokenUri || nftOrSft.uri };
+        }
+        // jsonの場合はjsonの中にあるuriまたはimageを取得して返す
+        else {
+          const jsonUri = await fetch(nftOrSft.uri);
+          const jsonUriData = await jsonUri.json();
+          const TokenUri = jsonUriData.image || jsonUriData.uri;
+          return { mint: mintPubkey, name: nftOrSft.name, symbol: nftOrSft.symbol, uri: TokenUri || nftOrSft.uri };
+        }
+
         const tokenMetadata: TokenMetadata = {
           mint: mintPubkey,
           name: nftOrSft.name,
           symbol: nftOrSft.symbol,
           uri: nftOrSft.uri,
         };
+
+        // 
 
         // キャッシュに保存
         setMetadataCache((prevCache) => {
