@@ -16,8 +16,13 @@ import {
   FormControl,
   MenuItem,
   Select,
+  Link,
+  List,
+  ListItem,
+  ListItemText,
+  Chip,
 } from "@mui/material";
-import { ContentPaste, ContentCopy } from "@mui/icons-material";
+import { ContentPaste, ContentCopy, OpenInNew } from "@mui/icons-material";
 
 // カスタムフックのインポート
 import { useWallet } from "../../hooks/useWallet";
@@ -28,11 +33,28 @@ import { useTokenMetadata } from "../../hooks/useTokenMetadata";
 import { useTokenTransfer } from "../../hooks/useTokenTransfer";
 
 // ヘッダーコンポーネント
-import Header from "../../components/Header"; // ここに今後、言語切り替え設定、ネットワーク切り替え設定を入れる予定
+import Header from "../../components/Header";
 
+// インターフェース定義
+interface TransactionResult {
+  signature: string;
+  status: 'success' | 'error';
+  timestamp: number;
+  error?: string;
+  recipients: string[];
+  amount: number;
+  token: string;
+}
+
+interface TokenDisplayProps {
+  account: {
+    mint: string;
+    uiAmount: number;
+  };
+}
 
 // トークン表示用コンポーネント
-const TokenDisplay: React.FC<{ account: any }> = ({ account }) => {
+const TokenDisplay: React.FC<TokenDisplayProps> = ({ account }) => {
   const { connection } = useConnection();
   const { fetchMetadata } = useTokenMetadata(connection);
   const [metadata, setMetadata] = React.useState<any>(null);
@@ -77,6 +99,7 @@ const TokenDisplay: React.FC<{ account: any }> = ({ account }) => {
   );
 };
 
+// メインのSenderコンポーネント
 const Sender: React.FC = () => {
   // Hooks
   const { connection } = useConnection();
@@ -91,6 +114,7 @@ const Sender: React.FC = () => {
   const [transferAmount, setTransferAmount] = useState<number>(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [transactionResults, setTransactionResults] = useState<TransactionResult[]>([]);
 
   // ユーティリティ関数
   const copyAddress = async (addr: string) => {
@@ -110,22 +134,33 @@ const Sender: React.FC = () => {
 
   const handleTransfer = async () => {
     if (!connected || !publicKey) return;
-
+  
     try {
-      const addresses = recipientAddresses
-        .split("\n")
-        .map((addr) => addr.trim())
-        .filter((addr) => addr.length > 0);
-
-      for (const recipient of addresses) {
-        await transfer({
-          recipient,
-          amount: transferAmount,
-          mint: selectedToken === "SOL" ? undefined : selectedToken
-        });
-      }
-
-      setSnackbarMessage("Transfer completed successfully!");
+      const recipients = recipientAddresses
+        .split('\n')
+        .map(addr => addr.trim())
+        .filter(addr => addr.length > 0);
+  
+      const results = await transfer({
+        recipients,
+        amount: transferAmount,
+        mint: selectedToken === "SOL" ? undefined : selectedToken
+      });
+  
+      const formattedResults: TransactionResult[] = results.map(result => ({
+        signature: result.signature,
+        status: result.status,
+        timestamp: Date.now(),
+        error: result.error,
+        recipients: result.recipients || [],
+        amount: transferAmount,
+        token: selectedToken
+      }));
+  
+      setTransactionResults(prev => [...formattedResults, ...prev]);
+      
+      const successful = results.filter(r => r.status === 'success');
+      setSnackbarMessage(`Successfully transferred to ${successful.length} recipients`);
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Transfer failed:", error);
@@ -302,6 +337,111 @@ const Sender: React.FC = () => {
                 "Transfer"
               )}
             </Button>
+
+            {/* Transaction Results */}
+            {transactionResults.length > 0 && (
+              <Box mt={3}>
+                <Typography variant="h6" gutterBottom>
+                  Recent Transactions
+                </Typography>
+                <List>
+                  {transactionResults.map((result, index) => (
+                    <ListItem
+                      key={`${result.signature}-${index}`}
+                      sx={{
+                        bgcolor: '#f5f5f5',
+                        borderRadius: 1,
+                        mb: 1,
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        p: 2,
+                      }}
+                    >
+                      {/* Status and Timestamp */}
+                      <Box display="flex" alignItems="center" width="100%" mb={1}>
+                        <Chip
+                          label={result.status}
+                          color={result.status === 'success' ? 'success' : 'error'}
+                          size="small"
+                          sx={{ mr: 1 }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          {new Date(result.timestamp).toLocaleString()}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Transfer Information */}
+                      <Box 
+                        sx={{ 
+                          width: '100%',
+                          mb: 1,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          bgcolor: 'rgba(0, 0, 0, 0.03)',
+                          borderRadius: 1,
+                          p: 1,
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {result.amount} {result.token === "SOL" ? "SOL" : "tokens"}
+                          {" x "}{result.recipients.length} recipients
+                        </Typography>
+                        <Typography variant="body2" color="primary">
+                          Total: {result.amount * result.recipients.length} {result.token === "SOL" ? "SOL" : "tokens"}
+                        </Typography>
+                      </Box>
+                      
+                      {/* Signature with Copy and Link */}
+                        <Box 
+                          display="flex" 
+                          alignItems="center" 
+                          width="100%"
+                          sx={{ wordBreak: 'break-all' }}
+                        >
+                          <ListItemText
+                            primary={
+                              <Link
+                                href={`https://${connection.rpcEndpoint.includes('devnet') ? 'solscan.io/tx/' : 'solscan.io/tx/'}${result.signature}${connection.rpcEndpoint.includes('devnet') ? '?cluster=devnet' : ''}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                sx={{ display: 'flex', alignItems: 'center' }}
+                              >
+                                {result.signature}
+                                <OpenInNew sx={{ ml: 1, fontSize: 16 }} />
+                              </Link>
+                            }
+                          />
+                          <IconButton
+                            size="small"
+                            onClick={() => copyAddress(result.signature)}
+                            sx={{ ml: 1 }}
+                          >
+                            <ContentCopy fontSize="small" />
+                          </IconButton>
+                        </Box>
+
+                      {/* Error Message */}
+                      {result.error && (
+                        <Box 
+                          sx={{ 
+                            mt: 1, 
+                            width: '100%',
+                            backgroundColor: 'error.light',
+                            borderRadius: 1,
+                            p: 1
+                          }}
+                        >
+                          <Typography variant="caption" color="error.dark">
+                            Error: {result.error}
+                          </Typography>
+                        </Box>
+                      )}
+                    </ListItem>
+                  ))}
+                </List>
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Container>
