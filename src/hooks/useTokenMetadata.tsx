@@ -11,11 +11,12 @@ import {
   TokenMetadata as T2022Metadata,
   unpack as unpackToken2022Metadata,
 } from "@solana/spl-token-metadata";
-import { Metadata } from "@metaplex-foundation/mpl-token-metadata";
+import { mplTokenMetadata as Metadata } from "@metaplex-foundation/mpl-token-metadata";
+import { Metaplex } from "@metaplex-foundation/js";
 
-const METAPLEX_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
-const TOKEN_PROGRAM_ID = new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-const TOKEN_2022_PROGRAM_ID = new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+const METAPLEX_PROGRAM_ID = new PublicKey(import.meta.env.VITE_METAPLEX_PROGRAM_ID);
+const TOKEN_PROGRAM_ID = new PublicKey(import.meta.env.VITE_TOKEN_PROGRAM_ID);
+const TOKEN_2022_PROGRAM_ID = new PublicKey(import.meta.env.VITE_TOKEN_2022_PROGRAM_ID);
 
 export interface TokenMetadata {
   mint: PublicKey;
@@ -26,82 +27,54 @@ export interface TokenMetadata {
 }
 
 export const useTokenMetadata = (connection: Connection) => {
-  const [metadataCache, setMetadataCache] = useState<Map<string, TokenMetadata>>(
-    new Map()
-  );
+  const [metadataCache, setMetadataCache] = useState<Map<string, TokenMetadata>>(new Map());
 
   const fetchMetadata = useCallback(
     async (mintAddress: string): Promise<TokenMetadata | null> => {
       try {
-        // キャッシュチェック
+        // 既にキャッシュ済みならそれを返す
         if (metadataCache.has(mintAddress)) {
           return metadataCache.get(mintAddress) || null;
         }
 
+        // Mint PublicKey を生成
         const mintPubkey = new PublicKey(mintAddress);
-        
-        // mintアカウントの情報を取得してプログラムIDを判定
-        const [metadataPDA] = PublicKey.findProgramAddressSync(
-          [Buffer.from("metadata"), METAPLEX_PROGRAM_ID.toBuffer(), mintPubkey.toBuffer()],
-          METAPLEX_PROGRAM_ID
-        );
-        const accountInfo = await connection.getAccountInfo(metadataPDA);
-        console.log("accountInfo", accountInfo?.data.toString());
+        console.log("Fetching metadata for Mint:", mintPubkey.toBase58());
 
-        // デバッグ出力: バイナリデータの詳細
-        console.log("Raw data length:", accountInfo?.data.length);
-        console.log("First few bytes:", Buffer.from(accountInfo?.data).slice(0, 10));
+        // Metaplex SDK を初期化
+        const metaplex = new Metaplex(connection);
 
-        // Metaplexのメタデータをデシリアライズ
-        const [metadata] = Metadata.deserialize(accountInfo?.data);
-        
-        // デシリアライズしたデータの詳細を出力
-        console.log("\nDeserialized Metadata:");
-        console.log("===================");
-        console.log("Name:", metadata.data.name);
-        console.log("Symbol:", metadata.data.symbol);
-        console.log("URI:", metadata.data.uri);
-        console.log("Seller Fee Basis Points:", metadata.data.sellerFeeBasisPoints);
-        console.log("Creators:", metadata.data.creators);
-        
-        // メタデータの構造体全体をJSON形式で出力
-        console.log("\nFull Metadata Structure:");
-        console.log(JSON.stringify(metadata, null, 2));
+        // NFT or SFT(=fungible token) いずれでも findByMint が使える
+        const nftOrSft = await metaplex.nfts().findByMint({ mintAddress: mintPubkey });
 
-        // データの検証
-        console.log("\nValidation:");
-        console.log("Name length:", metadata.data.name.length);
-        console.log("Symbol length:", metadata.data.symbol.length);
-        console.log("URI length:", metadata.data.uri.length);
+        // name, symbol, uri をコンソールに出力
+        console.log("Name:", nftOrSft.name);
+        console.log("Symbol:", nftOrSft.symbol);
+        console.log("Uri:", nftOrSft.uri);
 
-        // let metadata: TokenMetadata | null = null;
+        // 必要に応じて TokenMetadata 型にまとめる
+        // ここでは簡単に programId は省略しています
+        const tokenMetadata: TokenMetadata = {
+          mint: mintPubkey,
+          name: nftOrSft.name,
+          symbol: nftOrSft.symbol,
+          uri: nftOrSft.uri,
+        };
 
-        // // Token 2022の場合
-        // if (programId.equals(TOKEN_2022_PROGRAM_ID)) {
-        //   metadata = await findToken2022Metadata(mintPubkey, connection);
-        // }
+        // キャッシュに保存
+        setMetadataCache((prevCache) => {
+          const newCache = new Map(prevCache);
+          newCache.set(mintAddress, tokenMetadata);
+          return newCache;
+        });
 
-        // // メタデータが見つからない場合はMetaplexを試行
-        // if (!metadata) {
-        //   metadata = await fetchMetaplexMetadata(mintPubkey, connection);
-        // }
-
-        // if (metadata) {
-        //   metadata.programId = programId;
-        //   setMetadataCache((prevCache) => {
-        //     const newCache = new Map(prevCache);
-        //     newCache.set(mintAddress, metadata!);
-        //     return newCache;
-        //   });
-        // }
-
-        return metadata;
+        return tokenMetadata;
       } catch (error) {
         console.error(`Error fetching metadata for ${mintAddress}:`, error);
         return null;
       }
     },
-    [connection]
+    [connection, metadataCache]
   );
 
   const clearCache = useCallback(() => {
