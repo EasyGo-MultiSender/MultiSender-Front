@@ -34,3 +34,8 @@ const { t } = useTranslation(); // 翻訳フック
 ```
 
 をすれば `src/locales/ja.json`と`src/locales/en.json` に翻訳キーが追加されます。
+en.jsonは値が空の場合キーがそのまま表示されるので、英語で書いておけばen.jsonは編集しなくても大丈夫です。
+
+## 言語を追加するとき
+
+languages.ts　と、babel.config.json(キーの自動生成ファイル)に追加すればよい
