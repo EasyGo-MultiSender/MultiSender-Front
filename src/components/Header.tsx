@@ -100,7 +100,7 @@ const Header = memo(() => {
 
           {/* Add NetworkSelector before WalletMultiButton */}
           <TranslateSelector />
-          <Box sx={{mx:1}}> 
+          <Box sx={{ mx: 1 }}>
             <NetworkSelector />
           </Box>
 
