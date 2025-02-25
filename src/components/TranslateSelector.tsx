@@ -24,7 +24,16 @@ const TranslateSelector = () => {
 
   return (
     <>
-      <IconButton color="inherit" onClick={handleMenuOpen}>
+      <IconButton
+        color="inherit"
+        onClick={handleMenuOpen}
+        sx={{
+          transition: "all 0.3s ease", 
+          "&:hover": {
+            backgroundColor: "#250c46",
+          },
+        }}
+      >
         <TranslateIcon />
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
