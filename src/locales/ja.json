@@ -1,0 +1,19 @@
+{
+  "Addresses": "アドレス",
+  "Amount": "",
+  "AppName": "アプリ名",
+  "Enter Solana addresses (one per line)": "Solanaアドレスを入力（1行に1つずつ） ",
+  "No SPL tokens found": "SPLトークンが見つかりませんでした",
+  "Please connect your wallet in the header": "",
+  "Processing": "",
+  "Recent Transactions": "",
+  "Recipient Addresses": "受取人のアドレス",
+  "SOL Balance": "SOLの保有量",
+  "SPL Tokens": "SPL トークン",
+  "Select Token": "トークンを選択",
+  "Token Transfer": "トークンを送信",
+  "Total amount": "合計",
+  "Transfer": "送信",
+  "Wallet Address": "ウォレットアドレス",
+  "recipients": ""
+}
