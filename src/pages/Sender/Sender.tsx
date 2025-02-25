@@ -202,7 +202,9 @@ const Sender: React.FC = () => {
               SOL Balance
             </Typography>
             {loadingSol ? (
-              <CircularProgress size={24} />
+              <Box textAlign="center" p={2}>
+               <CircularProgress size={24} />
+              </Box>
             ) : (
               <Typography variant="h4" fontWeight="bold" color="green" textAlign="center">
                 {balance?.toFixed(5) ?? "0.00000"} SOL
