@@ -212,7 +212,7 @@ const Sender: React.FC = () => {
               </Box>
             ) : (
               <Typography variant="h4" fontWeight="bold" color="green" textAlign="center">
-                {balance?.toFixed(5) ?? "0.00000"} SOL
+                {balance?.toFixed(8) ?? "0.00000000"} SOL
               </Typography>
             )}
 
