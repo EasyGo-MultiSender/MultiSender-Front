@@ -228,52 +228,116 @@ export const useTokenMetadata = (connection: Connection) => {
             const metaplex = new Metaplex(connection);
 
             // NFT or SFT(=fungible token) いずれでも findByMint が使える
-            const nftOrSft = await metaplex.nfts().findByMint({ mintAddress: mintPubkey });
-            
-            if (nftOrSft.uri) {
-              // fetchでレスポンスを取得して、Content-Typeを確認
-              const response = await fetch(nftOrSft.uri);
-              const contentType = response.headers.get("content-type") || "";
+            // ここでエラーが発生するため、try-catchで囲む
+            try {
+              const nftOrSft = await metaplex.nfts().findByMint({ mintAddress: mintPubkey });
+              
+              if (nftOrSft.uri) {
+                try {
+                  // fetchでレスポンスを取得して、Content-Typeを確認
+                  const response = await fetch(nftOrSft.uri);
+                  const contentType = response.headers.get("content-type") || "";
 
-              let resolvedUri: string;
+                  let resolvedUri: string;
 
-              if (contentType.includes("application/json")) {
-                // JSONデータをパース
-                const jsonData = await response.json();
-                // imageフィールドやuriフィールドがある想定
-                resolvedUri = jsonData.image || jsonData.uri || nftOrSft.uri;
-              } else if (
-                contentType.includes("image/png") ||
-                contentType.includes("image/jpeg") ||
-                contentType.includes("image/gif")
-              ) {
-                // 画像の場合はそのままURLを使う
-                resolvedUri = nftOrSft.uri;
-              } else {
-                // それ以外のContent-Typeであれば一旦デフォルトとして
-                resolvedUri = nftOrSft.uri;
+                  if (contentType.includes("application/json")) {
+                    // JSONデータをパース
+                    const jsonData = await response.json();
+                    // imageフィールドやuriフィールドがある想定
+                    resolvedUri = jsonData.image || jsonData.uri || nftOrSft.uri;
+                  } else if (
+                    contentType.includes("image/png") ||
+                    contentType.includes("image/jpeg") ||
+                    contentType.includes("image/gif")
+                  ) {
+                    // 画像の場合はそのままURLを使う
+                    resolvedUri = nftOrSft.uri;
+                  } else {
+                    // それ以外のContent-Typeであれば一旦デフォルトとして
+                    resolvedUri = nftOrSft.uri;
+                  }
+
+                  // URIが見つからない場合は返却しない
+                  if (resolvedUri) {
+                    tokenMetadata = {
+                      mint: mintPubkey,
+                      name: nftOrSft.name,
+                      symbol: nftOrSft.symbol,
+                      uri: resolvedUri,
+                      programId: TOKEN_PROGRAM_ID,
+                      decimals: decimals
+                    };
+                  }
+                } catch (fetchError) {
+                  console.log('Failed to fetch token URI:', fetchError);
+                  // URI取得に失敗した場合でも基本情報は返却
+                  tokenMetadata = {
+                    mint: mintPubkey,
+                    name: nftOrSft.name || 'Unknown',
+                    symbol: nftOrSft.symbol || 'UNKNOWN',
+                    uri: nftOrSft.uri || '',
+                    programId: TOKEN_PROGRAM_ID,
+                    decimals: decimals
+                  };
+                }
               }
-
-              // URIが見つからない場合は返却しない
-              if (resolvedUri) {
-                tokenMetadata = {
-                  mint: mintPubkey,
-                  name: nftOrSft.name,
-                  symbol: nftOrSft.symbol,
-                  uri: resolvedUri,
-                  programId: TOKEN_PROGRAM_ID,
-                  decimals: decimals
-                };
-              }
+            } catch (metaplexError) {
+              // AccountNotFoundError が発生する場合、このトークンはMetaplexメタデータを持っていない
+              // console.log(`Metaplex metadata not found for token ${mintAddress}: ${metaplexError instanceof Error ? metaplexError.message : 'Unknown error'}`);
+              
+              // エラーが発生した場合は、基本的な情報だけでトークンメタデータを生成
+              // ここでスキップせず、最低限の情報でメタデータを生成
+              tokenMetadata = {
+                mint: mintPubkey,
+                name: `Token ${mintAddress.slice(0, 4)}...${mintAddress.slice(-4)}`,
+                symbol: 'TOKEN',
+                uri: '/token-placeholder.png', // プレースホルダー画像
+                programId: TOKEN_PROGRAM_ID,
+                decimals: decimals
+              };
             }
-          } catch (metaplexError) {
-            console.error(metaplexError);
+          } catch (outerError) {
+            console.error('Unexpected error in Metaplex processing:', outerError);
+            // 予期せぬエラーの場合も基本情報を返却
+            tokenMetadata = {
+              mint: mintPubkey,
+              name: `Token ${mintAddress.slice(0, 4)}...${mintAddress.slice(-4)}`,
+              symbol: 'TOKEN',
+              uri: '/token-placeholder.png',
+              programId: TOKEN_PROGRAM_ID,
+              decimals: decimals
+            };
           }
         }
         
         // 3. TOKEN_2022_PROGRAM_ID の場合
         if (!tokenMetadata && accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
-          tokenMetadata = await findToken2022Metadata(mintPubkey, connection, decimals);
+          try {
+            tokenMetadata = await findToken2022Metadata(mintPubkey, connection, decimals);
+            
+            // Token2022メタデータが見つからない場合も基本情報を返却
+            if (!tokenMetadata) {
+              tokenMetadata = {
+                mint: mintPubkey,
+                name: `Token2022 ${mintAddress.slice(0, 4)}...${mintAddress.slice(-4)}`,
+                symbol: 'TOKEN',
+                uri: '/token-placeholder.png',
+                programId: TOKEN_2022_PROGRAM_ID,
+                decimals: decimals
+              };
+            }
+          } catch (token2022Error) {
+            console.log('Error in Token2022 metadata processing:', token2022Error);
+            // エラーが発生した場合も基本情報を返却
+            tokenMetadata = {
+              mint: mintPubkey,
+              name: `Token2022 ${mintAddress.slice(0, 4)}...${mintAddress.slice(-4)}`,
+              symbol: 'TOKEN',
+              uri: '/token-placeholder.png',
+              programId: TOKEN_2022_PROGRAM_ID,
+              decimals: decimals
+            };
+          }
         }
 
         // メタデータが見つかった場合はキャッシュする
@@ -287,8 +351,20 @@ export const useTokenMetadata = (connection: Connection) => {
 
         return tokenMetadata;
       } catch (error) {
-        console.error(error);
-        return null;
+        console.error('Error in fetchMetadata:', error);
+        // 最終的なエラーの場合でも null を返さず、代替情報を提供
+        try {
+          const mintPubkey = new PublicKey(mintAddress);
+          return {
+            mint: mintPubkey,
+            name: `Unknown Token (${mintAddress.slice(0, 4)}...${mintAddress.slice(-4)})`,
+            symbol: 'UNKNOWN',
+            uri: '/token-placeholder.png',
+            decimals: 9 // デフォルトのデシマル値
+          };
+        } catch {
+          return null; // PublicKey の作成すら失敗した場合のみ null
+        }
       }
     },
     [connection, metadataCache, fetchOffChainMetadata]
@@ -335,7 +411,14 @@ async function findToken2022Metadata(
       
       // URIが空の場合は返却しない
       if (!originalUri) {
-        return null;
+        return {
+          mint: mintPubkey,
+          name: cleanString(metadata.name) || `Token ${mintPubkey.toBase58().slice(0, 4)}...`,
+          symbol: cleanString(metadata.symbol) || 'TOKEN',
+          uri: '/token-placeholder.png',
+          programId: TOKEN_2022_PROGRAM_ID,
+          decimals: decimals
+        };
       }
       
       try {
@@ -362,9 +445,9 @@ async function findToken2022Metadata(
           resolvedUri = originalUri;
         }
         
-        // 最終的なURIが空の場合は返却しない
+        // 最終的なURIが空の場合は代替URI
         if (!resolvedUri) {
-          return null;
+          resolvedUri = '/token-placeholder.png';
         }
         
         return {
@@ -381,18 +464,21 @@ async function findToken2022Metadata(
           mint: mintPubkey,
           name: cleanString(metadata.name),
           symbol: cleanString(metadata.symbol),
-          uri: originalUri,
+          uri: originalUri || '/token-placeholder.png',
           programId: TOKEN_2022_PROGRAM_ID,
           decimals: decimals
         };
       }
     }
   } catch (err) {
-    // エラーは無視
+    console.log('Error in findToken2022Metadata:', err);
   }
+  
+  // すべてのチェックに失敗した場合はnullを返す
   return null;
 }
 
 function cleanString(value: string): string {
+  if (!value) return '';
   return value.replace(/\u0000/g, "").trim();
 }
