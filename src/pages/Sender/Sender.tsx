@@ -75,7 +75,7 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({ account }) => {
     >
       <Box display="flex" alignItems="center" gap={1}>
         <Avatar
-          src={metadata?.image || "/token-placeholder.png"}
+          src={metadata?.uri || "/token-placeholder.png"}
           alt={metadata?.symbol || "Token"}
           sx={{ width: 32, height: 32 }}
         />
@@ -86,11 +86,13 @@ const TokenDisplay: React.FC<TokenDisplayProps> = ({ account }) => {
           <Typography variant="caption" color="text.secondary">
             {metadata?.name || "Unknown Token"}
           </Typography>
+          {/* 
           {metadata?.uri && (
             <Typography variant="caption" display="block" color="text.secondary">
               URI: {metadata.uri}
             </Typography>
           )}
+            */}
         </Box>
       </Box>
       <Typography variant="body2" fontWeight="bold">
