@@ -5,18 +5,19 @@ import {
   getMetadataPointerState,
   getExtensionData,
   ExtensionType,
-  getMint,
 } from "@solana/spl-token";
 import {
-  TokenMetadata as T2022Metadata,
   unpack as unpackToken2022Metadata,
 } from "@solana/spl-token-metadata";
-import { mplTokenMetadata as Metadata } from "@metaplex-foundation/mpl-token-metadata";
 import { Metaplex } from "@metaplex-foundation/js";
 
-const METAPLEX_PROGRAM_ID = new PublicKey(import.meta.env.VITE_METAPLEX_PROGRAM_ID);
+// const METAPLEX_PROGRAM_ID = new PublicKey(import.meta.env.VITE_METAPLEX_PROGRAM_ID);
 const TOKEN_PROGRAM_ID = new PublicKey(import.meta.env.VITE_TOKEN_PROGRAM_ID);
 const TOKEN_2022_PROGRAM_ID = new PublicKey(import.meta.env.VITE_TOKEN_2022_PROGRAM_ID);
+
+// SPL-Tokenの判別に使用するデシマル値の基準
+// NFTは通常デシマルが0
+const SPL_TOKEN_MIN_DECIMALS = 1;
 
 export interface TokenMetadata {
   mint: PublicKey;
@@ -24,18 +25,154 @@ export interface TokenMetadata {
   symbol: string;
   uri: string;
   programId?: PublicKey;
+  decimals?: number; // デシマル情報を追加
 }
 
-/* ---------------------------------------------------
-/  作成ロジックの流れ
-/  1. @solana/spl-token の token-list(オフチェーン)からtokenのmetadataを取得
-/  2. @metaplex-foundation/js の findByMintを使って、programId が TOKEN_PROGRAM_ID のmetadataを取得
-/  3. @solana/spl-token-metadata の unpackToken2022Metadata を使って、programId が TOKEN_2022_PROGRAM_ID のmetadataを取得
-/  4. それぞれのmetadataを統合して TokenMetadata 型にまとめる
-/  --------------------------------------------------- */
+// トークンリストの型定義
+interface TokenListItem {
+  address: string;
+  name: string;
+  symbol: string;
+  logoURI: string;
+  decimals?: number; // デシマル情報を追加
+  extensions?: {
+    website?: string;
+    description?: string;
+  };
+}
 
+interface TokenList {
+  tokens: TokenListItem[];
+}
+
+// トークンリストのキャッシュ
+const tokenListCache = new Map<string, TokenList>();
+
+// 1. @solana/spl-token の token-list(オフチェーン)からtokenのmetadataを取得
+export const useOffChainTokenMetadata = (connection: Connection) => {
+  const [metadataCache, setMetadataCache] = useState<Map<string, TokenMetadata>>(new Map());
+
+  const fetchOffChainMetadata = useCallback(
+    async (mintAddress: string): Promise<TokenMetadata | null> => {
+      try {
+        // 既にキャッシュ済みならそれを返す
+        if (metadataCache.has(mintAddress)) {
+          return metadataCache.get(mintAddress) || null;
+        }
+
+        const mintPubkey = new PublicKey(mintAddress);
+        
+        // アカウント情報を取得
+        const accountInfo = await connection.getAccountInfo(mintPubkey);
+        if (!accountInfo) return null;
+        
+        // トークンプログラムIDを確認
+        if (accountInfo.owner.equals(TOKEN_PROGRAM_ID) || accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+          // ミント情報を取得してデシマルをチェック
+          try {
+            const mintInfo = accountInfo.owner.equals(TOKEN_PROGRAM_ID) 
+              ? unpackMint(mintPubkey, accountInfo, TOKEN_PROGRAM_ID)
+              : unpackMint(mintPubkey, accountInfo, TOKEN_2022_PROGRAM_ID);
+              
+            if (mintInfo) {
+              // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
+              if (mintInfo.decimals < SPL_TOKEN_MIN_DECIMALS) {
+                return null;
+              }
+              
+              // Solana Token Listから情報を取得
+              const tokenInfo = await fetchFromTokenList(mintAddress);
+              
+              if (tokenInfo) {
+                // URI (logoURI) が存在しない場合は返却しない
+                if (!tokenInfo.logoURI) {
+                  return null;
+                }
+                
+                const tokenMetadata: TokenMetadata = {
+                  mint: mintPubkey,
+                  name: tokenInfo.name,
+                  symbol: tokenInfo.symbol,
+                  uri: tokenInfo.logoURI,
+                  programId: accountInfo.owner,
+                  decimals: mintInfo.decimals
+                };
+
+                // キャッシュに保存
+                setMetadataCache((prevCache) => {
+                  const newCache = new Map(prevCache);
+                  newCache.set(mintAddress, tokenMetadata);
+                  return newCache;
+                });
+
+                return tokenMetadata;
+              }
+            }
+          } catch (error) {
+            console.log(error);
+            return null;
+          }
+        }
+        
+        return null;
+      } catch (error) {
+        console.log(error);
+        return null;
+      }
+    },
+    [connection, metadataCache]
+  );
+
+  const clearCache = useCallback(() => {
+    setMetadataCache(new Map());
+  }, []);
+
+  // Solana Token Listから情報を取得する関数
+  const fetchFromTokenList = async (mintAddress: string): Promise<TokenListItem | null> => {
+    try {
+      // 主要なトークンリストのURLs
+      const tokenListUrls = [
+        'https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json',
+      ];
+
+      for (const url of tokenListUrls) {
+        // キャッシュを確認
+        if (!tokenListCache.has(url)) {
+          const response = await fetch(url);
+          if (!response.ok) continue;
+          
+          const data = await response.json();
+          const tokenList: TokenList = data.tokens ? data : { tokens: data.data || [] };
+          tokenListCache.set(url, tokenList);
+        }
+
+        const tokenList = tokenListCache.get(url);
+        if (!tokenList) continue;
+
+        // ミントアドレスに一致するトークンを探す
+        const token = tokenList.tokens.find(t => t.address.toLowerCase() === mintAddress.toLowerCase());
+        
+        // デシマルを確認し、SPL_TOKEN_MIN_DECIMALS未満のトークン（NFT）を除外
+        if (token && (!token.decimals || token.decimals >= SPL_TOKEN_MIN_DECIMALS)) {
+          return token;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  };
+
+  return { fetchOffChainMetadata, clearCache };
+};
+
+
+// 2. programId が TOKEN_PROGRAM_ID の場合、@metaplex-foundation/js の findByMint を使ってmetadataを取得
 export const useTokenMetadata = (connection: Connection) => {
   const [metadataCache, setMetadataCache] = useState<Map<string, TokenMetadata>>(new Map());
+  const { fetchOffChainMetadata } = useOffChainTokenMetadata(connection);
 
   const fetchMetadata = useCallback(
     async (mintAddress: string): Promise<TokenMetadata | null> => {
@@ -47,56 +184,114 @@ export const useTokenMetadata = (connection: Connection) => {
 
         // Mint PublicKey を生成
         const mintPubkey = new PublicKey(mintAddress);
-        console.log("Fetching metadata for Mint:", mintPubkey.toBase58());
 
-        // Metaplex SDK を初期化
-        const metaplex = new Metaplex(connection);
-
-        // NFT or SFT(=fungible token) いずれでも findByMint が使える
-        const nftOrSft = await metaplex.nfts().findByMint({ mintAddress: mintPubkey });
-
-        // name, symbol, uri をコンソールに出力
-        console.log("Name:", nftOrSft.name);
-        console.log("Symbol:", nftOrSft.symbol);
-        console.log("Uri:", nftOrSft.uri);
-
-        // uriが画像かjsonかによって処理を分岐
-        // 画像の場合はそのまま返す
-        if (nftOrSft.uri.includes(".png") || nftOrSft.uri.includes(".jpg")) {
-          const TokenUri = nftOrSft.uri;
-          return { mint: mintPubkey, name: nftOrSft.name, symbol: nftOrSft.symbol, uri: TokenUri || nftOrSft.uri };
+        // Token Programがあるかチェックする
+        const accountInfo = await connection.getAccountInfo(mintPubkey);
+        if (!accountInfo) return null;
+        
+        // トークンプログラムかどうか確認
+        if (!accountInfo.owner.equals(TOKEN_PROGRAM_ID) && !accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+          return null; // トークンプログラムでない場合はスキップ
         }
-        // jsonの場合はjsonの中にあるuriまたはimageを取得して返す
-        else {
-          const jsonUri = await fetch(nftOrSft.uri);
-          const jsonUriData = await jsonUri.json();
-          const TokenUri = jsonUriData.image || jsonUriData.uri;
-          return { mint: mintPubkey, name: nftOrSft.name, symbol: nftOrSft.symbol, uri: TokenUri || nftOrSft.uri };
+        
+        // ミント情報を取得してデシマルをチェック
+        let decimals = 0;
+        try {
+          const mintInfo = accountInfo.owner.equals(TOKEN_PROGRAM_ID) 
+            ? unpackMint(mintPubkey, accountInfo, TOKEN_PROGRAM_ID)
+            : unpackMint(mintPubkey, accountInfo, TOKEN_2022_PROGRAM_ID);
+            
+          if (mintInfo) {
+            decimals = mintInfo.decimals;
+            
+            // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
+            if (decimals < SPL_TOKEN_MIN_DECIMALS) {
+              return null;
+            }
+          } else {
+            return null; // ミント情報が取得できない場合はスキップ
+          }
+        } catch (error) {
+          console.log(error);
+          return null;
         }
 
-        const tokenMetadata: TokenMetadata = {
-          mint: mintPubkey,
-          name: nftOrSft.name,
-          symbol: nftOrSft.symbol,
-          uri: nftOrSft.uri,
-        };
+        let tokenMetadata: TokenMetadata | null = null;
 
-        // 
+        // 1. まずオフチェーンのトークンリストから取得
+        tokenMetadata = await fetchOffChainMetadata(mintAddress);
+        
+        // 2. オフチェーンで見つからなかった場合、TOKEN_PROGRAM_ID (Metaplex) で試す
+        if (!tokenMetadata && accountInfo.owner.equals(TOKEN_PROGRAM_ID)) {
+          try {
+            // Metaplex SDK を初期化
+            const metaplex = new Metaplex(connection);
 
-        // キャッシュに保存
-        setMetadataCache((prevCache) => {
-          const newCache = new Map(prevCache);
-          newCache.set(mintAddress, tokenMetadata);
-          return newCache;
-        });
+            // NFT or SFT(=fungible token) いずれでも findByMint が使える
+            const nftOrSft = await metaplex.nfts().findByMint({ mintAddress: mintPubkey });
+            
+            if (nftOrSft.uri) {
+              // fetchでレスポンスを取得して、Content-Typeを確認
+              const response = await fetch(nftOrSft.uri);
+              const contentType = response.headers.get("content-type") || "";
+
+              let resolvedUri: string;
+
+              if (contentType.includes("application/json")) {
+                // JSONデータをパース
+                const jsonData = await response.json();
+                // imageフィールドやuriフィールドがある想定
+                resolvedUri = jsonData.image || jsonData.uri || nftOrSft.uri;
+              } else if (
+                contentType.includes("image/png") ||
+                contentType.includes("image/jpeg") ||
+                contentType.includes("image/gif")
+              ) {
+                // 画像の場合はそのままURLを使う
+                resolvedUri = nftOrSft.uri;
+              } else {
+                // それ以外のContent-Typeであれば一旦デフォルトとして
+                resolvedUri = nftOrSft.uri;
+              }
+
+              // URIが見つからない場合は返却しない
+              if (resolvedUri) {
+                tokenMetadata = {
+                  mint: mintPubkey,
+                  name: nftOrSft.name,
+                  symbol: nftOrSft.symbol,
+                  uri: resolvedUri,
+                  programId: TOKEN_PROGRAM_ID,
+                  decimals: decimals
+                };
+              }
+            }
+          } catch (metaplexError) {
+            console.error(metaplexError);
+          }
+        }
+        
+        // 3. TOKEN_2022_PROGRAM_ID の場合
+        if (!tokenMetadata && accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
+          tokenMetadata = await findToken2022Metadata(mintPubkey, connection, decimals);
+        }
+
+        // メタデータが見つかった場合はキャッシュする
+        if (tokenMetadata) {
+          setMetadataCache((prevCache) => {
+            const newCache = new Map(prevCache);
+            newCache.set(mintAddress, tokenMetadata);
+            return newCache;
+          });
+        }
 
         return tokenMetadata;
       } catch (error) {
-        console.error(`Error fetching metadata for ${mintAddress}:`, error);
+        console.error(error);
         return null;
       }
     },
-    [connection, metadataCache]
+    [connection, metadataCache, fetchOffChainMetadata]
   );
 
   const clearCache = useCallback(() => {
@@ -108,9 +303,15 @@ export const useTokenMetadata = (connection: Connection) => {
 
 async function findToken2022Metadata(
   mintPubkey: PublicKey,
-  connection: Connection
+  connection: Connection,
+  decimals: number
 ): Promise<TokenMetadata | null> {
   try {
+    // デシマルチェック - SPL_TOKEN_MIN_DECIMALS未満はNFTとみなしてスキップ
+    if (decimals < SPL_TOKEN_MIN_DECIMALS) {
+      return null;
+    }
+    
     const accountInfo = await connection.getAccountInfo(mintPubkey);
     if (!accountInfo) return null;
 
@@ -130,58 +331,64 @@ async function findToken2022Metadata(
     const metadata = unpackToken2022Metadata(metadataExtension);
     
     if (metadata && metadata.mint.equals(mintPubkey)) {
-      return {
-        mint: mintPubkey,
-        name: cleanString(metadata.name),
-        symbol: cleanString(metadata.symbol),
-        uri: cleanString(metadata.uri),
-        programId: TOKEN_2022_PROGRAM_ID
-      };
+      const originalUri = cleanString(metadata.uri);
+      
+      // URIが空の場合は返却しない
+      if (!originalUri) {
+        return null;
+      }
+      
+      try {
+        // URIの内容を取得
+        const response = await fetch(originalUri);
+        const contentType = response.headers.get("content-type") || "";
+        
+        let resolvedUri: string;
+        
+        if (contentType.includes("application/json")) {
+          // JSONデータをパース
+          const jsonData = await response.json();
+          // imageフィールドやuriフィールドがある想定
+          resolvedUri = jsonData.image || jsonData.uri || originalUri;
+        } else if (
+          contentType.includes("image/png") ||
+          contentType.includes("image/jpeg") ||
+          contentType.includes("image/gif")
+        ) {
+          // 画像の場合はそのままURLを使う
+          resolvedUri = originalUri;
+        } else {
+          // それ以外のContent-Typeであれば一旦デフォルトとして
+          resolvedUri = originalUri;
+        }
+        
+        // 最終的なURIが空の場合は返却しない
+        if (!resolvedUri) {
+          return null;
+        }
+        
+        return {
+          mint: mintPubkey,
+          name: cleanString(metadata.name),
+          symbol: cleanString(metadata.symbol),
+          uri: resolvedUri,
+          programId: TOKEN_2022_PROGRAM_ID,
+          decimals: decimals
+        };
+      } catch (fetchError) {
+        // フェッチに失敗した場合でも、元のURIを使用
+        return {
+          mint: mintPubkey,
+          name: cleanString(metadata.name),
+          symbol: cleanString(metadata.symbol),
+          uri: originalUri,
+          programId: TOKEN_2022_PROGRAM_ID,
+          decimals: decimals
+        };
+      }
     }
   } catch (err) {
-    console.error("Error fetching Token 2022 metadata:", err);
-  }
-  return null;
-}
-
-async function fetchMetaplexMetadata(
-  mintPubkey: PublicKey,
-  connection: Connection,
-  retryCount = 3
-): Promise<TokenMetadata | null> {
-  for (let attempt = 1; attempt <= retryCount; attempt++) {
-    try {
-      const [metadataPDA] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("metadata"),
-          METAPLEX_PROGRAM_ID.toBuffer(),
-          mintPubkey.toBuffer(),
-        ],
-        METAPLEX_PROGRAM_ID
-      );
-
-      const accountInfo = await connection.getAccountInfo(metadataPDA);
-      if (!accountInfo) {
-        if (attempt === retryCount) {
-          console.log(`Metadata not found for ${mintPubkey.toBase58()}`);
-        }
-        continue;
-      }
-
-      const metadata = Metadata.deserialize(accountInfo.data)[0];
-
-      return {
-        mint: mintPubkey,
-        name: cleanString(metadata.data.name),
-        symbol: cleanString(metadata.data.symbol),
-        uri: cleanString(metadata.data.uri),
-        programId: TOKEN_PROGRAM_ID
-      };
-    } catch (error) {
-      if (attempt === retryCount) {
-        console.error("Failed to fetch Metaplex metadata:", error);
-      }
-    }
+    // エラーは無視
   }
   return null;
 }
