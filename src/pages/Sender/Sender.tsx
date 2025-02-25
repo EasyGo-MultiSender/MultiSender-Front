@@ -31,6 +31,7 @@ import { useBalance } from "../../hooks/useBalance";
 import { useTokenAccounts } from "../../hooks/useTokenAccounts";
 import { useTokenMetadata } from "../../hooks/useTokenMetadata";
 import { useTokenTransfer } from "../../hooks/useTokenTransfer";
+import { useTranslation } from "react-i18next";
 
 // ヘッダーコンポーネント
 import Header from "../../components/Header";
@@ -107,6 +108,8 @@ const Sender: React.FC = () => {
   const { balance, loading: loadingSol } = useBalance(connection, publicKey);
   const { accounts: tokenAccounts, loading: loadingTokens } = useTokenAccounts(connection, publicKey);
   const { transfer, loading: transferring } = useTokenTransfer(connection, publicKey);
+  const { t } = useTranslation(); // 翻訳フック
+  
 
   // Local state
   const [selectedToken, setSelectedToken] = useState<string>("SOL");
@@ -190,7 +193,7 @@ const Sender: React.FC = () => {
         {!connected && (
           <Card sx={{ mt: 4, p: 3, my: 4, borderRadius: 2, bgcolor: "#ffffff" }}>
             <Typography variant="h4" sx={{ textAlign: "center", fontWeight: "bold", color: "#000000" }}>
-              Please connect your wallet in the header
+              {t("Please connect your wallet in the header")}
             </Typography>
           </Card>
         )}
@@ -199,7 +202,7 @@ const Sender: React.FC = () => {
         <Card sx={{ my: 4 }}>
           <CardContent>
             <Typography variant="h6" mb={2} textAlign="center">
-              SOL Balance
+              {t("SOL Balance")}
             </Typography>
             {loadingSol ? (
               <Box textAlign="center" p={2}>
@@ -214,7 +217,7 @@ const Sender: React.FC = () => {
             <Divider sx={{ my: 2 }} />
 
             <Typography variant="h6" mb={1} textAlign="center">
-              Wallet Address
+              {t("Wallet Address")}
             </Typography>
             <Box sx={{ position: "relative", display: "flex", alignItems: "center", 
                       border: "1px solid #ccc", borderRadius: 1, p: 1, height: 36 }}>
@@ -235,7 +238,7 @@ const Sender: React.FC = () => {
         <Card sx={{ mb: 4 }}>
           <CardContent>
             <Typography variant="h6" textAlign="center">
-              SPL Tokens
+              {t("SPL Tokens")}
             </Typography>
             {loadingTokens ? (
               <Box textAlign="center" p={2}>
@@ -243,7 +246,7 @@ const Sender: React.FC = () => {
               </Box>
             ) : tokenAccounts.length === 0 ? (
               <Box textAlign="center" p={2} color="gray">
-                No SPL tokens found
+                {t("No SPL tokens found")}
               </Box>
             ) : (
               tokenAccounts.map((account) => (
@@ -257,15 +260,15 @@ const Sender: React.FC = () => {
         <Card sx={{ mb: 4 }}>
           <CardContent>
             <Typography variant="h6" textAlign="center" mb={2}>
-              Token Transfer
+              {t("Token Transfer")}
             </Typography>
 
             {/* Token Selection */}
             <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>Select Token</InputLabel>
+              <InputLabel>{t("Select Token")}</InputLabel>
               <Select
                 value={selectedToken}
-                label="Select Token"
+                label={t("Select Token")}
                 onChange={(e) => setSelectedToken(e.target.value)}
               >
                 <MenuItem value="SOL">SOL</MenuItem>
@@ -280,7 +283,7 @@ const Sender: React.FC = () => {
             {/* Recipient Addresses */}
             <Box mb={3}>
               <Typography variant="body2" fontWeight="bold" mb={1}>
-                Recipient Addresses
+                {t("Recipient Addresses")}
               </Typography>
               <Box position="relative">
                 <TextField
@@ -289,7 +292,7 @@ const Sender: React.FC = () => {
                   fullWidth
                   value={recipientAddresses}
                   onChange={(e) => setRecipientAddresses(e.target.value)}
-                  placeholder="Enter Solana addresses (one per line)"
+                  placeholder={t("Enter Solana addresses (one per line)")}
                 />
                 <IconButton
                   onClick={pasteAddresses}
@@ -299,14 +302,14 @@ const Sender: React.FC = () => {
                 </IconButton>
               </Box>
               <Typography variant="caption" color="gray">
-                Addresses: {parsedAddresses.length}
+                {t("Addresses")}: {parsedAddresses.length}
               </Typography>
             </Box>
 
             {/* Amount */}
             <Box mb={3}>
               <Typography variant="body2" fontWeight="bold" mb={1}>
-                Amount
+                {t("Amount")}
               </Typography>
               <TextField
                 type="number"
@@ -317,7 +320,7 @@ const Sender: React.FC = () => {
                 placeholder="Enter amount"
               />
               <Typography variant="caption" color="blue">
-                Total amount: {transferAmount * parsedAddresses.length}{" "}
+                {t("Total amount")}: {transferAmount * parsedAddresses.length}{" "}
                 {selectedToken === "SOL" ? "SOL" : "tokens"}
               </Typography>
             </Box>
@@ -333,10 +336,10 @@ const Sender: React.FC = () => {
               {transferring ? (
                 <>
                   <CircularProgress size={20} sx={{ color: "#fff", mr: 1 }} />
-                  Processing...
+                  {t("Processing")}...
                 </>
               ) : (
-                "Transfer"
+                t("Transfer")
               )}
             </Button>
 
@@ -344,7 +347,7 @@ const Sender: React.FC = () => {
             {transactionResults.length > 0 && (
               <Box mt={3}>
                 <Typography variant="h6" gutterBottom>
-                  Recent Transactions
+                  {t("Recent Transactions")}
                 </Typography>
                 <List>
                   {transactionResults.map((result, index) => (
@@ -387,7 +390,7 @@ const Sender: React.FC = () => {
                       >
                         <Typography variant="body2">
                           {result.amount} {result.token === "SOL" ? "SOL" : "tokens"}
-                          {" x "}{result.recipients.length} recipients
+                          {" x "}{result.recipients.length} {t("recipients")}
                         </Typography>
                         <Typography variant="body2" color="primary">
                           Total: {result.amount * result.recipients.length} {result.token === "SOL" ? "SOL" : "tokens"}

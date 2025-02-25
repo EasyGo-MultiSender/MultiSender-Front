@@ -2,6 +2,7 @@
   "Addresses": "",
   "Amount": "",
   "AppName": "",
+  "Enter Solana addresses (one per line)": "",
   "No SPL tokens found": "",
   "Please connect your wallet in the header": "",
   "Processing": "",
@@ -13,5 +14,6 @@
   "Token Transfer": "",
   "Total amount": "",
   "Transfer": "",
-  "Wallet Address": ""
+  "Wallet Address": "",
+  "recipients": ""
 }

@@ -1,6 +1,6 @@
 // src/components/Header.tsx
-import { Buffer } from 'buffer'
-window.Buffer = Buffer
+import { Buffer } from "buffer";
+window.Buffer = Buffer;
 
 import {
   AppBar,
@@ -18,9 +18,12 @@ import { Link } from "react-router-dom";
 import { memo, useEffect, useState } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "../hooks/useWallet";
-import { NetworkSelector } from "./NetworkSelector"; // Add this import
+import { NetworkSelector } from "./NetworkSelector";
+import { useTranslation } from "react-i18next";
+import TranslateSelector from "./TranslateSelector";
 
 const Header = memo(() => {
+  const { t } = useTranslation(); // 翻訳フック
   const [navValue, setNavValue] = useState<string | false>(false);
   const { connected, connecting, walletInfo } = useWallet();
 
@@ -72,7 +75,7 @@ const Header = memo(() => {
           </IconButton>
 
           <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 3 }}>
-            AppName
+            {t("AppName")}
           </Typography>
 
           <Tabs
@@ -96,7 +99,10 @@ const Header = memo(() => {
           </Tabs>
 
           {/* Add NetworkSelector before WalletMultiButton */}
-          <NetworkSelector />
+          <TranslateSelector />
+          <Box sx={{mx:1}}> 
+            <NetworkSelector />
+          </Box>
 
           <WalletMultiButton
             style={{
