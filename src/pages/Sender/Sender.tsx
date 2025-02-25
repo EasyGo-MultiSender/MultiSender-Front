@@ -134,21 +134,62 @@ const Sender: React.FC = () => {
     }
   };
 
+  // handleTransfer 関数の修正
   const handleTransfer = async () => {
     if (!connected || !publicKey) return;
-  
+
     try {
       const recipients = recipientAddresses
         .split('\n')
         .map(addr => addr.trim())
         .filter(addr => addr.length > 0);
-  
+
+      if (recipients.length === 0) {
+        setSnackbarMessage("No valid recipient addresses found");
+        setSnackbarOpen(true);
+        return;
+      }
+
+      // 選択されたトークンに関する情報を取得
+      let selectedTokenInfo = null;
+      if (selectedToken !== "SOL") {
+        // トークンアカウントから選択されたトークンの情報を探す
+        selectedTokenInfo = tokenAccounts.find(account => account.mint === selectedToken);
+        
+        if (!selectedTokenInfo) {
+          setSnackbarMessage("Selected token information not found");
+          setSnackbarOpen(true);
+          return;
+        }
+        
+        // 残高チェック
+        const totalAmount = transferAmount * recipients.length;
+        if (totalAmount > selectedTokenInfo.uiAmount) {
+          setSnackbarMessage(`Insufficient balance. You need ${totalAmount} tokens but have only ${selectedTokenInfo.uiAmount}`);
+          setSnackbarOpen(true);
+          return;
+        }
+      } else {
+        // SOLの場合は残高チェック
+        const totalAmount = transferAmount * recipients.length;
+        if (balance && totalAmount > balance) {
+          setSnackbarMessage(`Insufficient SOL balance. You need ${totalAmount} SOL but have only ${balance}`);
+          setSnackbarOpen(true);
+          return;
+        }
+      }
+
+      // 処理中の状態を設定
+      setSnackbarMessage("Processing transfers... Please wait and approve transactions in your wallet.");
+      setSnackbarOpen(true);
+
+      // 転送実行
       const results = await transfer({
         recipients,
         amount: transferAmount,
         mint: selectedToken === "SOL" ? undefined : selectedToken
       });
-  
+
       const formattedResults: TransactionResult[] = results.map(result => ({
         signature: result.signature,
         status: result.status,
@@ -158,11 +199,15 @@ const Sender: React.FC = () => {
         amount: transferAmount,
         token: selectedToken
       }));
-  
+
       setTransactionResults(prev => [...formattedResults, ...prev]);
       
       const successful = results.filter(r => r.status === 'success');
-      setSnackbarMessage(`Successfully transferred to ${successful.length} recipients`);
+      if (successful.length > 0) {
+        setSnackbarMessage(`Successfully transferred to ${successful.length} out of ${recipients.length} recipients`);
+      } else {
+        setSnackbarMessage(`Transfer failed. Check transaction details for more information.`);
+      }
       setSnackbarOpen(true);
     } catch (error) {
       console.error("Transfer failed:", error);
