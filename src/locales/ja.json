@@ -4,7 +4,7 @@
   "AppName": "アプリ名",
   "Enter Solana addresses (one per line)": "Solanaアドレスを入力（1行に1つずつ） ",
   "No SPL tokens found": "SPLトークンが見つかりませんでした",
-  "Please connect your wallet in the header": "",
+  "Please connect your wallet in the header": "ヘッダーからウォレットを接続してください",
   "Processing": "",
   "Recent Transactions": "",
   "Recipient Addresses": "受取人のアドレス",
