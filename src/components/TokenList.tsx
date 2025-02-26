@@ -95,6 +95,9 @@ const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
         );
 
         const results = await Promise.all(metadataPromises);
+        // 決め打ちで降順にソート
+        results.sort((a, b) => b.account.uiAmount - a.account.uiAmount);
+
         setTokensWithMetadata(results);
       } catch (error) {
         console.error("Error fetching token metadata:", error);
