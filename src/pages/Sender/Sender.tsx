@@ -251,7 +251,7 @@ const Sender: React.FC = () => {
           </Card>
 
           {/* Token List */}
-          <TokenList tokenAccounts={tokenAccounts} loading={loadingTokens} />
+          <TokenList tokenAccounts={tokenAccounts}  />
 
           {/* Transfer Form */}
           <Card sx={{ mb: 4 }}>

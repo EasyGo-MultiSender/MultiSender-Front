@@ -69,7 +69,7 @@ interface TokenListProps {
   loading: boolean;
 }
 
-const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
+const TokenList: React.FC<TokenListProps> = ({ tokenAccounts }) => {
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
   const { connection } = useConnection();
@@ -115,16 +115,13 @@ const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
   // 残りのトークン数
   const remainingTokens = tokensWithMetadata.length - 3;
 
-  // ローディング状態の統合
-  const isLoading = loading || metadataLoading;
-
   return (
     <Card sx={{ mb: 4 }}>
       <CardContent>
         <Typography variant="h6" textAlign="center">
           {t("SPL Tokens")}
         </Typography>
-        {isLoading ? (
+        {metadataLoading ? (
           <Box textAlign="center" p={2}>
             <CircularProgress size={24} />
           </Box>
