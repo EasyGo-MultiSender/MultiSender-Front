@@ -6,6 +6,10 @@
   background-color: #2b2e45;
 }
 
+html {
+  scrollbar-width: none;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
