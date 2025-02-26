@@ -142,6 +142,13 @@ const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
                   disableRipple
                   variant="text"
                   size="small"
+                  sx={{
+                    ":hover": {
+                      color: "#2824f9", // ホバー時に変更する文字色を指定（例：赤）
+                      transition: "all 0.3s", // ホバー時のアニメーションを指定
+                      backgroundColor: "transparent", // 背景色は変更しない
+                    },
+                  }}
                   onClick={() => setShowAll(!showAll)}
                   endIcon={<ExpandMore sx={{ transform: showAll ? "rotate(180deg)" : "none" }} />}
                 >
