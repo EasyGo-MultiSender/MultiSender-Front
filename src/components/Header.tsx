@@ -1,6 +1,6 @@
 // src/components/Header.tsx
-import { Buffer } from 'buffer'
-window.Buffer = Buffer
+import { Buffer } from "buffer";
+window.Buffer = Buffer;
 
 import {
   AppBar,
@@ -18,19 +18,20 @@ import { Link } from "react-router-dom";
 import { memo, useEffect, useState } from "react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { useWallet } from "../hooks/useWallet";
-import { NetworkSelector } from "./NetworkSelector"; // Add this import
+import { NetworkSelector } from "./NetworkSelector";
+import { useTranslation } from "react-i18next";
+import TranslateSelector from "./TranslateSelector";
 
 const Header = memo(() => {
+  const { t } = useTranslation(); // 翻訳フック
   const [navValue, setNavValue] = useState<string | false>(false);
   const { connected, connecting, walletInfo } = useWallet();
 
   useEffect(() => {
     if (location.pathname.includes("/bulksender")) {
       setNavValue("BulkSender");
-    } else if (location.pathname.includes("/app1")) {
-      setNavValue("app1");
-    } else if (location.pathname.includes("/app2")) {
-      setNavValue("app2");
+    } else if (location.pathname.includes("/comingsoon")) {
+      setNavValue("comingsoon");
     } else {
       setNavValue("");
     }
@@ -72,7 +73,7 @@ const Header = memo(() => {
           </IconButton>
 
           <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 3 }}>
-            AppName
+            {t("AppName")}
           </Typography>
 
           <Tabs
@@ -85,18 +86,26 @@ const Header = memo(() => {
               position: "absolute",
               left: "50%",
               transform: "translateX(-50%)",
-              "& .MuiTabs-indicator": { backgroundColor: "#47dded" },
+              "& .MuiTabs-indicator": { backgroundColor: "#47dded", transition: "none" },
               "& .Mui-selected": { color: "#47dded" },
               "& .MuiTab-root:not(.Mui-selected):hover": { color: "#47dded", opacity: 0.7 },
             }}
           >
-            <Tab value="BulkSender" label="BulkSender" component={Link} to="/bulksender" />
-            <Tab value="app1" label="app1" component={Link} to="/app1" />
-            <Tab value="app2" label="app2" component={Link} to="/app2" />
+            <Tab
+              disableRipple
+              value="BulkSender"
+              label="BulkSender"
+              component={Link}
+              to="/bulksender"
+            />
+            <Tab disableRipple disabled value="comingsoon" label="comingsoon" component={Link} to="/comingsoon" />
           </Tabs>
 
           {/* Add NetworkSelector before WalletMultiButton */}
-          <NetworkSelector />
+          <TranslateSelector />
+          <Box sx={{ mx: 1 }}>
+            <NetworkSelector />
+          </Box>
 
           <WalletMultiButton
             style={{
