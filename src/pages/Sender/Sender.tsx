@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+// メインのSenderコンポーネント
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
   Container,
@@ -21,7 +22,6 @@ import {
   ListItem,
   ListItemText,
   Chip,
-  InputAdornment,
 } from "@mui/material";
 import { ContentPaste, ContentCopy, OpenInNew } from "@mui/icons-material";
 
@@ -29,14 +29,13 @@ import { ContentPaste, ContentCopy, OpenInNew } from "@mui/icons-material";
 import { useWallet } from "../../hooks/useWallet";
 import { useConnection } from "../../hooks/useConnection";
 import { useBalance } from "../../hooks/useBalance";
-import { useTokenAccounts } from "../../hooks/useTokenAccounts";
 import { useTokenTransfer } from "../../hooks/useTokenTransfer";
 import { useTranslation } from "react-i18next";
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
 
 // ヘッダーコンポーネント
 import Header from "../../components/Header";
-import TokenList from "../../components/TokenList";
+import TokenList, { TokenListRef } from "../../components/TokenList";
 
 // インターフェース定義
 interface TransactionResult {
@@ -49,29 +48,96 @@ interface TransactionResult {
   token: string;
 }
 
-// メインのSenderコンポーネント
+// アドレスとその送金金額のインターフェース
+interface AddressEntry {
+  address: string;
+  amount: number;
+}
+
 const Sender: React.FC = () => {
   // Hooks
   const { connection } = useConnection();
   const { publicKey, connected, walletInfo } = useWallet();
   const { balance, loading: loadingSol } = useBalance(connection, publicKey);
-  const { accounts: tokenAccounts, loading: loadingTokens } = useTokenAccounts(
-    connection,
-    publicKey
-  );
   const { transfer, loading: transferring } = useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
-  const { validateAddresses } = useWalletAddressValidation();
+  const { isValidSolanaAddress } = useWalletAddressValidation();
+
+  // TokenList から公開される関数を利用するための参照
+  const tokenListRef = useRef<TokenListRef>(null);
 
   // Local state
   const [selectedToken, setSelectedToken] = useState<string>("SOL");
   const [recipientAddresses, setRecipientAddresses] = useState<string>("");
-  const [transferAmount, setTransferAmount] = useState<number>(0);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [transactionResults, setTransactionResults] = useState<TransactionResult[]>([]);
-  const [invalidAddresses, setInvalidAddresses] = useState<string[]>([]);
+  const [invalidEntries, setInvalidEntries] = useState<string[]>([]);
   const [duplicateAddresses, setDuplicateAddresses] = useState<string[]>([]);
+  const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
+  const [totalAmount, setTotalAmount] = useState<number>(0);
+  
+  // 最後にパースした内容を保持して不要な再パースを防止
+  const lastParsedAddressesRef = useRef<string>("");
+
+  // アドレスとアマウントの構文解析と検証を行うメモ化された関数
+  const parseAddressEntries = useCallback(() => {
+    // 前回と同じ内容なら処理をスキップ
+    if (recipientAddresses === lastParsedAddressesRef.current) {
+      return;
+    }
+    
+    lastParsedAddressesRef.current = recipientAddresses;
+    
+    const entries: AddressEntry[] = [];
+    const invalidLines: string[] = [];
+    const addressMap = new Map<string, number>();
+    
+    // 各行を解析
+    const lines = recipientAddresses
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    for (const line of lines) {
+      const parts = line.split(',').map(part => part.trim());
+      const address = parts[0];
+      const amountStr = parts[1];
+      
+      // アドレスとアマウントの検証
+      if (!address || !isValidSolanaAddress(address) || !amountStr || isNaN(parseFloat(amountStr))) {
+        invalidLines.push(line);
+        continue;
+      }
+      
+      const amount = parseFloat(amountStr);
+      
+      // 有効なエントリを追加
+      entries.push({ address, amount });
+      
+      // 重複アドレスを追跡
+      addressMap.set(address, (addressMap.get(address) || 0) + 1);
+    }
+    
+    // 重複アドレスの特定
+    const duplicates = Array.from(addressMap.entries())
+      .filter(([_, count]) => count > 1)
+      .map(([address]) => address);
+    
+    // 状態を更新
+    setParsedEntries(entries);
+    setInvalidEntries(invalidLines);
+    setDuplicateAddresses(duplicates);
+    
+    // 合計金額を計算
+    const sum = entries.reduce((total, entry) => total + entry.amount, 0);
+    setTotalAmount(sum);
+  }, [recipientAddresses, isValidSolanaAddress]);
+
+  // recipientAddressesが変更されたときにだけパースを実行
+  useEffect(() => {
+    parseAddressEntries();
+  }, [recipientAddresses, parseAddressEntries]);
 
   // ユーティリティ関数
   const copyAddress = async (addr: string) => {
@@ -89,7 +155,13 @@ const Sender: React.FC = () => {
     }
   };
 
-  // handleTransfer 関数の修正
+  // tokenListRefを通じてトークンアカウントデータを取得する関数
+  // メモ化して安定したリファレンスを提供
+  const getTokenAccountsForSelection = useCallback(() => {
+    return tokenListRef.current?.getTokenAccounts() || [];
+  }, []);
+
+  // handleTransfer 関数
   const handleTransfer = async () => {
     // ウォレット接続チェック
     if (!connected || !publicKey) {
@@ -97,131 +169,122 @@ const Sender: React.FC = () => {
       setSnackbarOpen(true);
       return;
     }
-   
-    // 受取人アドレスとAmountを準備
-    const addressEntries = recipientAddresses
-      .split('\n')
-      .map(line => {
-        const [address, amount] = line.split(',').map(part => part.trim());
-        return { 
-          address, 
-          amount: parseFloat(amount || '0') 
-        };
-      })
-      .filter(item => item.address.length > 0);
-   
-    // アドレスの妥当性検証
-    const { 
-      validAddresses, 
-      invalidAddresses: invalidList, 
-      duplicateAddresses: duplicateList 
-    } = validateAddresses(addressEntries.map(entry => entry.address));
-   
-    // 検証エラーの状態設定
-    setInvalidAddresses(invalidList);
-    setDuplicateAddresses(duplicateList);
-   
-    // 妥当性エラーがある場合は処理中止
-    if (invalidList.length > 0 || duplicateList.length > 0) {
-      setSnackbarMessage("Please correct invalid or duplicate addresses");
+  
+    if (parsedEntries.length === 0) {
+      setSnackbarMessage("No valid recipient addresses found");
       setSnackbarOpen(true);
       return;
     }
-   
-    // 転送総額の計算
-    const totalAmount = addressEntries
-      .filter(entry => validAddresses.includes(entry.address))
-      .reduce((sum, entry) => sum + entry.amount, 0);
-   
-    // 残高チェック
-    try {
-      const recipients = recipientAddresses
-        .split("\n")
-        .map((addr) => addr.trim())
-        .filter((addr) => addr.length > 0);
 
-      if (recipients.length === 0) {
-        setSnackbarMessage("No valid recipient addresses found");
+    // 妥当性エラーがある場合は処理中止
+    if (invalidEntries.length > 0 || duplicateAddresses.length > 0) {
+      setSnackbarMessage(
+        invalidEntries.length > 0 
+          ? "Please correct invalid entries" 
+          : "Please correct duplicate addresses"
+      );
+      setSnackbarOpen(true);
+      return;
+    }
+  
+    // TokenListから最新のトークンアカウント情報を取得
+    const tokenAccounts = tokenListRef.current?.getTokenAccounts() || [];
+  
+    // 残高チェック
+    if (selectedToken === "SOL") {
+      // SOLの残高チェック
+      if (balance && totalAmount > balance) {
+        setSnackbarMessage(`Insufficient SOL balance. Required: ${totalAmount.toFixed(6)}, Available: ${balance.toFixed(6)}`);
         setSnackbarOpen(true);
         return;
       }
-
-      // 選択されたトークンに関する情報を取得
-      let selectedTokenInfo = null;
-      if (selectedToken !== "SOL") {
-        // トークンアカウントから選択されたトークンの情報を探す
-        selectedTokenInfo = tokenAccounts.find((account) => account.mint === selectedToken);
-
-        if (!selectedTokenInfo) {
-          setSnackbarMessage("Selected token information not found");
-          setSnackbarOpen(true);
-          return;
-        }
-
-        // 残高チェック
-        const totalAmount = transferAmount * recipients.length;
-        if (totalAmount > selectedTokenInfo.uiAmount) {
-          setSnackbarMessage(
-            `Insufficient balance. You need ${totalAmount} tokens but have only ${selectedTokenInfo.uiAmount}`
-          );
-          if (selectedToken === "SOL") {
-        // SOLの残高チェック
-        if (balance && totalAmount > balance) {
-          setSnackbarMessage(`Insufficient SOL balance. Required: ${totalAmount}, Available: ${balance}`);
-          setSnackbarOpen(true);
-          return;
-        }
-      } else {
-        // トークンの残高チェック
-        const selectedTokenAccount = tokenAccounts.find(account => account.mint === selectedToken);
-        if (!selectedTokenAccount || totalAmount > selectedTokenAccount.uiAmount) {
-          setSnackbarMessage(`Insufficient token balance. Required: ${totalAmount}, Available: ${selectedTokenAccount?.uiAmount || 0}`);
-          setSnackbarOpen(true);
-          return;
-        }
+    } else {
+      // トークンの残高チェック
+      const selectedTokenAccount = tokenAccounts.find(account => account.mint === selectedToken);
+      if (!selectedTokenAccount) {
+        setSnackbarMessage("Selected token information not found");
+        setSnackbarOpen(true);
+        return;
       }
-      // 処理中の状態を設定
+      
+      if (totalAmount > selectedTokenAccount.uiAmount) {
+        setSnackbarMessage(`Insufficient token balance. Required: ${totalAmount.toFixed(6)}, Available: ${selectedTokenAccount.uiAmount.toFixed(6)}`);
+        setSnackbarOpen(true);
+        return;
+      }
+    }
+
+    try {
+      // 転送処理中メッセージ
       setSnackbarMessage(
         "Processing transfers... Please wait and approve transactions in your wallet."
       );
-      // 転送処理中メッセージ
-      setSnackbarMessage("Processing transfers... Please approve in your wallet");
       setSnackbarOpen(true);
-      // 転送実行
-      const results = await transfer({
-        recipients: validAddresses,
-        amount: addressEntries
-          .filter(entry => validAddresses.includes(entry.address))
-          .map(entry => entry.amount)[0], // 最初のエントリーのamountを使用
-        mint: selectedToken === "SOL" ? undefined : selectedToken
-      });
-   
-      // トランザクション結果の更新
-      setTransactionResults(prev => [
-        ...results.map(result => ({
-          ...result,
+
+      // バッチに分割して転送実行（最大10アドレスずつ）
+      const batchSize = 10;
+      const batches: AddressEntry[][] = [];
+      
+      for (let i = 0; i < parsedEntries.length; i += batchSize) {
+        batches.push(parsedEntries.slice(i, i + batchSize));
+      }
+      
+      const allResults: TransactionResult[] = [];
+      
+      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+        const batch = batches[batchIndex];
+        const recipients = batch.map(entry => entry.address);
+        const firstAmount = batch[0].amount; // バッチ内の最初のアドレスの金額を使用
+        
+        // プログレスアップデート
+        setSnackbarMessage(
+          `Processing batch ${batchIndex + 1}/${batches.length}... Please approve in your wallet.`
+        );
+        
+        // 転送実行
+        const results = await transfer({
+          recipients,
+          amount: firstAmount,
+          mint: selectedToken === "SOL" ? undefined : selectedToken
+        });
+        
+        // バッチ結果をフォーマット
+        const formattedResults: TransactionResult[] = results.map((result) => ({
+          signature: result.signature,
+          status: result.status,
+          timestamp: result.timestamp || Date.now(),
+          error: result.error,
+          recipients: result.recipients || [],
+          amount: firstAmount,
           token: selectedToken,
-          amount: totalAmount
-        })),
-        ...prev
-      ]);
-   
+        }));
+        
+        allResults.push(...formattedResults);
+        
+        // バッチ間の遅延
+        if (batchIndex < batches.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+      
+      // 全トランザクション結果を更新
+      setTransactionResults(prev => [...allResults, ...prev]);
+  
       // 成功/失敗フィードバック
-      const successCount = results.filter(r => r.status === 'success').length;
-      setSnackbarMessage(`Transferred to ${successCount} out of ${validAddresses.length} recipients`);
+      const successCount = allResults.filter(r => r.status === 'success').length;
+      if (successCount > 0) {
+        setSnackbarMessage(`Successfully transferred to ${successCount} out of ${parsedEntries.length} recipients`);
+      } else {
+        setSnackbarMessage(`Transfer failed. Check transaction details for more information.`);
+      }
       setSnackbarOpen(true);
-   
+  
     } catch (error) {
       console.error("Transfer failed:", error);
       setSnackbarMessage(`Transfer failed: ${(error as Error).message}`);
       setSnackbarOpen(true);
     }
   };
-
-  const parsedAddresses = recipientAddresses
-    .split("\n")
-    .map((addr) => addr.trim())
-    .filter((addr) => addr.length > 0);
 
   return (
     <>
@@ -294,8 +357,11 @@ const Sender: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Token List */}
-          <TokenList tokenAccounts={tokenAccounts}  />
+          {/* Token List - 改善版 */}
+          <TokenList 
+            publicKey={publicKey} 
+            ref={tokenListRef}
+          />
 
           {/* Transfer Form */}
           <Card sx={{ mb: 4 }}>
@@ -313,7 +379,7 @@ const Sender: React.FC = () => {
                   onChange={(e) => setSelectedToken(e.target.value)}
                 >
                   <MenuItem value="SOL">SOL</MenuItem>
-                  {tokenAccounts.map((account) => (
+                  {getTokenAccountsForSelection().map((account) => (
                     <MenuItem key={account.mint} value={account.mint}>
                       {account.mint.slice(0, 4)}...{account.mint.slice(-4)}
                     </MenuItem>
@@ -321,19 +387,30 @@ const Sender: React.FC = () => {
                 </Select>
               </FormControl>
 
-              {/* Recipient Addresses */}
+              {/* Recipient Addresses with Amounts */}
               <Box mb={3}>
                 <Typography variant="body2" fontWeight="bold" mb={1}>
-                  {t("Recipient Addresses")}
+                  {t("Recipient Addresses and Amounts")}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" mb={1} display="block">
+                  Format: address,amount (one entry per line)
                 </Typography>
                 <Box position="relative">
                   <TextField
                     multiline
-                    rows={4}
+                    rows={10}
                     fullWidth
                     value={recipientAddresses}
                     onChange={(e) => setRecipientAddresses(e.target.value)}
-                    placeholder={t("Enter Solana addresses (one per line)")}
+                    placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
+                    error={invalidEntries.length > 0 || duplicateAddresses.length > 0}
+                    helperText={
+                      invalidEntries.length > 0
+                        ? `Invalid entries: ${invalidEntries.length}`
+                        : duplicateAddresses.length > 0
+                        ? `Duplicate addresses: ${duplicateAddresses.length}`
+                        : ""
+                    }
                   />
                   <IconButton
                     onClick={pasteAddresses}
@@ -342,28 +419,14 @@ const Sender: React.FC = () => {
                     <ContentPaste />
                   </IconButton>
                 </Box>
-                <Typography variant="caption" color="gray">
-                  {t("Addresses")}: {parsedAddresses.length}
-                </Typography>
-              </Box>
-
-              {/* Amount */}
-              <Box mb={3}>
-                <Typography variant="body2" fontWeight="bold" mb={1}>
-                  {t("Amount")}
-                </Typography>
-                <TextField
-                  type="number"
-                  fullWidth
-                  value={transferAmount}
-                  onChange={(e) => setTransferAmount(Number(e.target.value))}
-                  InputProps={{ inputProps: { min: 0, step: "any" } }}
-                  placeholder="Enter amount"
-                />
-                <Typography variant="caption" color="blue">
-                  {t("Total amount")}: {transferAmount * parsedAddresses.length}{" "}
-                  {selectedToken === "SOL" ? "SOL" : "tokens"}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                  <Typography variant="caption" color="gray">
+                    {t("Valid entries")}: {parsedEntries.length}
+                  </Typography>
+                  <Typography variant="caption" color="primary" fontWeight="bold">
+                    {t("Total amount")}: {totalAmount.toFixed(6)} {selectedToken === "SOL" ? "SOL" : "tokens"}
+                  </Typography>
+                </Box>
               </Box>
 
               {/* Transfer Button */}
@@ -372,7 +435,7 @@ const Sender: React.FC = () => {
                 color="primary"
                 fullWidth
                 onClick={handleTransfer}
-                disabled={!connected || transferring || !parsedAddresses.length || !transferAmount}
+                disabled={!connected || transferring || parsedEntries.length === 0 || invalidEntries.length > 0 || duplicateAddresses.length > 0}
               >
                 {transferring ? (
                   <>
@@ -431,13 +494,14 @@ const Sender: React.FC = () => {
                         >
                           <Typography variant="body2">
                             {result.amount} {result.token === "SOL" ? "SOL" : "tokens"}
-                            {" x "}
-                            {result.recipients.length} {t("recipients")}
+                            {result.recipients.length > 1 ? ` x ${result.recipients.length} ${t("recipients")}` : ''}
                           </Typography>
-                          <Typography variant="body2" color="primary">
-                            Total: {result.amount * result.recipients.length}{" "}
-                            {result.token === "SOL" ? "SOL" : "tokens"}
-                          </Typography>
+                          {result.recipients.length > 1 && (
+                            <Typography variant="body2" color="primary">
+                              Total: {(result.amount * result.recipients.length).toFixed(6)}{" "}
+                              {result.token === "SOL" ? "SOL" : "tokens"}
+                            </Typography>
+                          )}
                         </Box>
 
                         {/* Signature with Copy and Link */}
