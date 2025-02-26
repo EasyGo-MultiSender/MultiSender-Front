@@ -164,7 +164,7 @@ const Sender: React.FC = () => {
           setSnackbarMessage(
             `Insufficient balance. You need ${totalAmount} tokens but have only ${selectedTokenInfo.uiAmount}`
           );
-          if (selectedToken === "SOL") {
+        }
         // SOLの残高チェック
         if (balance && totalAmount > balance) {
           setSnackbarMessage(`Insufficient SOL balance. Required: ${totalAmount}, Available: ${balance}`);
