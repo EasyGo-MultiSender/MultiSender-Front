@@ -30,10 +30,8 @@ const Header = memo(() => {
   useEffect(() => {
     if (location.pathname.includes("/bulksender")) {
       setNavValue("BulkSender");
-    } else if (location.pathname.includes("/app1")) {
-      setNavValue("app1");
-    } else if (location.pathname.includes("/app2")) {
-      setNavValue("app2");
+    } else if (location.pathname.includes("/comingsoon")) {
+      setNavValue("comingsoon");
     } else {
       setNavValue("");
     }
@@ -100,8 +98,7 @@ const Header = memo(() => {
               component={Link}
               to="/bulksender"
             />
-            <Tab disableRipple value="app1" label="app1" component={Link} to="/app1" />
-            <Tab disableRipple value="app2" label="app2" component={Link} to="/app2" />
+            <Tab disableRipple disabled value="comingsoon" label="comingsoon" component={Link} to="/comingsoon" />
           </Tabs>
 
           {/* Add NetworkSelector before WalletMultiButton */}
