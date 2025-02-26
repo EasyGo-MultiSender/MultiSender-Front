@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Card,
@@ -6,28 +6,32 @@ import {
   Typography,
   CircularProgress,
   Button,
-  Avatar
+  Avatar,
 } from "@mui/material";
 import { ExpandMore } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { TokenMetadata, useTokenMetadata } from "../hooks/useTokenMetadata";
 
-// トークン表示用コンポーネント
+// インターフェース定義
 interface Account {
   mint: string;
   uiAmount: number;
 }
 
-const TokenDisplay = ({ account }: { account: Account }) => {
-  const { connection } = useConnection();
-  const { fetchMetadata } = useTokenMetadata(connection);
-  const [metadata, setMetadata] = React.useState<TokenMetadata | null>(null);
+interface TokenWithMetadata {
+  account: Account;
+  metadata: TokenMetadata | null;
+}
 
-  React.useEffect(() => {
-    fetchMetadata(account.mint).then(setMetadata);
-  }, [account.mint, fetchMetadata]);
-
+// トークン表示用コンポーネント
+const TokenDisplay = ({
+  account,
+  metadata,
+}: {
+  account: Account;
+  metadata: TokenMetadata | null;
+}) => {
   return (
     <Box
       display="flex"
@@ -68,11 +72,48 @@ interface TokenListProps {
 const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
-  
+  const { connection } = useConnection();
+  const { fetchMetadata } = useTokenMetadata(connection);
+
+  // すべてのトークンメタデータを保持する状態
+  const [tokensWithMetadata, setTokensWithMetadata] = useState<TokenWithMetadata[]>([]);
+  const [metadataLoading, setMetadataLoading] = useState(false);
+
+  // すべてのトークンのメタデータを一度に取得
+  useEffect(() => {
+    const fetchAllMetadata = async () => {
+      if (tokenAccounts.length === 0) return;
+
+      setMetadataLoading(true);
+
+      try {
+        // Promise.allを使用して並列にメタデータを取得
+        const metadataPromises = tokenAccounts.map((account) =>
+          fetchMetadata(account.mint)
+            .then((metadata) => ({ account, metadata }))
+            .catch(() => ({ account, metadata: null }))
+        );
+
+        const results = await Promise.all(metadataPromises);
+        setTokensWithMetadata(results);
+      } catch (error) {
+        console.error("Error fetching token metadata:", error);
+      } finally {
+        setMetadataLoading(false);
+      }
+    };
+
+    fetchAllMetadata();
+  }, [tokenAccounts, fetchMetadata]);
+
   // 表示するトークンの数を制限
-  const displayedTokens = showAll ? tokenAccounts : tokenAccounts.slice(0, 3);
+  const displayedTokens = showAll ? tokensWithMetadata : tokensWithMetadata.slice(0, 3);
+
   // 残りのトークン数
-  const remainingTokens = tokenAccounts.length - 3;
+  const remainingTokens = tokensWithMetadata.length - 3;
+
+  // ローディング状態の統合
+  const isLoading = loading || metadataLoading;
 
   return (
     <Card sx={{ mb: 4 }}>
@@ -80,22 +121,22 @@ const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
         <Typography variant="h6" textAlign="center">
           {t("SPL Tokens")}
         </Typography>
-        {loading ? (
+        {isLoading ? (
           <Box textAlign="center" p={2}>
             <CircularProgress size={24} />
           </Box>
-        ) : tokenAccounts.length === 0 ? (
+        ) : tokensWithMetadata.length === 0 ? (
           <Box textAlign="center" p={2}>
             {t("No SPL tokens found")}
           </Box>
         ) : (
           <>
-            {displayedTokens.map((account) => (
-              <TokenDisplay key={account.mint} account={account} />
+            {displayedTokens.map(({ account, metadata }) => (
+              <TokenDisplay key={account.mint} account={account} metadata={metadata} />
             ))}
-            
+
             {/* もっと見るボタン */}
-            {tokenAccounts.length > 3 && (
+            {tokensWithMetadata.length > 3 && (
               <Box textAlign="center" mt={1}>
                 <Button
                   variant="text"
