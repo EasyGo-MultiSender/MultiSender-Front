@@ -36,6 +36,7 @@ import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidati
 // ヘッダーコンポーネント
 import Header from "../../components/Header";
 import TokenList, { TokenListRef } from "../../components/TokenList";
+import UploadButton from "../../components/UploadButton";
 
 // インターフェース定義
 interface TransactionResult {
@@ -419,14 +420,36 @@ const Sender: React.FC = () => {
                     <ContentPaste />
                   </IconButton>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                <Box
+                  position="relative"
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
                   <Typography variant="caption" color="gray">
-                    {t("Valid entries")}: {parsedEntries.length}
+                    {t("Addresses")}: {parsedAddresses.length}
                   </Typography>
-                  <Typography variant="caption" color="primary" fontWeight="bold">
-                    {t("Total amount")}: {totalAmount.toFixed(6)} {selectedToken === "SOL" ? "SOL" : "tokens"}
-                  </Typography>
+                  <UploadButton/>
                 </Box>
+              </Box>
+
+              {/* Amount */}
+              <Box mb={3}>
+                <Typography variant="body2" fontWeight="bold" mb={1}>
+                  {t("Amount")}
+                </Typography>
+                <TextField
+                  type="number"
+                  fullWidth
+                  value={transferAmount}
+                  onChange={(e) => setTransferAmount(Number(e.target.value))}
+                  InputProps={{ inputProps: { min: 0, step: "any" } }}
+                  placeholder="Enter amount"
+                />
+                <Typography variant="caption" color="blue">
+                  {t("Total amount")}: {transferAmount * parsedAddresses.length}{" "}
+                  {selectedToken === "SOL" ? "SOL" : "tokens"}
+                </Typography>
               </Box>
 
               {/* Transfer Button */}

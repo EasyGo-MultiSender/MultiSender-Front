@@ -4,6 +4,7 @@
   "AppName": "アプリ名",
   "Enter Solana addresses (one per line)": "Solanaアドレスを入力（1行に1つずつ） ",
   "No SPL tokens found": "SPLトークンが見つかりませんでした",
+  "Oops! The page you are looking for does not exist.": "おっと！お探しのページは存在しません。",
   "Please connect your wallet in the header": "ヘッダーからウォレットを接続してください",
   "Processing": "処理中",
   "Recent Transactions": "最近のトランザクション",

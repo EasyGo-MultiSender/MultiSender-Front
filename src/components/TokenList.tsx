@@ -75,14 +75,15 @@ const TokenDisplay = memo(({
 
 TokenDisplay.displayName = 'TokenDisplay';
 
+
 // トークンリスト用のコンポーネント
 interface TokenListProps {
   publicKey: PublicKey | null;
   loading?: boolean; // 既存のloadingを利用するかどうか
 }
 
-// forwardRefを使用して親コンポーネントからアクセスできるようにする
-const TokenList = forwardRef<TokenListRef, TokenListProps>(({ publicKey, loading: externalLoading }, ref) => {
+  // forwardRefを使用して親コンポーネントからアクセスできるようにする
+  const TokenList = forwardRef<TokenListRef, TokenListProps>(({ publicKey, loading: externalLoading }, ref) => {
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
   const { connection } = useConnection();
