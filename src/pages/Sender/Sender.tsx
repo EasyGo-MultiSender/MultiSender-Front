@@ -29,12 +29,12 @@ import { useWallet } from "../../hooks/useWallet";
 import { useConnection } from "../../hooks/useConnection";
 import { useBalance } from "../../hooks/useBalance";
 import { useTokenAccounts } from "../../hooks/useTokenAccounts";
-import { useTokenMetadata } from "../../hooks/useTokenMetadata";
 import { useTokenTransfer } from "../../hooks/useTokenTransfer";
 import { useTranslation } from "react-i18next";
 
 // ヘッダーコンポーネント
 import Header from "../../components/Header";
+import TokenList from "../../components/TokenList";
 
 // インターフェース定義
 interface TransactionResult {
@@ -46,61 +46,6 @@ interface TransactionResult {
   amount: number;
   token: string;
 }
-
-interface TokenDisplayProps {
-  account: {
-    mint: string;
-    uiAmount: number;
-  };
-}
-
-// トークン表示用コンポーネント
-const TokenDisplay: React.FC<TokenDisplayProps> = ({ account }) => {
-  const { connection } = useConnection();
-  const { fetchMetadata } = useTokenMetadata(connection);
-  const [metadata, setMetadata] = React.useState<any>(null);
-
-  React.useEffect(() => {
-    fetchMetadata(account.mint).then(setMetadata);
-  }, [account.mint, fetchMetadata]);
-
-  return (
-    <Box
-      display="flex"
-      alignItems="center"
-      justifyContent="space-between"
-      borderTop="1px solid #eee"
-      py={1}
-      px={1}
-    >
-      <Box display="flex" alignItems="center" gap={1}>
-        <Avatar
-          src={metadata?.uri || "/token-placeholder.png"}
-          alt={metadata?.symbol || "Token"}
-          sx={{ width: 32, height: 32 }}
-        />
-        <Box>
-          <Typography variant="body1" fontWeight="bold">
-            {metadata?.symbol || "Unknown"}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {metadata?.name || "Unknown Token"}
-          </Typography>
-          {/* 
-          {metadata?.uri && (
-            <Typography variant="caption" display="block" color="text.secondary">
-              URI: {metadata.uri}
-            </Typography>
-          )}
-            */}
-        </Box>
-      </Box>
-      <Typography variant="body2" fontWeight="bold">
-        {account.uiAmount} {metadata?.symbol || ""}
-      </Typography>
-    </Box>
-  );
-};
 
 // メインのSenderコンポーネント
 const Sender: React.FC = () => {
@@ -306,26 +251,7 @@ const Sender: React.FC = () => {
           </Card>
 
           {/* Token List */}
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="h6" textAlign="center">
-                {t("SPL Tokens")}
-              </Typography>
-              {loadingTokens ? (
-                <Box textAlign="center" p={2}>
-                  <CircularProgress size={24} />
-                </Box>
-              ) : tokenAccounts.length === 0 ? (
-                <Box textAlign="center" p={2} color="gray">
-                  {t("No SPL tokens found")}
-                </Box>
-              ) : (
-                tokenAccounts.map((account) => (
-                  <TokenDisplay key={account.mint} account={account} />
-                ))
-              )}
-            </CardContent>
-          </Card>
+          <TokenList tokenAccounts={tokenAccounts} loading={loadingTokens} />
 
           {/* Transfer Form */}
           <Card sx={{ mb: 4 }}>
