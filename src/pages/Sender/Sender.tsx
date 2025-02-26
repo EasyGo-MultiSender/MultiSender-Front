@@ -37,6 +37,7 @@ import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidati
 // ヘッダーコンポーネント
 import Header from "../../components/Header";
 import TokenList from "../../components/TokenList";
+import UploadButton from "../../components/UploadButton";
 
 // インターフェース定義
 interface TransactionResult {
@@ -342,9 +343,17 @@ const Sender: React.FC = () => {
                     <ContentPaste />
                   </IconButton>
                 </Box>
-                <Typography variant="caption" color="gray">
-                  {t("Addresses")}: {parsedAddresses.length}
-                </Typography>
+                <Box
+                  position="relative"
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Typography variant="caption" color="gray">
+                    {t("Addresses")}: {parsedAddresses.length}
+                  </Typography>
+                  <UploadButton/>
+                </Box>
               </Box>
 
               {/* Amount */}
