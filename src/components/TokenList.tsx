@@ -102,12 +102,12 @@ const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
       } catch (error) {
         console.error("Error fetching token metadata:", error);
       } finally {
-        setMetadataLoading(false);
+        setMetadataLoading(false);  
       }
     };
 
     fetchAllMetadata();
-  }, [tokenAccounts, fetchMetadata]);
+  }, [tokenAccounts]);
 
   // 表示するトークンの数を制限
   const displayedTokens = showAll ? tokensWithMetadata : tokensWithMetadata.slice(0, 3);
