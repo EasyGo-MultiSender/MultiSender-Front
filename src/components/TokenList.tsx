@@ -63,13 +63,7 @@ const TokenDisplay = ({
   );
 };
 
-// トークンリスト用の修正コンポーネント
-interface TokenListProps {
-  tokenAccounts: Account[];
-  loading: boolean;
-}
-
-const TokenList: React.FC<TokenListProps> = ({ tokenAccounts }) => {
+const TokenList: React.FC<{ tokenAccounts: Account[] }> = ({ tokenAccounts }) => {
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
   const { connection } = useConnection();
