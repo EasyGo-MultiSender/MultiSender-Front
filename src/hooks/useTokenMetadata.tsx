@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useRef } from "react";
 import { Connection, PublicKey } from "@solana/web3.js";
 import {
   unpackMint,
@@ -50,14 +50,15 @@ const tokenListCache = new Map<string, TokenList>();
 
 // 1. @solana/spl-token の token-list(オフチェーン)からtokenのmetadataを取得
 export const useOffChainTokenMetadata = (connection: Connection) => {
-  const [metadataCache, setMetadataCache] = useState<Map<string, TokenMetadata>>(new Map());
+  // キャッシュをuseRefに変更してレンダリングループを防ぐ
+  const metadataCacheRef = useRef<Map<string, TokenMetadata>>(new Map());
 
   const fetchOffChainMetadata = useCallback(
     async (mintAddress: string): Promise<TokenMetadata | null> => {
       try {
         // 既にキャッシュ済みならそれを返す
-        if (metadataCache.has(mintAddress)) {
-          return metadataCache.get(mintAddress) || null;
+        if (metadataCacheRef.current.has(mintAddress)) {
+          return metadataCacheRef.current.get(mintAddress) || null;
         }
 
         const mintPubkey = new PublicKey(mintAddress);
@@ -98,12 +99,8 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
                   decimals: mintInfo.decimals
                 };
 
-                // キャッシュに保存
-                setMetadataCache((prevCache) => {
-                  const newCache = new Map(prevCache);
-                  newCache.set(mintAddress, tokenMetadata);
-                  return newCache;
-                });
+                // キャッシュに保存 (useRefを使用)
+                metadataCacheRef.current.set(mintAddress, tokenMetadata);
 
                 return tokenMetadata;
               }
@@ -120,11 +117,11 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
         return null;
       }
     },
-    [connection, metadataCache]
+    [connection] // metadataCacheを依存配列から削除
   );
 
   const clearCache = useCallback(() => {
-    setMetadataCache(new Map());
+    metadataCacheRef.current = new Map();
   }, []);
 
   // Solana Token Listから情報を取得する関数
@@ -171,15 +168,16 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
 
 // 2. programId が TOKEN_PROGRAM_ID の場合、@metaplex-foundation/js の findByMint を使ってmetadataを取得
 export const useTokenMetadata = (connection: Connection) => {
-  const [metadataCache, setMetadataCache] = useState<Map<string, TokenMetadata>>(new Map());
+  // キャッシュをuseRefに変更してレンダリングループを防ぐ
+  const metadataCacheRef = useRef<Map<string, TokenMetadata>>(new Map());
   const { fetchOffChainMetadata } = useOffChainTokenMetadata(connection);
 
   const fetchMetadata = useCallback(
     async (mintAddress: string): Promise<TokenMetadata | null> => {
       try {
         // 既にキャッシュ済みならそれを返す
-        if (metadataCache.has(mintAddress)) {
-          return metadataCache.get(mintAddress) || null;
+        if (metadataCacheRef.current.has(mintAddress)) {
+          return metadataCacheRef.current.get(mintAddress) || null;
         }
 
         // Mint PublicKey を生成
@@ -340,13 +338,9 @@ export const useTokenMetadata = (connection: Connection) => {
           }
         }
 
-        // メタデータが見つかった場合はキャッシュする
+        // メタデータが見つかった場合はキャッシュする (useRefを使用)
         if (tokenMetadata) {
-          setMetadataCache((prevCache) => {
-            const newCache = new Map(prevCache);
-            newCache.set(mintAddress, tokenMetadata);
-            return newCache;
-          });
+          metadataCacheRef.current.set(mintAddress, tokenMetadata);
         }
 
         return tokenMetadata;
@@ -367,11 +361,11 @@ export const useTokenMetadata = (connection: Connection) => {
         }
       }
     },
-    [connection, metadataCache, fetchOffChainMetadata]
+    [connection, fetchOffChainMetadata] // metadataCacheを依存配列から削除
   );
 
   const clearCache = useCallback(() => {
-    setMetadataCache(new Map());
+    metadataCacheRef.current = new Map();
   }, []);
 
   return { fetchMetadata, clearCache };

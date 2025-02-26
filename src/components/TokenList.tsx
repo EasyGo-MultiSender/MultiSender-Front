@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo, forwardRef, useImperativeHandle, useRef } from "react";
 import {
   Box,
   Card,
@@ -11,10 +11,15 @@ import {
 import { ExpandMore } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { TokenMetadata, useTokenMetadata } from "../hooks/useTokenMetadata";
+import { useTokenAccounts } from "../hooks/useTokenAccounts";
+
+// グローバルキャッシュ - コンポーネントのマウント間で保持される
+const CACHED_TOKEN_DATA = new Map<string, any>();
 
 // インターフェース定義
-interface Account {
+export interface Account {
   mint: string;
   uiAmount: number;
 }
@@ -24,8 +29,13 @@ interface TokenWithMetadata {
   metadata: TokenMetadata | null;
 }
 
+// トークンリストへの外部からの参照用インターフェース
+export interface TokenListRef {
+  getTokenAccounts: () => Account[];
+}
+
 // トークン表示用コンポーネント
-const TokenDisplay = ({
+const TokenDisplay = memo(({
   account,
   metadata,
 }: {
@@ -61,47 +71,106 @@ const TokenDisplay = ({
       </Typography>
     </Box>
   );
-};
+});
 
-const TokenList: React.FC<{ tokenAccounts: Account[] }> = ({ tokenAccounts }) => {
+TokenDisplay.displayName = 'TokenDisplay';
+
+
+// トークンリスト用のコンポーネント
+interface TokenListProps {
+  publicKey: PublicKey | null;
+  loading?: boolean; // 既存のloadingを利用するかどうか
+}
+
+  // forwardRefを使用して親コンポーネントからアクセスできるようにする
+  const TokenList = forwardRef<TokenListRef, TokenListProps>(({ publicKey, loading: externalLoading }, ref) => {
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
   const { connection } = useConnection();
   const { fetchMetadata } = useTokenMetadata(connection);
+  
+  // トークンアカウントの取得を内部化
+  const { accounts: tokenAccounts, loading: loadingTokens } = useTokenAccounts(
+    connection,
+    publicKey
+  );
+
+  // 内部のtokenAccountsをrefに保存して参照の安定性を確保
+  const tokenAccountsRef = useRef<Account[]>([]);
+
+  // トークンアカウントが変更されたら内部refを更新
+  useEffect(() => {
+    tokenAccountsRef.current = tokenAccounts;
+  }, [tokenAccounts]);
 
   // すべてのトークンメタデータを保持する状態
   const [tokensWithMetadata, setTokensWithMetadata] = useState<TokenWithMetadata[]>([]);
   const [metadataLoading, setMetadataLoading] = useState(false);
+  const [dataFetched, setDataFetched] = useState(false);
 
-  // すべてのトークンのメタデータを一度に取得
+  // キャッシュキーを生成
+  const cacheKey = publicKey ? publicKey.toString() : "no-wallet";
+
+  // 外部から呼び出し可能な関数を公開
+  useImperativeHandle(ref, () => ({
+    getTokenAccounts: () => tokenAccountsRef.current
+  }), []);
+
+  // メタデータ取得関数
+  const fetchAllMetadata = useCallback(async () => {
+    // すでに取得済みか、publicKeyがない場合は何もしない
+    if (!publicKey || tokenAccounts.length === 0) return;
+
+    // データがすでに取得済みならスキップ
+    if (dataFetched && tokensWithMetadata.length > 0) return;
+
+    // キャッシュをチェック
+    if (CACHED_TOKEN_DATA.has(cacheKey)) {
+      setTokensWithMetadata(CACHED_TOKEN_DATA.get(cacheKey));
+      setDataFetched(true);
+      return;
+    }
+
+    setMetadataLoading(true);
+
+    try {
+      // console.log(`Fetching metadata for ${tokenAccounts.length} tokens...`);
+      
+      // Promise.allを使用して並列にメタデータを取得
+      const metadataPromises = tokenAccounts.map((account) =>
+        fetchMetadata(account.mint)
+          .then((metadata) => ({ account, metadata }))
+          .catch(() => ({ account, metadata: null }))
+      );
+
+      const results = await Promise.all(metadataPromises);
+      // 降順にソート
+      results.sort((a, b) => b.account.uiAmount - a.account.uiAmount);
+
+      // 結果をキャッシュと状態に保存
+      CACHED_TOKEN_DATA.set(cacheKey, results);
+      setTokensWithMetadata(results);
+      setDataFetched(true);
+      
+      // console.log(`Metadata fetch complete, cached with key: ${cacheKey}`);
+    } catch (error) {
+      console.error("Error fetching token metadata:", error);
+    } finally {
+      setMetadataLoading(false);
+    }
+  }, [publicKey, tokenAccounts, fetchMetadata, cacheKey, dataFetched, tokensWithMetadata.length]);
+
+  // publicKeyまたはtokenAccountsが変わったときにデータを取得
   useEffect(() => {
-    const fetchAllMetadata = async () => {
-      if (tokenAccounts.length === 0) return;
-
-      setMetadataLoading(true);
-
-      try {
-        // Promise.allを使用して並列にメタデータを取得
-        const metadataPromises = tokenAccounts.map((account) =>
-          fetchMetadata(account.mint)
-            .then((metadata) => ({ account, metadata }))
-            .catch(() => ({ account, metadata: null }))
-        );
-
-        const results = await Promise.all(metadataPromises);
-        // 決め打ちで降順にソート
-        results.sort((a, b) => b.account.uiAmount - a.account.uiAmount);
-
-        setTokensWithMetadata(results);
-      } catch (error) {
-        console.error("Error fetching token metadata:", error);
-      } finally {
-        setMetadataLoading(false);  
+    if (publicKey && tokenAccounts.length > 0) {
+      // キャッシュが無効になったらリセット
+      if (publicKey.toString() !== cacheKey && dataFetched) {
+        setDataFetched(false);
       }
-    };
-
-    fetchAllMetadata();
-  }, [tokenAccounts]);
+      
+      fetchAllMetadata();
+    }
+  }, [publicKey, tokenAccounts, fetchAllMetadata, cacheKey, dataFetched]);
 
   // 表示するトークンの数を制限
   const displayedTokens = showAll ? tokensWithMetadata : tokensWithMetadata.slice(0, 3);
@@ -109,13 +178,16 @@ const TokenList: React.FC<{ tokenAccounts: Account[] }> = ({ tokenAccounts }) =>
   // 残りのトークン数
   const remainingTokens = tokensWithMetadata.length - 3;
 
+  // ローディング状態を集約
+  const isLoading = externalLoading || loadingTokens || metadataLoading;
+
   return (
     <Card sx={{ mb: 4 }}>
       <CardContent>
         <Typography variant="h6" textAlign="center">
           {t("SPL Tokens")}
         </Typography>
-        {metadataLoading ? (
+        {isLoading ? (
           <Box textAlign="center" p={2}>
             <CircularProgress size={24} />
           </Box>
@@ -138,15 +210,15 @@ const TokenList: React.FC<{ tokenAccounts: Account[] }> = ({ tokenAccounts }) =>
                   size="small"
                   sx={{
                     ":hover": {
-                      color: "#2824f9", // ホバー時に変更する文字色を指定（例：赤）
-                      transition: "all 0.3s", // ホバー時のアニメーションを指定
-                      backgroundColor: "transparent", // 背景色は変更しない
+                      color: "#2824f9", 
+                      transition: "all 0.3s", 
+                      backgroundColor: "transparent", 
                     },
                   }}
                   onClick={() => setShowAll(!showAll)}
                   endIcon={<ExpandMore sx={{ transform: showAll ? "rotate(180deg)" : "none" }} />}
                 >
-                  {showAll ? t("Show less") : t(`Show more (${remainingTokens})`)}
+                  {showAll ? t("Show less") : t("Show more", { count: remainingTokens })}
                 </Button>
               </Box>
             )}
@@ -155,6 +227,9 @@ const TokenList: React.FC<{ tokenAccounts: Account[] }> = ({ tokenAccounts }) =>
       </CardContent>
     </Card>
   );
-};
+});
 
+TokenList.displayName = 'TokenList';
+
+// Sender.tsxに公開する最適化されたトークンリスト
 export default TokenList;
