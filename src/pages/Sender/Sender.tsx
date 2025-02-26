@@ -21,6 +21,7 @@ import {
   ListItem,
   ListItemText,
   Chip,
+  InputAdornment,
 } from "@mui/material";
 import { ContentPaste, ContentCopy, OpenInNew } from "@mui/icons-material";
 
@@ -31,6 +32,7 @@ import { useBalance } from "../../hooks/useBalance";
 import { useTokenAccounts } from "../../hooks/useTokenAccounts";
 import { useTokenMetadata } from "../../hooks/useTokenMetadata";
 import { useTokenTransfer } from "../../hooks/useTokenTransfer";
+import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
 
 // ヘッダーコンポーネント
 import Header from "../../components/Header";
@@ -109,6 +111,7 @@ const Sender: React.FC = () => {
   const { balance, loading: loadingSol } = useBalance(connection, publicKey);
   const { accounts: tokenAccounts, loading: loadingTokens } = useTokenAccounts(connection, publicKey);
   const { transfer, loading: transferring } = useTokenTransfer(connection, publicKey);
+  const { validateAddresses } = useWalletAddressValidation();
 
   // Local state
   const [selectedToken, setSelectedToken] = useState<string>("SOL");
@@ -117,6 +120,8 @@ const Sender: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [transactionResults, setTransactionResults] = useState<TransactionResult[]>([]);
+  const [invalidAddresses, setInvalidAddresses] = useState<string[]>([]);
+  const [duplicateAddresses, setDuplicateAddresses] = useState<string[]>([]);
 
   // ユーティリティ関数
   const copyAddress = async (addr: string) => {
@@ -136,82 +141,98 @@ const Sender: React.FC = () => {
 
   // handleTransfer 関数の修正
   const handleTransfer = async () => {
-    if (!connected || !publicKey) return;
-
+    // ウォレット接続チェック
+    if (!connected || !publicKey) {
+      setSnackbarMessage("Please connect your wallet");
+      setSnackbarOpen(true);
+      return;
+    }
+   
+    // 受取人アドレスとAmountを準備
+    const addressEntries = recipientAddresses
+      .split('\n')
+      .map(line => {
+        const [address, amount] = line.split(',').map(part => part.trim());
+        return { 
+          address, 
+          amount: parseFloat(amount || '0') 
+        };
+      })
+      .filter(item => item.address.length > 0);
+   
+    // アドレスの妥当性検証
+    const { 
+      validAddresses, 
+      invalidAddresses: invalidList, 
+      duplicateAddresses: duplicateList 
+    } = validateAddresses(addressEntries.map(entry => entry.address));
+   
+    // 検証エラーの状態設定
+    setInvalidAddresses(invalidList);
+    setDuplicateAddresses(duplicateList);
+   
+    // 妥当性エラーがある場合は処理中止
+    if (invalidList.length > 0 || duplicateList.length > 0) {
+      setSnackbarMessage("Please correct invalid or duplicate addresses");
+      setSnackbarOpen(true);
+      return;
+    }
+   
+    // 転送総額の計算
+    const totalAmount = addressEntries
+      .filter(entry => validAddresses.includes(entry.address))
+      .reduce((sum, entry) => sum + entry.amount, 0);
+   
+    // 残高チェック
     try {
-      const recipients = recipientAddresses
-        .split('\n')
-        .map(addr => addr.trim())
-        .filter(addr => addr.length > 0);
-
-      if (recipients.length === 0) {
-        setSnackbarMessage("No valid recipient addresses found");
-        setSnackbarOpen(true);
-        return;
-      }
-
-      // 選択されたトークンに関する情報を取得
-      let selectedTokenInfo = null;
-      if (selectedToken !== "SOL") {
-        // トークンアカウントから選択されたトークンの情報を探す
-        selectedTokenInfo = tokenAccounts.find(account => account.mint === selectedToken);
-        
-        if (!selectedTokenInfo) {
-          setSnackbarMessage("Selected token information not found");
-          setSnackbarOpen(true);
-          return;
-        }
-        
-        // 残高チェック
-        const totalAmount = transferAmount * recipients.length;
-        if (totalAmount > selectedTokenInfo.uiAmount) {
-          setSnackbarMessage(`Insufficient balance. You need ${totalAmount} tokens but have only ${selectedTokenInfo.uiAmount}`);
+      if (selectedToken === "SOL") {
+        // SOLの残高チェック
+        if (balance && totalAmount > balance) {
+          setSnackbarMessage(`Insufficient SOL balance. Required: ${totalAmount}, Available: ${balance}`);
           setSnackbarOpen(true);
           return;
         }
       } else {
-        // SOLの場合は残高チェック
-        const totalAmount = transferAmount * recipients.length;
-        if (balance && totalAmount > balance) {
-          setSnackbarMessage(`Insufficient SOL balance. You need ${totalAmount} SOL but have only ${balance}`);
+        // トークンの残高チェック
+        const selectedTokenAccount = tokenAccounts.find(account => account.mint === selectedToken);
+        if (!selectedTokenAccount || totalAmount > selectedTokenAccount.uiAmount) {
+          setSnackbarMessage(`Insufficient token balance. Required: ${totalAmount}, Available: ${selectedTokenAccount?.uiAmount || 0}`);
           setSnackbarOpen(true);
           return;
         }
       }
-
-      // 処理中の状態を設定
-      setSnackbarMessage("Processing transfers... Please wait and approve transactions in your wallet.");
+   
+      // 転送処理中メッセージ
+      setSnackbarMessage("Processing transfers... Please approve in your wallet");
       setSnackbarOpen(true);
-
+   
       // 転送実行
       const results = await transfer({
-        recipients,
-        amount: transferAmount,
+        recipients: validAddresses,
+        amount: addressEntries
+          .filter(entry => validAddresses.includes(entry.address))
+          .map(entry => entry.amount)[0], // 最初のエントリーのamountを使用
         mint: selectedToken === "SOL" ? undefined : selectedToken
       });
-
-      const formattedResults: TransactionResult[] = results.map(result => ({
-        signature: result.signature,
-        status: result.status,
-        timestamp: Date.now(),
-        error: result.error,
-        recipients: result.recipients || [],
-        amount: transferAmount,
-        token: selectedToken
-      }));
-
-      setTransactionResults(prev => [...formattedResults, ...prev]);
-      
-      const successful = results.filter(r => r.status === 'success');
-      if (successful.length > 0) {
-        setSnackbarMessage(`Successfully transferred to ${successful.length} out of ${recipients.length} recipients`);
-      } else {
-        setSnackbarMessage(`Transfer failed. Check transaction details for more information.`);
-      }
+   
+      // トランザクション結果の更新
+      setTransactionResults(prev => [
+        ...results.map(result => ({
+          ...result,
+          token: selectedToken,
+          amount: totalAmount
+        })),
+        ...prev
+      ]);
+   
+      // 成功/失敗フィードバック
+      const successCount = results.filter(r => r.status === 'success').length;
+      setSnackbarMessage(`Transferred to ${successCount} out of ${validAddresses.length} recipients`);
       setSnackbarOpen(true);
+   
     } catch (error) {
       console.error("Transfer failed:", error);
-      setSnackbarMessage("Transfer failed: " + (error as Error).message);
+      setSnackbarMessage(`Transfer failed: ${(error as Error).message}`);
       setSnackbarOpen(true);
     }
   };
@@ -330,40 +351,94 @@ const Sender: React.FC = () => {
               <Box position="relative">
                 <TextField
                   multiline
-                  rows={4}
+                  rows={30}
                   fullWidth
                   value={recipientAddresses}
-                  onChange={(e) => setRecipientAddresses(e.target.value)}
-                  placeholder="Enter Solana addresses (one per line)"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setRecipientAddresses(value);
+                    
+                    // アドレスとAmountを同時にバリデーション
+                    const addresses = value
+                      .split('\n')
+                      .map(line => {
+                        const [address, amount] = line.split(',').map(part => part.trim());
+                        return { address, amount: parseFloat(amount || '0') };
+                      })
+                      .filter(item => item.address.length > 0);
+                    
+                    const { 
+                      validAddresses, 
+                      invalidAddresses: invalidList, 
+                      duplicateAddresses: duplicateList 
+                    } = validateAddresses(addresses.map(item => item.address));
+                    
+                    setInvalidAddresses(invalidList);
+                    setDuplicateAddresses(duplicateList);
+                  }}
+                  placeholder="Enter Solana addresses and amounts (address,amount per line)"
+                  error={invalidAddresses.length > 0 || duplicateAddresses.length > 0}
+                  helperText={
+                    <>
+                      {invalidAddresses.length > 0 && `Invalid addresses: ${invalidAddresses.join(', ')}`}
+                      {duplicateAddresses.length > 0 && (
+                        <>
+                          {invalidAddresses.length > 0 && <br />}
+                          {`Duplicate addresses: ${duplicateAddresses.join(', ')}`}
+                        </>
+                      )}
+                    </>
+                  }
+                  InputProps={{
+                    inputComponent: 'textarea',
+                    inputProps: {
+                      style: {
+                        resize: 'vertical',
+                        overflow: 'auto',
+                        wordWrap: 'break-word',
+                        whiteSpace: 'pre-wrap'
+                      }
+                    },
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton onClick={pasteAddresses}>
+                          <ContentPaste />
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                  sx={{
+                    '& .MuiInputBase-input': {
+                      color: (theme) => theme.palette.text.primary,
+                      '& ::selection': {
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)'
+                      }
+                    },
+                    '& textarea': {
+                      '&::selection': {
+                        backgroundColor: 'rgba(255, 0, 0, 0.1)'
+                      }
+                    }
+                  }}
                 />
-                <IconButton
-                  onClick={pasteAddresses}
-                  sx={{ position: "absolute", top: 8, right: 8 }}
-                >
-                  <ContentPaste />
-                </IconButton>
               </Box>
               <Typography variant="caption" color="gray">
-                Addresses: {parsedAddresses.length}
-              </Typography>
-            </Box>
-
-            {/* Amount */}
-            <Box mb={3}>
-              <Typography variant="body2" fontWeight="bold" mb={1}>
-                Amount
-              </Typography>
-              <TextField
-                type="number"
-                fullWidth
-                value={transferAmount}
-                onChange={(e) => setTransferAmount(Number(e.target.value))}
-                InputProps={{ inputProps: { min: 0, step: "any" } }}
-                placeholder="Enter amount"
-              />
-              <Typography variant="caption" color="blue">
-                Total amount: {transferAmount * parsedAddresses.length}{" "}
-                {selectedToken === "SOL" ? "SOL" : "tokens"}
+                Entries: {
+                  recipientAddresses
+                    .split('\n')
+                    .filter(line => line.trim().length > 0)
+                    .length
+                }
+                {invalidAddresses.length > 0 && (
+                  <span style={{ color: 'red', marginLeft: '10px' }}>
+                    Invalid addresses: {invalidAddresses.length}
+                  </span>
+                )}
+                {duplicateAddresses.length > 0 && (
+                  <span style={{ color: 'red', marginLeft: '10px' }}>
+                    Duplicate addresses: {duplicateAddresses.length}
+                  </span>
+                )}
               </Typography>
             </Box>
 
@@ -373,7 +448,25 @@ const Sender: React.FC = () => {
               color="primary"
               fullWidth
               onClick={handleTransfer}
-              disabled={!connected || transferring || !parsedAddresses.length || !transferAmount}
+              disabled={
+                !connected || 
+                transferring || 
+                recipientAddresses
+                  .split('\n')
+                  .map(line => {
+                    const [address, amount] = line.split(',').map(part => part.trim());
+                    return { address, amount: parseFloat(amount || '0') };
+                  })
+                  .filter(item => item.address.length > 0).length === 0 || 
+                (recipientAddresses
+                  .split('\n')
+                  .map(line => {
+                    const [address, amount] = line.split(',').map(part => part.trim());
+                    return { address, amount: parseFloat(amount || '0') };
+                  })
+                  .filter(item => item.address.length > 0)
+                  .some(item => isNaN(item.amount) || item.amount <= 0)
+                )}
             >
               {transferring ? (
                 <>
