@@ -55,6 +55,12 @@ interface AddressEntry {
   amount: number;
 }
 
+// CSVからインポートされた受取人情報
+interface Recipient {
+  walletAddress: string;
+  amount: number;
+}
+
 const Sender: React.FC = () => {
   // Hooks
   const { connection } = useConnection();
@@ -139,6 +145,17 @@ const Sender: React.FC = () => {
   useEffect(() => {
     parseAddressEntries();
   }, [recipientAddresses, parseAddressEntries]);
+
+  // CSVからのインポート処理
+  const handleRecipientsLoaded = useCallback((recipients: Recipient[]) => {
+    // CSVからインポートされた受取人情報を変換して設定
+    const formattedAddresses = recipients.map(
+      r => `${r.walletAddress},${r.amount}`
+    ).join('\n');
+    
+    // テキストフィールドを更新
+    setRecipientAddresses(formattedAddresses);
+  }, []);
 
   // ユーティリティ関数
   const copyAddress = async (addr: string) => {
@@ -425,30 +442,15 @@ const Sender: React.FC = () => {
                   display="flex"
                   justifyContent="space-between"
                   alignItems="center"
+                  mt={1}
                 >
                   <Typography variant="caption" color="gray">
-                    {t("Addresses")}: {parsedAddresses.length}
+                    {t("Valid entries")}: {parsedEntries.length}
                   </Typography>
-                  <UploadButton/>
+                  <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
                 </Box>
-              </Box>
-
-              {/* Amount */}
-              <Box mb={3}>
-                <Typography variant="body2" fontWeight="bold" mb={1}>
-                  {t("Amount")}
-                </Typography>
-                <TextField
-                  type="number"
-                  fullWidth
-                  value={transferAmount}
-                  onChange={(e) => setTransferAmount(Number(e.target.value))}
-                  InputProps={{ inputProps: { min: 0, step: "any" } }}
-                  placeholder="Enter amount"
-                />
-                <Typography variant="caption" color="blue">
-                  {t("Total amount")}: {transferAmount * parsedAddresses.length}{" "}
-                  {selectedToken === "SOL" ? "SOL" : "tokens"}
+                <Typography variant="caption" color="primary" fontWeight="bold" display="block" textAlign="right">
+                  {t("Total amount")}: {totalAmount.toFixed(6)} {selectedToken === "SOL" ? "SOL" : "tokens"}
                 </Typography>
               </Box>
 
