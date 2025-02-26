@@ -139,6 +139,7 @@ const TokenList: React.FC<TokenListProps> = ({ tokenAccounts, loading }) => {
             {tokensWithMetadata.length > 3 && (
               <Box textAlign="center" mt={1}>
                 <Button
+                  disableRipple
                   variant="text"
                   size="small"
                   onClick={() => setShowAll(!showAll)}
