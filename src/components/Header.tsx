@@ -72,8 +72,8 @@ const Header = memo(() => {
             <RocketLaunchIcon sx={{ color: "#47dded" }} />
           </IconButton>
 
-          <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 3 }}>
-            {t("AppName")}
+          <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 2 }}>
+            {t("easy go")}
           </Typography>
 
           <Tabs
