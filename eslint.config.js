@@ -56,7 +56,7 @@ export default [
 
       // 未使用の変数は先頭アンダースコア (_var) を許可
       'unused-imports/no-unused-vars': [
-        'off',
+        'error',
         {
           vars: 'all',
           varsIgnorePattern: '^_',
