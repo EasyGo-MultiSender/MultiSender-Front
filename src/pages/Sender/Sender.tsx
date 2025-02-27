@@ -432,7 +432,7 @@ const Sender: React.FC = () => {
                   />
                   <IconButton
                     onClick={pasteAddresses}
-                    sx={{ position: "absolute", top: 8, right: 8 }}
+                    sx={{ position: "absolute", top: 8, right: 18 }}
                   >
                     <ContentPaste />
                   </IconButton>
@@ -452,7 +452,7 @@ const Sender: React.FC = () => {
                 <Typography variant="caption" color="primary" fontWeight="bold" display="block" textAlign="right">
                   {t("Total amount")}: {totalAmount.toFixed(6)} {selectedToken === "SOL" ? "SOL" : "tokens"}
                 </Typography>
-              </Box>
+              </Box>  
 
               {/* Transfer Button */}
               <Button
