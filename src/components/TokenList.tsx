@@ -24,14 +24,22 @@ export interface Account {
   uiAmount: number;
 }
 
-interface TokenWithMetadata {
+// メタデータを含む拡張トークン情報
+export interface TokenWithMetadata {
   account: Account;
   metadata: TokenMetadata | null;
 }
 
-// トークンリストへの外部からの参照用インターフェース
+// トークンリストへの外部からの参照用インターフェース（拡張版）
 export interface TokenListRef {
+  // 基本的なアカウント情報を取得（後方互換性のため）
   getTokenAccounts: () => Account[];
+  // メタデータを含むトークン情報を取得（新機能）
+  getTokensWithMetadata: () => TokenWithMetadata[];
+  // メタデータの読み込みを手動で実行 (同期的に取得するための関数)
+  fetchMetadata: () => Promise<TokenWithMetadata[]>;
+  // データ読み込み状態を確認
+  isLoading: () => boolean;
 }
 
 // トークン表示用コンポーネント
@@ -80,10 +88,11 @@ TokenDisplay.displayName = 'TokenDisplay';
 interface TokenListProps {
   publicKey: PublicKey | null;
   loading?: boolean; // 既存のloadingを利用するかどうか
+  onDataLoaded?: (tokens: TokenWithMetadata[]) => void; // データが読み込まれたときのコールバック
 }
 
-  // forwardRefを使用して親コンポーネントからアクセスできるようにする
-  const TokenList = forwardRef<TokenListRef, TokenListProps>(({ publicKey, loading: externalLoading }, ref) => {
+// forwardRefを使用して親コンポーネントからアクセスできるようにする
+const TokenList = forwardRef<TokenListRef, TokenListProps>(({ publicKey, loading: externalLoading, onDataLoaded }, ref) => {
   const [showAll, setShowAll] = useState(false);
   const { t } = useTranslation();
   const { connection } = useConnection();
@@ -97,6 +106,9 @@ interface TokenListProps {
 
   // 内部のtokenAccountsをrefに保存して参照の安定性を確保
   const tokenAccountsRef = useRef<Account[]>([]);
+  
+  // メタデータを含むトークン情報をrefに保存
+  const tokensWithMetadataRef = useRef<TokenWithMetadata[]>([]);
 
   // トークンアカウントが変更されたら内部refを更新
   useEffect(() => {
@@ -111,30 +123,31 @@ interface TokenListProps {
   // キャッシュキーを生成
   const cacheKey = publicKey ? publicKey.toString() : "no-wallet";
 
-  // 外部から呼び出し可能な関数を公開
-  useImperativeHandle(ref, () => ({
-    getTokenAccounts: () => tokenAccountsRef.current
-  }), []);
-
   // メタデータ取得関数
-  const fetchAllMetadata = useCallback(async () => {
-    // すでに取得済みか、publicKeyがない場合は何もしない
-    if (!publicKey || tokenAccounts.length === 0) return;
+  const fetchAllMetadata = useCallback(async (): Promise<TokenWithMetadata[]> => {
+    // キャッシュをチェック（publicKeyがない場合でも空配列を返せるようにする）
+    if (!publicKey || tokenAccounts.length === 0) {
+      return [];
+    }
 
-    // データがすでに取得済みならスキップ
-    if (dataFetched && tokensWithMetadata.length > 0) return;
+    // データがすでに取得済みならそのデータを返す
+    if (dataFetched && tokensWithMetadata.length > 0) {
+      return tokensWithMetadata;
+    }
 
     // キャッシュをチェック
     if (CACHED_TOKEN_DATA.has(cacheKey)) {
-      setTokensWithMetadata(CACHED_TOKEN_DATA.get(cacheKey));
+      const cachedData = CACHED_TOKEN_DATA.get(cacheKey);
+      setTokensWithMetadata(cachedData);
+      tokensWithMetadataRef.current = cachedData; // refも更新
       setDataFetched(true);
-      return;
+      return cachedData;
     }
 
     setMetadataLoading(true);
 
     try {
-      // console.log(`Fetching metadata for ${tokenAccounts.length} tokens...`);
+      console.log(`Fetching metadata for ${tokenAccounts.length} tokens...`);
       
       // Promise.allを使用して並列にメタデータを取得
       const metadataPromises = tokenAccounts.map((account) =>
@@ -150,15 +163,24 @@ interface TokenListProps {
       // 結果をキャッシュと状態に保存
       CACHED_TOKEN_DATA.set(cacheKey, results);
       setTokensWithMetadata(results);
+      tokensWithMetadataRef.current = results; // refも更新
       setDataFetched(true);
       
-      // console.log(`Metadata fetch complete, cached with key: ${cacheKey}`);
+      console.log(`Metadata fetch complete, found ${results.length} tokens`);
+      
+      // データロード完了時にコールバックを実行
+      if (onDataLoaded) {
+        onDataLoaded(results);
+      }
+      
+      return results;
     } catch (error) {
       console.error("Error fetching token metadata:", error);
+      return [];
     } finally {
       setMetadataLoading(false);
     }
-  }, [publicKey, tokenAccounts, fetchMetadata, cacheKey, dataFetched, tokensWithMetadata.length]);
+  }, [publicKey, tokenAccounts, fetchMetadata, cacheKey, dataFetched, tokensWithMetadata, onDataLoaded]);
 
   // publicKeyまたはtokenAccountsが変わったときにデータを取得
   useEffect(() => {
@@ -172,6 +194,23 @@ interface TokenListProps {
     }
   }, [publicKey, tokenAccounts, fetchAllMetadata, cacheKey, dataFetched]);
 
+  // ローディング状態確認用の関数
+  const isLoading = useCallback(() => {
+    return externalLoading || loadingTokens || metadataLoading;
+  }, [externalLoading, loadingTokens, metadataLoading]);
+
+  // 外部から呼び出し可能な関数を公開（拡張版）
+  useImperativeHandle(ref, () => ({
+    // 基本的なアカウント情報（後方互換性用）
+    getTokenAccounts: () => tokenAccountsRef.current,
+    // メタデータを含むトークン情報（新機能）
+    getTokensWithMetadata: () => tokensWithMetadataRef.current,
+    // メタデータの読み込みを手動で実行 (新機能)
+    fetchMetadata: fetchAllMetadata,
+    // データ読み込み状態を確認
+    isLoading
+  }), [tokenAccountsRef, tokensWithMetadataRef, fetchAllMetadata, isLoading]);
+
   // 表示するトークンの数を制限
   const displayedTokens = showAll ? tokensWithMetadata : tokensWithMetadata.slice(0, 3);
 
@@ -179,7 +218,7 @@ interface TokenListProps {
   const remainingTokens = tokensWithMetadata.length - 3;
 
   // ローディング状態を集約
-  const isLoading = externalLoading || loadingTokens || metadataLoading;
+  const loading = isLoading();
 
   return (
     <Card sx={{ mb: 4 }}>
@@ -187,7 +226,7 @@ interface TokenListProps {
         <Typography variant="h6" textAlign="center">
           {t("SPL Tokens")}
         </Typography>
-        {isLoading ? (
+        {loading ? (
           <Box textAlign="center" p={2}>
             <CircularProgress size={24} />
           </Box>

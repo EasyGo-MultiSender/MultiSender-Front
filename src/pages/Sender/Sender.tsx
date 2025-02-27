@@ -1,4 +1,4 @@
-// メインのSenderコンポーネント
+// メインのSenderコンポーネント（SPLトークン選択改善版）
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Box,
@@ -22,6 +22,7 @@ import {
   ListItem,
   ListItemText,
   Chip,
+  ListItemAvatar,
 } from "@mui/material";
 import { ContentPaste, ContentCopy, OpenInNew } from "@mui/icons-material";
 
@@ -35,7 +36,7 @@ import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidati
 
 // ヘッダーコンポーネント
 import Header from "../../components/Header";
-import TokenList, { TokenListRef } from "../../components/TokenList";
+import TokenList, { TokenListRef, TokenWithMetadata } from "../../components/TokenList";
 import UploadButton from "../../components/UploadButton";
 
 // インターフェース定義
@@ -66,7 +67,7 @@ const Sender: React.FC = () => {
   const { connection } = useConnection();
   const { publicKey, connected, walletInfo } = useWallet();
   const { balance, loading: loadingSol } = useBalance(connection, publicKey);
-  const { transfer, loading: transferring } = useTokenTransfer(connection, publicKey);
+  const { transfer, transferWithIndividualAmounts, loading: transferring } = useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
 
@@ -84,8 +85,60 @@ const Sender: React.FC = () => {
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   
+  // メタデータ付きトークンを保持する状態
+  const [tokensWithMetadata, setTokensWithMetadata] = useState<TokenWithMetadata[]>([]);
+  // トークンリストのロード状態
+  const [tokensLoading, setTokensLoading] = useState(true);
+  
   // 最後にパースした内容を保持して不要な再パースを防止
   const lastParsedAddressesRef = useRef<string>("");
+
+  // トークンメタデータを含むトークンアカウントを取得する関数 (明示的に実行)
+  const fetchTokensWithMetadata = useCallback(async () => {
+    if (!tokenListRef.current) return [];
+    
+    setTokensLoading(true);
+    try {
+      console.log("Explicitly fetching token metadata in Sender.tsx");
+      const tokens = await tokenListRef.current.fetchMetadata();
+      setTokensWithMetadata(tokens);
+      
+      console.log(`Found ${tokens.length} tokens with metadata`);
+      // tokens配列の内容をコンソールに出力して確認
+      if (tokens.length > 0) {
+        tokens.forEach((token, index) => {
+          console.log(`Token ${index+1}:`, {
+            mint: token.account.mint,
+            amount: token.account.uiAmount,
+            symbol: token.metadata?.symbol || 'Unknown',
+            name: token.metadata?.name || 'Unknown Token'
+          });
+        });
+      }
+      
+      return tokens;
+    } catch (error) {
+      console.error("Error fetching tokens with metadata:", error);
+      return [];
+    } finally {
+      setTokensLoading(false);
+    }
+  }, []);
+
+  // TokenListからのデータロード完了時のコールバック
+  const handleTokenDataLoaded = useCallback((tokens: TokenWithMetadata[]) => {
+    console.log(`Token data loaded callback: ${tokens.length} tokens received`);
+    setTokensWithMetadata(tokens);
+    setTokensLoading(false);
+  }, []);
+
+  // コンポーネントマウント時にトークンメタデータを取得
+  useEffect(() => {
+    if (connected && publicKey) {
+      // ウォレット接続時に明示的にトークンデータを取得
+      fetchTokensWithMetadata();
+    }
+  }, [connected, publicKey, fetchTokensWithMetadata]);
 
   // アドレスとアマウントの構文解析と検証を行うメモ化された関数
   const parseAddressEntries = useCallback(() => {
@@ -173,13 +226,7 @@ const Sender: React.FC = () => {
     }
   };
 
-  // tokenListRefを通じてトークンアカウントデータを取得する関数
-  // メモ化して安定したリファレンスを提供
-  const getTokenAccountsForSelection = useCallback(() => {
-    return tokenListRef.current?.getTokenAccounts() || [];
-  }, []);
-
-  // handleTransfer 関数
+  // handleTransfer 関数（修正版）
   const handleTransfer = async () => {
     // ウォレット接続チェック
     if (!connected || !publicKey) {
@@ -193,7 +240,7 @@ const Sender: React.FC = () => {
       setSnackbarOpen(true);
       return;
     }
-
+  
     // 妥当性エラーがある場合は処理中止
     if (invalidEntries.length > 0 || duplicateAddresses.length > 0) {
       setSnackbarMessage(
@@ -206,7 +253,15 @@ const Sender: React.FC = () => {
     }
   
     // TokenListから最新のトークンアカウント情報を取得
-    const tokenAccounts = tokenListRef.current?.getTokenAccounts() || [];
+    // まずトークンが読み込まれていることを確認
+    let tokens = tokensWithMetadata;
+    if (tokens.length === 0 && selectedToken !== "SOL") {
+      try {
+        tokens = await fetchTokensWithMetadata();
+      } catch (err) {
+        console.error("Failed to fetch tokens before transfer:", err);
+      }
+    }
   
     // 残高チェック
     if (selectedToken === "SOL") {
@@ -218,78 +273,82 @@ const Sender: React.FC = () => {
       }
     } else {
       // トークンの残高チェック
-      const selectedTokenAccount = tokenAccounts.find(account => account.mint === selectedToken);
-      if (!selectedTokenAccount) {
+      const selectedTokenInfo = tokens.find(token => token.account.mint === selectedToken);
+      if (!selectedTokenInfo) {
         setSnackbarMessage("Selected token information not found");
         setSnackbarOpen(true);
         return;
       }
       
-      if (totalAmount > selectedTokenAccount.uiAmount) {
-        setSnackbarMessage(`Insufficient token balance. Required: ${totalAmount.toFixed(6)}, Available: ${selectedTokenAccount.uiAmount.toFixed(6)}`);
+      if (totalAmount > selectedTokenInfo.account.uiAmount) {
+        setSnackbarMessage(`Insufficient token balance. Required: ${totalAmount.toFixed(6)}, Available: ${selectedTokenInfo.account.uiAmount.toFixed(6)}`);
         setSnackbarOpen(true);
         return;
       }
     }
-
+  
     try {
       // 転送処理中メッセージ
       setSnackbarMessage(
-        "Processing transfers... Please wait and approve transactions in your wallet."
+        "Processing transfers... Please wait and approve transaction in your wallet."
       );
       setSnackbarOpen(true);
-
-      // バッチに分割して転送実行（最大10アドレスずつ）
-      const batchSize = 10;
-      const batches: AddressEntry[][] = [];
-      
-      for (let i = 0; i < parsedEntries.length; i += batchSize) {
-        batches.push(parsedEntries.slice(i, i + batchSize));
+  
+      // 選択されたトークンの表示名を取得
+      let tokenDisplayName = "SOL";
+      if (selectedToken !== "SOL") {
+        const tokenInfo = tokens.find(t => t.account.mint === selectedToken);
+        tokenDisplayName = tokenInfo?.metadata?.symbol || selectedToken.slice(0, 4) + "..." + selectedToken.slice(-4);
       }
-      
-      const allResults: TransactionResult[] = [];
-      
-      for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-        const batch = batches[batchIndex];
-        const recipients = batch.map(entry => entry.address);
-        const firstAmount = batch[0].amount; // バッチ内の最初のアドレスの金額を使用
+  
+      // 改善: transferWithIndividualAmountsメソッドを使用
+      // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
+      const results = await transferWithIndividualAmounts(
+        parsedEntries.map(entry => ({
+          address: entry.address,
+          amount: entry.amount
+        })),
+        selectedToken === "SOL" ? undefined : selectedToken
+      );
+  
+      // 結果をフォーマット
+      const formattedResults: TransactionResult[] = results.map((result) => {
+        // バッチ処理された結果から適切な情報を抽出
+        const recipientAddresses = result.recipients || [];
         
-        // プログレスアップデート
-        setSnackbarMessage(
-          `Processing batch ${batchIndex + 1}/${batches.length}... Please approve in your wallet.`
-        );
-        
-        // 転送実行
-        const results = await transfer({
-          recipients,
-          amount: firstAmount,
-          mint: selectedToken === "SOL" ? undefined : selectedToken
+        // この結果に含まれるすべての受取人に対する送金額を収集
+        const recipientAmounts = recipientAddresses.map(addr => {
+          const entry = parsedEntries.find(e => e.address === addr);
+          return entry ? entry.amount : 0;
         });
         
-        // バッチ結果をフォーマット
-        const formattedResults: TransactionResult[] = results.map((result) => ({
+        // 合計金額を計算（複数受取人の場合）
+        const totalBatchAmount = recipientAmounts.reduce((sum, amount) => sum + amount, 0);
+        
+        return {
           signature: result.signature,
           status: result.status,
           timestamp: result.timestamp || Date.now(),
           error: result.error,
-          recipients: result.recipients || [],
-          amount: firstAmount,
-          token: selectedToken,
-        }));
-        
-        allResults.push(...formattedResults);
-        
-        // バッチ間の遅延
-        if (batchIndex < batches.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
+          recipients: recipientAddresses,
+          // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
+          amount: recipientAddresses.length === 1 ? recipientAmounts[0] : totalBatchAmount / recipientAddresses.length,
+          token: tokenDisplayName,
+          // 追加フィールド: このバッチに含まれるすべての受取人と金額
+          recipientDetails: recipientAddresses.map((addr, idx) => ({
+            address: addr,
+            amount: recipientAmounts[idx]
+          }))
+        };
+      });
       
       // 全トランザクション結果を更新
-      setTransactionResults(prev => [...allResults, ...prev]);
+      setTransactionResults(prev => [...formattedResults, ...prev]);
   
       // 成功/失敗フィードバック
-      const successCount = allResults.filter(r => r.status === 'success').length;
+      const successCount = formattedResults.reduce((count, result) => 
+        result.status === 'success' ? count + result.recipients.length : count, 0);
+        
       if (successCount > 0) {
         setSnackbarMessage(`Successfully transferred to ${successCount} out of ${parsedEntries.length} recipients`);
       } else {
@@ -303,6 +362,35 @@ const Sender: React.FC = () => {
       setSnackbarOpen(true);
     }
   };
+
+  // 選択されたトークンの情報を取得
+  const getSelectedTokenInfo = useCallback(() => {
+    if (selectedToken === "SOL") {
+      return {
+        symbol: "SOL",
+        name: "Solana",
+        mint: "SOL",
+        icon: "/solana-icon.png" // SOLアイコンのパス
+      };
+    }
+    
+    const tokenInfo = tokensWithMetadata.find(t => t.account.mint === selectedToken);
+    return {
+      symbol: tokenInfo?.metadata?.symbol || "Unknown",
+      name: tokenInfo?.metadata?.name || "Unknown Token",
+      mint: selectedToken,
+      icon: tokenInfo?.metadata?.uri || "/token-placeholder.png"
+    };
+  }, [selectedToken, tokensWithMetadata]);
+
+  // 選択中のトークン情報
+  const selectedTokenInfo = getSelectedTokenInfo();
+
+  // トークン選択肢が準備できているかどうか
+  const tokenSelectReady = !tokensLoading && (tokensWithMetadata.length > 0 || connected);
+
+  // トークンリストがロード中かどうか
+  const isTokenListLoading = tokensLoading || (tokenListRef.current?.isLoading() ?? false);
 
   return (
     <>
@@ -379,6 +467,7 @@ const Sender: React.FC = () => {
           <TokenList 
             publicKey={publicKey} 
             ref={tokenListRef}
+            onDataLoaded={handleTokenDataLoaded}
           />
 
           {/* Transfer Form */}
@@ -388,20 +477,92 @@ const Sender: React.FC = () => {
                 {t("Token Transfer")}
               </Typography>
 
-              {/* Token Selection */}
+              {/* Token Selection - 改善版 */}
               <FormControl fullWidth sx={{ mb: 3 }}>
                 <InputLabel>{t("Select Token")}</InputLabel>
                 <Select
                   value={selectedToken}
                   label={t("Select Token")}
                   onChange={(e) => setSelectedToken(e.target.value)}
+                  renderValue={(selected) => (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Avatar 
+                        src={selectedTokenInfo.icon}
+                        alt={selectedTokenInfo.symbol}
+                        sx={{ width: 24, height: 24 }}
+                      />
+                      <Typography>
+                        {selectedTokenInfo.symbol} - {selectedTokenInfo.name}
+                      </Typography>
+                    </Box>
+                  )}
                 >
-                  <MenuItem value="SOL">SOL</MenuItem>
-                  {getTokenAccountsForSelection().map((account) => (
-                    <MenuItem key={account.mint} value={account.mint}>
-                      {account.mint.slice(0, 4)}...{account.mint.slice(-4)}
+                  <MenuItem value="SOL">
+                    <ListItemAvatar>
+                      <Avatar 
+                        src="/solana-icon.png"
+                        alt="SOL"
+                        sx={{ width: 24, height: 24 }}
+                      />
+                    </ListItemAvatar>
+                    <ListItemText 
+                      primary="SOL - Solana" 
+                      secondary="Native Token"
+                    />
+                  </MenuItem>
+
+                  {/* トークンのロード状態表示 */}
+                  {isTokenListLoading ? (
+                    <MenuItem disabled>
+                      <Box display="flex" alignItems="center" py={1}>
+                        <CircularProgress size={20} sx={{ mr: 2 }} />
+                        <Typography>Loading tokens...</Typography>
+                      </Box>
                     </MenuItem>
-                  ))}
+                  ) : tokensWithMetadata.length === 0 ? (
+                    <MenuItem disabled>
+                      <Typography color="text.secondary">No SPL tokens found</Typography>
+                    </MenuItem>
+                  ) : (
+                    tokensWithMetadata.map((token) => (
+                      <MenuItem key={token.account.mint} value={token.account.mint}>
+                        <ListItemAvatar>
+                          <Avatar 
+                            src={token.metadata?.uri || "/token-placeholder.png"}
+                            alt={token.metadata?.symbol || "Token"}
+                            sx={{ width: 24, height: 24 }}
+                          />
+                        </ListItemAvatar>
+                        <ListItemText 
+                          primary={`${token.metadata?.symbol || "Unknown"} - ${token.metadata?.name || "Unknown Token"}`}
+                          secondary={`${token.account.mint.slice(0, 6)}...${token.account.mint.slice(-6)}`}
+                        />
+                      </MenuItem>
+                    ))
+                  )}
+
+                  {/* トークンデータ手動更新ボタン */}
+                  {connected && (
+                    <MenuItem 
+                      onClick={(e) => {
+                        e.preventDefault();
+                        fetchTokensWithMetadata();
+                      }}
+                      sx={{ 
+                        color: 'primary.main',
+                        borderTop: '1px solid rgba(0,0,0,0.1)' 
+                      }}
+                    >
+                      <Box display="flex" alignItems="center" width="100%" justifyContent="center">
+                        <Typography fontWeight="bold">
+                          {isTokenListLoading ? 'Refreshing...' : 'Refresh token list'}
+                        </Typography>
+                        {isTokenListLoading && (
+                          <CircularProgress size={16} sx={{ ml: 1 }} />
+                        )}
+                      </Box>
+                    </MenuItem>
+                  )}
                 </Select>
               </FormControl>
 
@@ -450,7 +611,7 @@ const Sender: React.FC = () => {
                   <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
                 </Box>
                 <Typography variant="caption" color="primary" fontWeight="bold" display="block" textAlign="right">
-                  {t("Total amount")}: {totalAmount.toFixed(6)} {selectedToken === "SOL" ? "SOL" : "tokens"}
+                  {t("Total amount")}: {totalAmount.toFixed(6)} {selectedTokenInfo.symbol}
                 </Typography>
               </Box>  
 
@@ -491,7 +652,7 @@ const Sender: React.FC = () => {
                           p: 2,
                         }}
                       >
-                        {/* Status and Timestamp */}
+                       {/* Status and Timestamp */}
                         <Box display="flex" alignItems="center" width="100%" mb={1}>
                           <Chip
                             label={result.status}
@@ -517,15 +678,51 @@ const Sender: React.FC = () => {
                             p: 1,
                           }}
                         >
-                          <Typography variant="body2">
-                            {result.amount} {result.token === "SOL" ? "SOL" : "tokens"}
-                            {result.recipients.length > 1 ? ` x ${result.recipients.length} ${t("recipients")}` : ''}
-                          </Typography>
-                          {result.recipients.length > 1 && (
-                            <Typography variant="body2" color="primary">
-                              Total: {(result.amount * result.recipients.length).toFixed(6)}{" "}
-                              {result.token === "SOL" ? "SOL" : "tokens"}
+                          {result.recipients.length === 1 ? (
+                            // 単一受取人の場合
+                            <Typography variant="body2">
+                              {result.amount} {result.token} to {result.recipients[0].slice(0, 6)}...{result.recipients[0].slice(-4)}
                             </Typography>
+                          ) : (
+                            // 複数受取人の場合（バッチ処理された場合）
+                            <Box width="100%">
+                              <Typography variant="body2" fontWeight="bold">
+                                Batch transfer: {result.recipients.length} recipients
+                              </Typography>
+                              <Typography variant="body2" color="primary" mb={1}>
+                                Total: {(result.amount * result.recipients.length).toFixed(6)} {result.token}
+                              </Typography>
+                              
+                              {/* オプション: 詳細表示ボタンを追加して全受取人リストを表示/非表示切り替え */}
+                              {(result as any).recipientDetails && (
+                                <Box mt={1}>
+                                  <Button 
+                                    size="small" 
+                                    variant="outlined" 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      // 詳細表示トグル実装（別の状態変数が必要）
+                                      // setDetailVisibility(prev => ({...prev, [result.signature]: !prev[result.signature]}));
+                                    }}
+                                  >
+                                    Show recipients
+                                  </Button>
+                                  {/* 詳細表示時のコード（状態に応じて条件付きレンダリング）
+                                  {detailVisibility[result.signature] && (
+                                    <List dense>
+                                      {(result as any).recipientDetails.map((detail: any, idx: number) => (
+                                        <ListItem key={idx} dense>
+                                          <Typography variant="caption">
+                                            {detail.address.slice(0, 8)}...{detail.address.slice(-8)}: {detail.amount} {result.token}
+                                          </Typography>
+                                        </ListItem>
+                                      ))}
+                                    </List>
+                                  )}
+                                  */}
+                                </Box>
+                              )}
+                            </Box>
                           )}
                         </Box>
 
@@ -557,7 +754,10 @@ const Sender: React.FC = () => {
                           />
                           <IconButton
                             size="small"
-                            onClick={() => copyAddress(result.signature)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyAddress(result.signature);
+                            }}
                             sx={{ ml: 1 }}
                           >
                             <ContentCopy fontSize="small" />
