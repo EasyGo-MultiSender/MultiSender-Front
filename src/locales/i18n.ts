@@ -21,10 +21,11 @@ const resources = availableLanguages.reduce((acc, lang) => {
 const savedLanguage = localStorage.getItem("language") || defaultLanguage;
 
 i18n.use(initReactI18next).init({
-  debug: true,
+  debug: false,
   resources,
   lng: savedLanguage,
   fallbackLng: defaultLanguage,
+  returnEmptyString: false,
   interpolation: { escapeValue: false },
 });
 
