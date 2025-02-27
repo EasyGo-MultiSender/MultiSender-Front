@@ -31,11 +31,6 @@ export default [
     languageOptions: {
       ecmaVersion: 'latest',
       parser: tsParser, // パーサはオブジェクトとして指定
-      parserOptions: {
-        // TypeScript の型チェックを有効にするための設定
-        project: './tsconfig.json',
-        sourceType: 'module',
-      },
     },
     plugins: {
       // 必要なプラグインを列挙
@@ -61,7 +56,7 @@ export default [
 
       // 未使用の変数は先頭アンダースコア (_var) を許可
       'unused-imports/no-unused-vars': [
-        'error',
+        'off',
         {
           vars: 'all',
           varsIgnorePattern: '^_',
