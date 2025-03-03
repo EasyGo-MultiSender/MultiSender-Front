@@ -443,8 +443,7 @@ export function useTokenTransfer(
                   `Batch ${batchIndex + 1} transaction failed confirmation: ${signature}`
                 );
               }
-            } catch (signError: any) {
-              // eslint-disable-line
+            } catch (signError: any) { // eslint-disable-line
               // ユーザーによる拒否を検出
               if (
                 signError.message?.includes('User rejected') ||
@@ -663,8 +662,7 @@ export function useTokenTransfer(
                   recipients: batchRecipients,
                 });
               }
-            } catch (signError: any) {
-              // eslint-disable-line
+            } catch (signError: any) { // eslint-disable-line
               // ユーザーによる拒否を検出
               if (
                 signError.message?.includes('User rejected') ||
