@@ -16,7 +16,7 @@ import {
 } from '@solana/web3.js';
 import { useState, useCallback } from 'react';
 
-const BATCH_SIZE = Number(import.meta.env.VITE_TRANSFER_BATCH_SIZE) || 9;
+const BATCH_SIZE = Number(import.meta.env.VITE_TRANSFER_BATCH_SIZE) || 100;
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1秒間のリトライ遅延
 const TRANSACTION_TIMEOUT = 120000; // 120秒のタイムアウト
@@ -118,7 +118,8 @@ export function useTokenTransfer(connection: Connection, publicKey: PublicKey | 
               lamports: Math.round(amount * LAMPORTS_PER_SOL)
             })
           );
-        } catch (error) {
+        } catch (e) {
+          console.error(`Error preparing SOL transfer to ${recipient}:`, e);
           throw new Error(`Invalid recipient address: ${recipient}`);
         }
       }
