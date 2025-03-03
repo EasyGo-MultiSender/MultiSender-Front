@@ -805,34 +805,6 @@ const Sender: React.FC = () => {
                               </Typography>
 
                               {/* オプション: 詳細表示ボタンを追加して全受取人リストを表示/非表示切り替え */}
-                              {result.recipientDetails && (
-                                <Box mt={1}>
-                                  <Button
-                                    size="small"
-                                    variant="outlined"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      // 詳細表示トグル実装（別の状態変数が必要）
-                                      // setDetailVisibility(prev => ({...prev, [result.signature]: !prev[result.signature]}));
-                                    }}
-                                  >
-                                    Show recipients
-                                  </Button>
-                                  {/* 詳細表示時のコード（状態に応じて条件付きレンダリング）
-                                  {detailVisibility[result.signature] && (
-                                    <List dense>
-                                      {(result as any).recipientDetails.map((detail: any, idx: number) => (
-                                        <ListItem key={idx} dense>
-                                          <Typography variant="caption">
-                                            {detail.address.slice(0, 8)}...{detail.address.slice(-8)}: {detail.amount} {result.token}
-                                          </Typography>
-                                        </ListItem>
-                                      ))}
-                                    </List>
-                                  )}
-                                  */}
-                                </Box>
-                              )}
                             </Box>
                           )}
                         </Box>
