@@ -1,7 +1,6 @@
 // src/components/NetworkSelector.tsx
 import { useState } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { useConnection } from '@solana/wallet-adapter-react';
 import { clusterApiUrl } from '@solana/web3.js';
 import {
   Button,
