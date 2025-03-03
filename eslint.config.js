@@ -52,11 +52,11 @@ export default [
       '@typescript-eslint/no-unused-vars': 'off',
 
       // 未使用の import を自動削除
-      'unused-imports/no-unused-imports': 'off',
+      'unused-imports/no-unused-imports': 'error',
 
       // 未使用の変数は先頭アンダースコア (_var) を許可
       'unused-imports/no-unused-vars': [
-        'off',
+        'error',
         {
           vars: 'all',
           varsIgnorePattern: '^_',
@@ -67,7 +67,7 @@ export default [
 
       // インポートの並びを自動修正
       'import/order': [
-        'off',
+        'error',
         {
           groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index'],
           // 空行に関するエラーを出さない
