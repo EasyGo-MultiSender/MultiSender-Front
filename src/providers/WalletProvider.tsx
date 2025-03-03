@@ -1,13 +1,9 @@
 // src/providers/WalletProvider.tsx
-import { FC, ReactNode, useMemo } from 'react';
+import { clusterApiUrl } from '@solana/web3.js';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { FC, ReactNode, useMemo, useEffect } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
-import { PhantomWalletAdapter } from '@solana/wallet-adapter-phantom';
-import { SolflareWalletAdapter } from '@solana/wallet-adapter-solflare';
-import { clusterApiUrl } from '@solana/web3.js';
-
-// Wallet modal styles
 import '@solana/wallet-adapter-react-ui/styles.css';
 
 interface Props {
@@ -33,11 +29,47 @@ export const WalletConnectionProvider: FC<Props> = ({ children }) => {
   // Configure available wallets
   const wallets = useMemo(
     () => [
-      new PhantomWalletAdapter(),
-      new SolflareWalletAdapter(),
     ],
     [network] // Update when network changes
   );
+
+  // function to hide phantom and solflare wallets
+  useEffect(() => {
+    // モーダルが開かれたときにPhantom以外を非表示にする
+    const observer = new MutationObserver((mutations) => {
+      // モーダルリストを探す
+      const walletList = document.querySelector('.wallet-adapter-modal-list');
+      if (walletList) {
+        // すべてのリスト項目を取得
+        const listItems = walletList.querySelectorAll('li');
+        
+        // 各項目を確認
+        listItems.forEach(item => {
+          const button = item.querySelector('button');
+          // ボタンがない、またはPhantomまたはSolflare以外のボタンの場合は非表示
+          if (!button || !button.textContent?.includes('Phantom') && !button.textContent?.includes('Solflare')) {
+            item.style.display = 'none'; // PhantomまたはSolflare以外は非表示
+          } else {
+            item.style.display = 'block'; // PhantomまたはSolflareは表示
+          }
+        });
+
+        // 「More options」ボタンも非表示
+        const moreOptions = document.querySelector('.wallet-adapter-modal-list-more');
+        if (moreOptions) {
+          moreOptions.setAttribute('style', 'display: none !important');
+        }
+      }
+    });
+
+    // body要素の変更を監視開始
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    // クリーンアップ関数
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   return (
     <ConnectionProvider endpoint={endpoint}>
