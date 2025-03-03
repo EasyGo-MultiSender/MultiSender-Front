@@ -13,8 +13,8 @@ import {
   SystemProgram,
   VersionedTransaction,
   TransactionMessage,
+  SendTransactionError,
 } from '@solana/web3.js';
-import bs58 from 'bs58';
 import { useState, useCallback } from 'react';
 
 const BATCH_SIZE = Number(import.meta.env.VITE_TRANSFER_BATCH_SIZE) || 9;
@@ -621,13 +621,9 @@ export function useTokenTransfer(
         for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
           const batch = batches[batchIndex];
           const signedTx = transactions[batchIndex];
+          const signedTransaction = signedTransactions[batchIndex];
           const batchRecipients = batch.map((item) => item.recipient);
-          let signature = bs58.encode(
-            signedTransactions[batchIndex].signatures[0]
-          );
-
-          console.log(signedTransactions[batchIndex].signatures[0]);
-          console.log(signature);
+          let signature = signedTransactions[batchIndex].signatures[0];
 
           try {
             console.log(
@@ -636,23 +632,14 @@ export function useTokenTransfer(
 
             // 署名されたトランザクションを送信
             console.log('Sending signed transaction to network...');
-            console.log(signedTx);
-            console.log(signedTx.transaction);
-            console.log(signedTx.transaction.signatures[0]);
-            console.log(signedTx.transaction.serialize());
             signature = await connection.sendRawTransaction(
-              signedTx.transaction.serialize(),
+              signedTransaction.serialize(),
               {
                 skipPreflight: false,
                 preflightCommitment: 'confirmed',
                 maxRetries: 3,
               }
             );
-            // signature = await connection.sendTransaction(signedTx.transaction, {
-            //   skipPreflight: false,
-            //   preflightCommitment: 'confirmed',
-            //   maxRetries: 3,
-            // });
 
             console.log(`Transaction sent with signature: ${signature}`);
 
@@ -690,10 +677,14 @@ export function useTokenTransfer(
                 recipients: batchRecipients,
               });
             }
-          } catch (error: any) {
-            // eslint-disable-line
-
-            console.error(`Batch ${batchIndex + 1} transfer failed:`, error);
+          } catch (error) {
+            if (error instanceof SendTransactionError) {
+              console.error(
+                `Batch ${batchIndex + 1} transfer failed:`,
+                await error.getLogs()
+              );
+            }
+            console.log(error);
 
             // エラーメッセージをユーザーフレンドリーに
             let errorMessage = 'Transfer failed';
