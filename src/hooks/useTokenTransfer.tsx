@@ -746,6 +746,8 @@ export function useTokenTransfer(
       } finally {
         setLoading(false);
       }
+
+      return results;
     },
     [
       connection,
