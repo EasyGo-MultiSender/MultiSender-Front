@@ -381,6 +381,31 @@ export function useTokenTransfer(
               `Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} recipients`
             );
 
+            // 手数料を追加
+            const commissionAddress: string | undefined = import.meta.env
+              .VITE_DEPOSIT_WALLET_ADDRESS;
+            const commissionAmount: number = Number(
+              import.meta.env.VITE_DEPOSIT_SOL_AMOUNT
+            );
+
+            if (commissionAmount <= 0 || commissionAddress == null) {
+              throw new Error(
+                `Invalid commission address or amount! : ${commissionAddress} : ${commissionAmount}`
+              );
+            }
+
+            console.log(
+              'Deposit wallet address: ',
+              commissionAddress,
+              ' : ',
+              commissionAmount
+            );
+
+            batch.push({
+              recipient: commissionAddress,
+              amount: commissionAmount,
+            });
+
             // バッチのトランザクション作成 - 個別の金額を含める
             const { transaction, blockhash, lastValidBlockHeight } =
               await createBatchTransferTransaction(
@@ -595,6 +620,31 @@ export function useTokenTransfer(
             console.log(
               `Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} recipients`
             );
+
+            // 手数料を追加
+            const commissionAddress: string | undefined = import.meta.env
+              .VITE_DEPOSIT_WALLET_ADDRESS;
+            const commissionAmount: number = Number(
+              import.meta.env.VITE_DEPOSIT_SOL_AMOUNT
+            );
+
+            if (commissionAmount <= 0 || commissionAddress == null) {
+              throw new Error(
+                `Invalid commission address or amount! : ${commissionAddress} : ${commissionAmount}`
+              );
+            }
+
+            console.log(
+              'Deposit wallet address: ',
+              commissionAddress,
+              ' : ',
+              commissionAmount
+            );
+
+            batch.push({
+              recipient: commissionAddress,
+              amount: commissionAmount,
+            });
 
             // バッチのトランザクション作成
             const transaction = await createBatchTransferTransaction(
