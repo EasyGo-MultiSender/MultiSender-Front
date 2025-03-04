@@ -3,14 +3,14 @@ name: Build
 on:
   workflow_dispatch:
     inputs:
-      environment:
-        description: "Select Environment"
+      logLevel:
+        description: 'Select Environment'
         required: true
-        default: "staging"
+        default: 'warning'
         type: choice
         options:
-          - "staging"
-          - "production"
+          - staging
+          - production
   push:
 
 jobs:
