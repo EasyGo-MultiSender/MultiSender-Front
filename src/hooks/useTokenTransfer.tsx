@@ -1,12 +1,3 @@
-import { useState, useCallback } from 'react';
-import {
-  PublicKey,
-  Connection,
-  LAMPORTS_PER_SOL,
-  SystemProgram,
-  VersionedTransaction,
-  TransactionMessage,
-} from '@solana/web3.js';
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
@@ -15,6 +6,16 @@ import {
   TOKEN_PROGRAM_ID,
   TOKEN_2022_PROGRAM_ID,
 } from '@solana/spl-token';
+import {
+  PublicKey,
+  Connection,
+  LAMPORTS_PER_SOL,
+  SystemProgram,
+  VersionedTransaction,
+  TransactionMessage,
+  SendTransactionError,
+} from '@solana/web3.js';
+import { useState, useCallback } from 'react';
 
 const BATCH_SIZE = Number(import.meta.env.VITE_TRANSFER_BATCH_SIZE) || 9;
 const TRANSACTION_TIMEOUT = 120000; // 120秒のタイムアウト
@@ -135,7 +136,8 @@ export function useTokenTransfer(
                 lamports: Math.round(amount * LAMPORTS_PER_SOL),
               })
             );
-          } catch (error) {
+          } catch (e) {
+            console.error(`Error preparing SOL transfer to ${recipient}:`, e);
             throw new Error(`Invalid recipient address: ${recipient}`);
           }
         }
@@ -283,17 +285,18 @@ export function useTokenTransfer(
 
   // ウォレットを取得する関数
   const getWalletAdapter = useCallback(() => {
-    // 利用可能なウォレットを優先順位で試す
+    // 利用可能なウォレット候補を、型を明示したオブジェクトの配列で管理
+
     const possibleWallets = [
       window.phantom?.solana,
-      (window as any).solflare,
-      (window as any).solana,
+      window.solflare,
+      window.solana,
       window.xnft?.solana,
     ];
 
     // 最初に見つかった有効なウォレットを使用
     for (const wallet of possibleWallets) {
-      if (wallet && typeof wallet.signTransaction === 'function') {
+      if (wallet && wallet?.isConnected) {
         console.log(
           `Using wallet provider: ${wallet.isPhantom ? 'Phantom' : wallet.isSolflare ? 'Solflare' : 'Unknown'}`
         );
@@ -438,36 +441,38 @@ export function useTokenTransfer(
                   `Batch ${batchIndex + 1} transaction failed confirmation: ${signature}`
                 );
               }
-            } catch (signError: any) {
-              // ユーザーによる拒否を検出
-              if (
-                signError.message?.includes('User rejected') ||
-                signError.message?.includes('Transaction rejected') ||
-                signError.message?.includes('cancelled') ||
-                signError.message?.includes('canceled') ||
-                // Phantomウォレット特有のエラーメッセージ
-                signError.message?.includes('user rejected') ||
-                signError.message?.includes('request timed out')
-              ) {
-                console.log('User cancelled transaction');
-                results.push({
-                  signature: '',
-                  status: 'error',
-                  error: 'Transaction cancelled by user',
-                  timestamp: Date.now(),
-                  recipients: batchRecipients,
-                });
+            } catch (signError) {
+              if (signError instanceof Error) {
+                // ユーザーによる拒否を検出
+                if (
+                  signError.message?.includes('User rejected') ||
+                  signError.message?.includes('Transaction rejected') ||
+                  signError.message?.includes('cancelled') ||
+                  signError.message?.includes('canceled') ||
+                  // Phantomウォレット特有のエラーメッセージ
+                  signError.message?.includes('user rejected') ||
+                  signError.message?.includes('request timed out')
+                ) {
+                  console.log('User cancelled transaction');
+                  results.push({
+                    signature: '',
+                    status: 'error',
+                    error: 'Transaction cancelled by user',
+                    timestamp: Date.now(),
+                    recipients: batchRecipients,
+                  });
 
-                // ユーザーがキャンセルした場合は残りのバッチを中止
-                console.log(
-                  'User cancelled transaction, stopping further processing'
-                );
-                break;
-              } else {
-                console.error('Error during transaction signing:', signError);
-                throw new Error(
-                  `Failed to sign transaction: ${signError.message || 'Unknown wallet error'}`
-                );
+                  // ユーザーがキャンセルした場合は残りのバッチを中止
+                  console.log(
+                    'User cancelled transaction, stopping further processing'
+                  );
+                  break;
+                } else {
+                  console.error('Error during transaction signing:', signError);
+                  throw new Error(
+                    `Failed to sign transaction: ${signError.message || 'Unknown wallet error'}`
+                  );
+                }
               }
             }
           } catch (error) {
@@ -557,14 +562,6 @@ export function useTokenTransfer(
           `Starting transfer with individual amounts: ${recipientsWithAmounts.length} recipients, mint: ${mint || 'SOL'}`
         );
 
-        // ネットワーク接続確認
-        const connectionOk = await logConnectionInfo();
-        if (!connectionOk) {
-          throw new Error(
-            `Unable to connect to ${getNetworkName(connection.rpcEndpoint)} network. Please check your internet connection or try a different RPC endpoint.`
-          );
-        }
-
         // ウォレットアダプタを事前に取得して検証
         const wallet = getWalletAdapter();
         if (!wallet || typeof wallet.signTransaction !== 'function') {
@@ -588,11 +585,11 @@ export function useTokenTransfer(
           `Split into ${batches.length} batches of max ${BATCH_SIZE} recipients each`
         );
 
+        const transactions = [];
+
         // 各バッチを順次処理
         for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
           const batch = batches[batchIndex];
-          const batchRecipients = batch.map((item) => item.recipient);
-          let signature = '';
 
           try {
             console.log(
@@ -600,90 +597,91 @@ export function useTokenTransfer(
             );
 
             // バッチのトランザクション作成
-            const { transaction, blockhash, lastValidBlockHeight } =
-              await createBatchTransferTransaction(batch, publicKey, mint);
+            const transaction = await createBatchTransferTransaction(
+              batch,
+              publicKey,
+              mint
+            );
 
             console.log(
-              `Transaction created with ${transaction.message.compiledInstructions.length} instructions`
+              `Transaction created with ${transaction.transaction.message.compiledInstructions.length} instructions`
             );
             console.log('Requesting wallet signature...');
 
-            try {
-              // 署名リクエスト
-              const signedTx = await wallet.signTransaction(transaction);
-              console.log('Transaction signed successfully by wallet');
+            transactions.push(transaction);
+          } catch (error) {
+            console.error(`Batch ${batchIndex + 1} transfer failed:`, error);
+          }
+        }
 
-              // 署名されたトランザクションを送信
-              console.log('Sending signed transaction to network...');
-              signature = await connection.sendTransaction(signedTx, {
+        const signedTransactions = await wallet.signAllTransactions(
+          transactions.map((t) => t.transaction)
+        );
+        console.log('Transaction signed successfully by wallet');
+
+        for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+          const batch = batches[batchIndex];
+          const signedTx = transactions[batchIndex];
+          const signedTransaction = signedTransactions[batchIndex];
+          const batchRecipients = batch.map((item) => item.recipient);
+          let signature = signedTransactions[batchIndex].signatures[0];
+
+          try {
+            console.log(
+              `Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} recipients`
+            );
+
+            // 署名されたトランザクションを送信
+            console.log('Sending signed transaction to network...');
+            signature = await connection.sendRawTransaction(
+              signedTransaction.serialize(),
+              {
                 skipPreflight: false,
                 preflightCommitment: 'confirmed',
                 maxRetries: 3,
-              });
+              }
+            );
 
-              console.log(`Transaction sent with signature: ${signature}`);
+            console.log(`Transaction sent with signature: ${signature}`);
 
-              // 送信したトランザクションの確認を待機
-              const success = await waitForTransactionConfirmation(
-                connection,
+            // 送信したトランザクションの確認を待機
+            const success = await waitForTransactionConfirmation(
+              connection,
+              signature,
+              signedTx.blockhash,
+              signedTx.lastValidBlockHeight
+            );
+
+            if (success) {
+              // バッチ内の各受取人の金額を保持
+              const recipientAmounts = batch.map((item) => item.amount);
+
+              // 成功した場合、このバッチのすべての受取人を結果に追加
+              results.push({
                 signature,
-                blockhash,
-                lastValidBlockHeight
+                status: 'success',
+                timestamp: Date.now(),
+                recipients: batchRecipients,
+                // 追加情報としてamountsを含める
+                amounts: recipientAmounts,
+              } as any); // eslint-disable-line
+
+              console.log(
+                `Batch ${batchIndex + 1} confirmed successfully with ${batchRecipients.length} recipients`
               );
-
-              if (success) {
-                // バッチ内の各受取人の金額を保持
-                const recipientAmounts = batch.map((item) => item.amount);
-
-                // 成功した場合、このバッチのすべての受取人を結果に追加
-                results.push({
-                  signature,
-                  status: 'success',
-                  timestamp: Date.now(),
-                  recipients: batchRecipients,
-                  // 追加情報としてamountsを含める
-                  amounts: recipientAmounts,
-                } as any);
-
-                console.log(
-                  `Batch ${batchIndex + 1} confirmed successfully with ${batchRecipients.length} recipients`
-                );
-              } else {
-                results.push({
-                  signature,
-                  status: 'error',
-                  error: 'Transaction failed confirmation',
-                  timestamp: Date.now(),
-                  recipients: batchRecipients,
-                });
-              }
-            } catch (signError: any) {
-              // ユーザーによる拒否を検出
-              if (
-                signError.message?.includes('User rejected') ||
-                signError.message?.includes('Transaction rejected') ||
-                signError.message?.includes('cancelled') ||
-                signError.message?.includes('canceled') ||
-                signError.message?.includes('user rejected') ||
-                signError.message?.includes('request timed out')
-              ) {
-                console.log('User cancelled transaction');
-                results.push({
-                  signature: '',
-                  status: 'error',
-                  error: 'Transaction cancelled by user',
-                  timestamp: Date.now(),
-                  recipients: batchRecipients,
-                });
-
-                // ユーザーがキャンセルした場合は残りのバッチを中止
-                break;
-              } else {
-                throw signError;
-              }
+            } else {
+              results.push({
+                signature,
+                status: 'error',
+                error: 'Transaction failed confirmation',
+                timestamp: Date.now(),
+                recipients: batchRecipients,
+              });
             }
           } catch (error) {
-            console.error(`Batch ${batchIndex + 1} transfer failed:`, error);
+            if (error instanceof SendTransactionError) {
+              console.log(`Batch ${batchIndex + 1} transfer failed:`, error);
+            }
 
             // エラーメッセージをユーザーフレンドリーに
             let errorMessage = 'Transfer failed';
@@ -721,21 +719,37 @@ export function useTokenTransfer(
         console.log(`Transfer operation completed. Results:`, results);
         return results;
       } catch (error) {
-        console.error('Transfer operation failed:', error);
-        throw error instanceof Error
-          ? error
-          : new Error('Unknown error in transfer operation');
+        if (error instanceof Error) {
+          // ユーザーによる拒否を検出
+          if (
+            error.message?.includes('User rejected') ||
+            error.message?.includes('Transaction rejected') ||
+            error.message?.includes('cancelled') ||
+            error.message?.includes('canceled') ||
+            error.message?.includes('user rejected') ||
+            error.message?.includes('request timed out')
+          ) {
+            console.log('User cancelled transaction');
+            results.push({
+              signature: '',
+              status: 'error',
+              error: 'Transaction cancelled by user',
+              timestamp: Date.now(),
+              recipients: ['recipientsrecipientsrecipientsrecipients', '?'],
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
       } finally {
         setLoading(false);
       }
+
+      return results;
     },
-    [
-      connection,
-      publicKey,
-      createBatchTransferTransaction,
-      getWalletAdapter,
-      logConnectionInfo,
-    ]
+    [connection, publicKey, createBatchTransferTransaction, getWalletAdapter]
   );
 
   return {
