@@ -1,0 +1,13 @@
+name: build.yml
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        options:
+          - 'staging'
+          - 'production'
+
+jobs:
