@@ -42,6 +42,10 @@ import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
 
+// SOL Validation Amount import
+const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
+console.log('SOL_VALIDATION_AMOUNT:', SOL_VALIDATION_AMOUNT);
+
 // インターフェース定義
 interface TransactionResult {
   signature: string;
@@ -90,6 +94,7 @@ const Sender: React.FC = () => {
   const [duplicateAddresses, setDuplicateAddresses] = useState<string[]>([]);
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
+  const [belowMinSolEntries, setBelowMinSolEntries] = useState<string[]>([]);
 
   // メタデータ付きトークンを保持する状態
   const [tokensWithMetadata, setTokensWithMetadata] = useState<
@@ -160,6 +165,11 @@ const Sender: React.FC = () => {
     const entries: AddressEntry[] = [];
     const invalidLines: string[] = [];
     const addressMap = new Map<string, number>();
+    // SOL最小額チェック用の配列
+    const belowMinimumSolLines: string[] = [];
+
+    // 最小SOL額の取得（設定されていない場合は0を使用）
+    const minSolAmount = parseFloat(SOL_VALIDATION_AMOUNT) || 0;
 
     // 各行を解析
     const lines = recipientAddresses
@@ -185,6 +195,12 @@ const Sender: React.FC = () => {
 
       const amount = parseFloat(amountStr);
 
+      // SOL選択時の最小額チェック
+      if (selectedToken === 'SOL' && amount < minSolAmount && minSolAmount > 0) {
+        belowMinimumSolLines.push(line);
+        // 最小額未満でもエントリには追加して、後で警告を表示できるようにする
+      }
+
       // 有効なエントリを追加
       entries.push({ address, amount });
 
@@ -202,10 +218,14 @@ const Sender: React.FC = () => {
     setInvalidEntries(invalidLines);
     setDuplicateAddresses(duplicates);
 
+    // SOL最小額チェックの結果を状態に追加
+    // 新しい状態を追加: belowMinSolEntries
+    setBelowMinSolEntries(belowMinimumSolLines);
+
     // 合計金額を計算
     const sum = entries.reduce((total, entry) => total + entry.amount, 0);
     setTotalAmount(sum);
-  }, [recipientAddresses, isValidSolanaAddress]);
+  }, [recipientAddresses, isValidSolanaAddress, selectedToken, SOL_VALIDATION_AMOUNT]);
 
   // recipientAddressesが変更されたときにだけパースを実行
   useEffect(() => {
@@ -653,24 +673,28 @@ const Sender: React.FC = () => {
                   Format: address,amount (one entry per line)
                 </Typography>
                 <Box position="relative">
-                  <TextField
-                    multiline
-                    rows={10}
-                    fullWidth
-                    value={recipientAddresses}
-                    onChange={(e) => setRecipientAddresses(e.target.value)}
-                    placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
-                    error={
-                      invalidEntries.length > 0 || duplicateAddresses.length > 0
-                    }
-                    helperText={
-                      invalidEntries.length > 0
-                        ? `Invalid entries: ${invalidEntries.length}`
-                        : duplicateAddresses.length > 0
-                          ? `Duplicate addresses: ${duplicateAddresses.length}`
+                <TextField
+                  multiline
+                  rows={10}
+                  fullWidth
+                  value={recipientAddresses}
+                  onChange={(e) => setRecipientAddresses(e.target.value)}
+                  placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
+                  error={
+                    invalidEntries.length > 0 || 
+                    duplicateAddresses.length > 0 || 
+                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                  }
+                  helperText={
+                    invalidEntries.length > 0
+                      ? `Invalid entries: ${invalidEntries.length}`
+                      : duplicateAddresses.length > 0
+                        ? `Duplicate addresses: ${duplicateAddresses.length}`
+                        : (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                          ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
                           : ''
-                    }
-                  />
+                  }
+                />
                   <IconButton
                     onClick={pasteAddresses}
                     sx={{ position: 'absolute', top: 8, right: 18 }}
@@ -713,7 +737,8 @@ const Sender: React.FC = () => {
                   transferring ||
                   parsedEntries.length === 0 ||
                   invalidEntries.length > 0 ||
-                  duplicateAddresses.length > 0
+                  duplicateAddresses.length > 0 ||
+                  (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
                 }
               >
                 {transferring ? (
