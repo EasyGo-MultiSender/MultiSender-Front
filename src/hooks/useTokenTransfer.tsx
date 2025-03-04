@@ -719,10 +719,30 @@ export function useTokenTransfer(
         console.log(`Transfer operation completed. Results:`, results);
         return results;
       } catch (error) {
-        console.error('Transfer operation failed:', error);
-        throw error instanceof Error
-          ? error
-          : new Error('Unknown error in transfer operation');
+        if (error instanceof Error) {
+          // ユーザーによる拒否を検出
+          if (
+            error.message?.includes('User rejected') ||
+            error.message?.includes('Transaction rejected') ||
+            error.message?.includes('cancelled') ||
+            error.message?.includes('canceled') ||
+            error.message?.includes('user rejected') ||
+            error.message?.includes('request timed out')
+          ) {
+            console.log('User cancelled transaction');
+            results.push({
+              signature: '',
+              status: 'error',
+              error: 'Transaction cancelled by user',
+              timestamp: Date.now(),
+              recipients: ['recipientsrecipientsrecipientsrecipients', '?'],
+            });
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
       } finally {
         setLoading(false);
       }
