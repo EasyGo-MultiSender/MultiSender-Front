@@ -1,18 +1,23 @@
-name: build.yml
+name: Build
+
 on:
   workflow_dispatch:
     inputs:
       environment:
-        description: 'Environment to deploy to'
+        description: "Select Environment"
         required: true
-        default: 'staging'
+        default: "staging"
+        type: choice
         options:
-          - 'staging'
-          - 'production'
+          - "staging"
+          - "production"
 
 jobs:
-  Checkout:
+  checkout:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
+      - name: Print selected environment
+        run: echo "Selected environment: ${{ github.event.inputs.environment }}"
