@@ -749,13 +749,7 @@ export function useTokenTransfer(
 
       return results;
     },
-    [
-      connection,
-      publicKey,
-      createBatchTransferTransaction,
-      getWalletAdapter,
-      logConnectionInfo,
-    ]
+    [connection, publicKey, createBatchTransferTransaction, getWalletAdapter]
   );
 
   return {
