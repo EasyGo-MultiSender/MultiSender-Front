@@ -680,12 +680,8 @@ export function useTokenTransfer(
             }
           } catch (error) {
             if (error instanceof SendTransactionError) {
-              console.error(
-                `Batch ${batchIndex + 1} transfer failed:`,
-                await error.getLogs()
-              );
+              console.log(`Batch ${batchIndex + 1} transfer failed:`, error);
             }
-            console.log(error);
 
             // エラーメッセージをユーザーフレンドリーに
             let errorMessage = 'Transfer failed';
