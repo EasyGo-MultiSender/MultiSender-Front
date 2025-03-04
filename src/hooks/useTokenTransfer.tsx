@@ -296,7 +296,7 @@ export function useTokenTransfer(
 
     // 最初に見つかった有効なウォレットを使用
     for (const wallet of possibleWallets) {
-      if (wallet && typeof wallet.isConnected) {
+      if (wallet && wallet?.isConnected) {
         console.log(
           `Using wallet provider: ${wallet.isPhantom ? 'Phantom' : wallet.isSolflare ? 'Solflare' : 'Unknown'}`
         );
