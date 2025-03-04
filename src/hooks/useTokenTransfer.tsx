@@ -708,30 +708,6 @@ export function useTokenTransfer(
               timestamp: Date.now(),
               recipients: batchRecipients,
             });
-            //
-            // // ユーザーによる拒否を検出
-            // if (
-            //   signError.message?.includes('User rejected') ||
-            //   signError.message?.includes('Transaction rejected') ||
-            //   signError.message?.includes('cancelled') ||
-            //   signError.message?.includes('canceled') ||
-            //   signError.message?.includes('user rejected') ||
-            //   signError.message?.includes('request timed out')
-            // ) {
-            //   console.log('User cancelled transaction');
-            //   results.push({
-            //     signature: '',
-            //     status: 'error',
-            //     error: 'Transaction cancelled by user',
-            //     timestamp: Date.now(),
-            //     recipients: batchRecipients,
-            //   });
-            //
-            //   // ユーザーがキャンセルした場合は残りのバッチを中止
-            //   break;
-            // } else {
-            //   throw signError;
-            // }
           }
 
           // バッチ間の遅延
