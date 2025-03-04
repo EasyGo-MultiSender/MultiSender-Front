@@ -1,25 +1,64 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // Vite 向けの Node.js ポリフィルプラグイン
+    nodePolyfills({
+      protocolImports: true,
+      globals: {
+        Buffer: true,
+        process: true,
+      },
+    }),
+  ],
   define: {
-    global: "window",
-    'process.env': {}
+    global: 'globalThis',
+    'process.env': {},
   },
   resolve: {
     alias: {
-      buffer: "buffer",
-      stream: 'stream-browserify'
-    }
+      crypto: 'crypto-browserify',
+      stream: 'stream-browserify',
+      buffer: 'buffer',
+      events: 'events',
+      path: 'path-browserify',
+      os: 'os-browserify/browser',
+    },
   },
   optimizeDeps: {
-    include: ['buffer', '@solana/web3.js', '@solana/spl-token'],
+    include: [
+      'buffer',
+      '@solana/web3.js',
+      '@solana/spl-token',
+      'crypto-browserify',
+      'react',
+      'react-dom',
+      'stream-browserify',
+      'events',
+      'path-browserify',
+      'os-browserify/browser',
+    ],
     esbuildOptions: {
       target: 'esnext',
       define: {
-        global: 'globalThis'
-      }
-    }
-  }
+        global: 'globalThis',
+      },
+      plugins: [
+        NodeGlobalsPolyfillPlugin({
+          process: true,
+          buffer: true,
+        }),
+      ],
+    },
+  },
+  build: {
+    target: 'esnext',
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
 });

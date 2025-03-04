@@ -1,7 +1,6 @@
 // src/components/NetworkSelector.tsx
 import { useState } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
-import { useConnection } from '@solana/wallet-adapter-react';
 import { clusterApiUrl } from '@solana/web3.js';
 import {
   Button,
@@ -12,12 +11,10 @@ import {
   DialogContent,
   DialogActions,
   TextField,
-  Box,
 } from '@mui/material';
 import NetworkCheckIcon from '@mui/icons-material/NetworkCheck';
 
 export const NetworkSelector = () => {
-  const { connection } = useConnection();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [customRpcDialogOpen, setCustomRpcDialogOpen] = useState(false);
   const [customRpc, setCustomRpc] = useState('');
@@ -35,7 +32,8 @@ export const NetworkSelector = () => {
     if (network === WalletAdapterNetwork.Mainnet) {
       endpoint = import.meta.env.VITE_RPC_ENDPOINT || clusterApiUrl(network);
     } else if (network === WalletAdapterNetwork.Devnet) {
-      endpoint = import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT || clusterApiUrl(network);
+      endpoint =
+        import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT || clusterApiUrl(network);
     } else {
       endpoint = clusterApiUrl(network);
     }
@@ -57,14 +55,11 @@ export const NetworkSelector = () => {
   };
 
   // Get current network with proper default from env variables
-  const currentNetwork = window.localStorage.getItem('network') || 
-    import.meta.env.VITE_SOLANA_NETWORK || 
-    import.meta.env.VITE_SOLANA_DEV_NETWORK || 
+  const currentNetwork =
+    window.localStorage.getItem('network') ||
+    import.meta.env.VITE_SOLANA_NETWORK ||
+    import.meta.env.VITE_SOLANA_DEV_NETWORK ||
     'devnet';
-
-  // Get current endpoint for display purposes
-  const currentEndpoint = window.localStorage.getItem('endpoint') || 
-    (currentNetwork === WalletAdapterNetwork.Mainnet ? import.meta.env.VITE_RPC_ENDPOINT : import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT);
 
   const getDisplayNetwork = () => {
     if (currentNetwork === 'custom') return 'Custom RPC';
@@ -88,18 +83,14 @@ export const NetworkSelector = () => {
       >
         {getDisplayNetwork()}
       </Button>
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleClose}
-      >
-        <MenuItem 
+      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+        <MenuItem
           onClick={() => handleNetworkChange(WalletAdapterNetwork.Mainnet)}
           selected={currentNetwork === WalletAdapterNetwork.Mainnet}
         >
           Mainnet Beta
         </MenuItem>
-        <MenuItem 
+        <MenuItem
           onClick={() => handleNetworkChange(WalletAdapterNetwork.Devnet)}
           selected={currentNetwork === WalletAdapterNetwork.Devnet}
         >
@@ -110,7 +101,10 @@ export const NetworkSelector = () => {
         </MenuItem>
       </Menu>
 
-      <Dialog open={customRpcDialogOpen} onClose={() => setCustomRpcDialogOpen(false)}>
+      <Dialog
+        open={customRpcDialogOpen}
+        onClose={() => setCustomRpcDialogOpen(false)}
+      >
         <DialogTitle>Enter Custom RPC URL</DialogTitle>
         <DialogContent>
           <TextField
