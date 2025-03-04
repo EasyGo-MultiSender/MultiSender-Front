@@ -441,37 +441,38 @@ export function useTokenTransfer(
                   `Batch ${batchIndex + 1} transaction failed confirmation: ${signature}`
                 );
               }
-            } catch (signError: any) {
-              // eslint-disable-line
-              // ユーザーによる拒否を検出
-              if (
-                signError.message?.includes('User rejected') ||
-                signError.message?.includes('Transaction rejected') ||
-                signError.message?.includes('cancelled') ||
-                signError.message?.includes('canceled') ||
-                // Phantomウォレット特有のエラーメッセージ
-                signError.message?.includes('user rejected') ||
-                signError.message?.includes('request timed out')
-              ) {
-                console.log('User cancelled transaction');
-                results.push({
-                  signature: '',
-                  status: 'error',
-                  error: 'Transaction cancelled by user',
-                  timestamp: Date.now(),
-                  recipients: batchRecipients,
-                });
+            } catch (signError) {
+              if (signError instanceof Error) {
+                // ユーザーによる拒否を検出
+                if (
+                  signError.message?.includes('User rejected') ||
+                  signError.message?.includes('Transaction rejected') ||
+                  signError.message?.includes('cancelled') ||
+                  signError.message?.includes('canceled') ||
+                  // Phantomウォレット特有のエラーメッセージ
+                  signError.message?.includes('user rejected') ||
+                  signError.message?.includes('request timed out')
+                ) {
+                  console.log('User cancelled transaction');
+                  results.push({
+                    signature: '',
+                    status: 'error',
+                    error: 'Transaction cancelled by user',
+                    timestamp: Date.now(),
+                    recipients: batchRecipients,
+                  });
 
-                // ユーザーがキャンセルした場合は残りのバッチを中止
-                console.log(
-                  'User cancelled transaction, stopping further processing'
-                );
-                break;
-              } else {
-                console.error('Error during transaction signing:', signError);
-                throw new Error(
-                  `Failed to sign transaction: ${signError.message || 'Unknown wallet error'}`
-                );
+                  // ユーザーがキャンセルした場合は残りのバッチを中止
+                  console.log(
+                    'User cancelled transaction, stopping further processing'
+                  );
+                  break;
+                } else {
+                  console.error('Error during transaction signing:', signError);
+                  throw new Error(
+                    `Failed to sign transaction: ${signError.message || 'Unknown wallet error'}`
+                  );
+                }
               }
             }
           } catch (error) {
