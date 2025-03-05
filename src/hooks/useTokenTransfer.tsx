@@ -3,6 +3,7 @@ import {
   PublicKey,
   SendTransactionError,
   Transaction,
+  VersionedTransaction,
 } from '@solana/web3.js';
 import { useCallback, useState } from 'react';
 import { TransferResult } from './interfaces/transfer';
@@ -81,34 +82,51 @@ export function useTokenTransfer(
           `Split into ${batches.length} batches of max ${BATCH_SIZE} recipients each`
         );
 
-        const transactions = [];
+        const transactions: {
+          transaction: VersionedTransaction;
+          blockhash: string;
+          lastValidBlockHeight: number;
+        }[] = [];
 
-        // 各バッチを順次処理
-        for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-          const batch = batches[batchIndex];
+        // すべてのバッチを順次処理
+        await Promise.all(
+          batches.map(
+            (batch, batchIndex) =>
+              new Promise<void>(async (resolve) => {
+                // 各バッチを順番に遅延スタート（バッチごとに 1 秒遅延）
+                await new Promise((r) =>
+                  setTimeout(r, batchIndex * RPC_RATE_LIMIT)
+                );
 
-          try {
-            console.log(
-              `Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} recipients`
-            );
+                try {
+                  console.log(
+                    `[${batchIndex + 1}/${batches.length}] Processing batch with ${batch.length} recipients`
+                  );
 
-            // バッチのトランザクション作成
-            const transaction = await createBatchTransferTransaction(
-              batch,
-              publicKey,
-              connection,
-              mint
-            );
+                  // バッチのトランザクション作成
+                  const transaction = await createBatchTransferTransaction(
+                    batch,
+                    publicKey,
+                    connection,
+                    mint
+                  );
 
-            console.log(
-              `Transaction created with ${transaction.transaction.message.compiledInstructions.length} instructions`
-            );
+                  console.log(
+                    `[${batchIndex + 1}/${batches.length}] Transaction created with ${transaction.transaction.message.compiledInstructions.length} instructions`
+                  );
 
-            transactions.push(transaction);
-          } catch (error) {
-            console.error(`Batch ${batchIndex + 1} transfer failed:`, error);
-          }
-        }
+                  transactions.push(transaction);
+                } catch (error) {
+                  console.error(
+                    `Batch ${batchIndex + 1} transfer failed:`,
+                    error
+                  );
+                }
+
+                resolve();
+              })
+          )
+        );
 
         console.log('Requesting wallet signature...');
         const signedTransactions: Transaction[] =
@@ -117,103 +135,96 @@ export function useTokenTransfer(
           );
         console.log('Transaction signed successfully by wallet');
 
-        for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
-          const batch = batches[batchIndex];
-          const signedTx = transactions[batchIndex];
-          const signedTransaction = signedTransactions[batchIndex];
-          const batchRecipients = batch.map((item) => item.recipient);
-          let signature: string | undefined =
-            signedTransactions[batchIndex].signatures[0].signature?.toString(
-              'base64'
-            );
+        for (const [batchIndex, batch] of batches.entries()) {
+          await (async () => {
+            const signedTx = transactions[batchIndex];
+            const signedTransaction = signedTransactions[batchIndex];
+            const batchRecipients = batch.map((item) => item.recipient);
+            let signature: string | undefined =
+              signedTransaction.signatures[0].signature?.toString('base64');
 
-          try {
-            console.log(
-              `Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} recipients`
-            );
-
-            // 署名されたトランザクションを送信
-            console.log('Sending signed transaction to network...');
-            signature = await connection.sendRawTransaction(
-              signedTransaction.serialize(),
-              {
-                skipPreflight: false,
-                preflightCommitment: 'confirmed',
-                maxRetries: 3,
-              }
-            );
-
-            console.log(`Transaction sent with signature: ${signature}`);
-
-            // 送信したトランザクションの確認を待機
-            const success = await waitForTransactionConfirmation(
-              connection,
-              signature,
-              signedTx.blockhash,
-              signedTx.lastValidBlockHeight
-            );
-
-            if (success) {
-              // バッチ内の各受取人の金額を保持
-              const recipientAmounts = batch.map((item) => item.amount);
-
-              // 成功した場合、このバッチのすべての受取人を結果に追加
-              results.push({
-                signature: signature || '',
-                status: 'success',
-                timestamp: Date.now(),
-                recipients: batchRecipients,
-                // 追加情報としてamountsを含める
-                amounts: recipientAmounts,
-              } as any); // eslint-disable-line
-
+            try {
               console.log(
-                `Batch ${batchIndex + 1} confirmed successfully with ${batchRecipients.length} recipients`
+                `[${batchIndex + 1}/${batches.length}] Processing batch with ${batch.length} recipients`
               );
-            } else {
+
+              console.log('Sending signed transaction to network...');
+
+              signature = await connection.sendRawTransaction(
+                signedTransaction.serialize(),
+                {
+                  skipPreflight: false,
+                  preflightCommitment: 'confirmed',
+                  maxRetries: 3,
+                }
+              );
+
+              console.log(`Transaction sent with signature: ${signature}`);
+
+              const success = await waitForTransactionConfirmation(
+                connection,
+                signature,
+                signedTx.blockhash,
+                signedTx.lastValidBlockHeight
+              );
+
+              if (success) {
+                const recipientAmounts = batch.map((item) => item.amount);
+
+                results.push({
+                  signature: signature || '',
+                  status: 'success',
+                  timestamp: Date.now(),
+                  recipients: batchRecipients,
+                  amounts: recipientAmounts,
+                });
+
+                console.log(
+                  `Batch ${batchIndex + 1} confirmed successfully with ${batchRecipients.length} recipients`
+                );
+              } else {
+                results.push({
+                  signature: signature || '',
+                  status: 'error',
+                  error: 'Transaction failed confirmation',
+                  timestamp: Date.now(),
+                  recipients: batchRecipients,
+                });
+              }
+            } catch (error) {
+              if (error instanceof SendTransactionError) {
+                console.log(`Batch ${batchIndex + 1} transfer failed:`, error);
+              }
+
+              let errorMessage = 'Transfer failed';
+
+              if (error instanceof Error) {
+                errorMessage = error.message;
+
+                if (error.message.includes('TokenInvalidAccountOwner')) {
+                  errorMessage = `Invalid token account owner. This token may not exist on the current network (${getNetworkName(connection.rpcEndpoint)}). Try switching networks.`;
+                } else if (error.message.includes('TokenInvalidMint')) {
+                  errorMessage =
+                    'Invalid token mint address. Please verify the token address.';
+                } else if (error.message.includes('Transaction too large')) {
+                  errorMessage =
+                    'Transaction size exceeded limit. Try sending fewer recipients per batch.';
+                }
+              }
+
               results.push({
                 signature: signature || '',
                 status: 'error',
-                error: 'Transaction failed confirmation',
+                error: errorMessage,
                 timestamp: Date.now(),
                 recipients: batchRecipients,
               });
             }
-          } catch (error) {
-            if (error instanceof SendTransactionError) {
-              console.log(`Batch ${batchIndex + 1} transfer failed:`, error);
-            }
+          })();
 
-            // エラーメッセージをユーザーフレンドリーに
-            let errorMessage = 'Transfer failed';
-
-            if (error instanceof Error) {
-              errorMessage = error.message;
-
-              // よくあるエラーパターンを処理
-              if (error.message.includes('TokenInvalidAccountOwner')) {
-                errorMessage = `Invalid token account owner. This token may not exist on the current network (${getNetworkName(connection.rpcEndpoint)}). Try switching networks.`;
-              } else if (error.message.includes('TokenInvalidMint')) {
-                errorMessage =
-                  'Invalid token mint address. Please verify the token address.';
-              } else if (error.message.includes('Transaction too large')) {
-                errorMessage =
-                  'Transaction size exceeded limit. Try sending fewer recipients per batch.';
-              }
-            }
-
-            results.push({
-              signature: signature || '',
-              status: 'error',
-              error: errorMessage,
-              timestamp: Date.now(),
-              recipients: batchRecipients,
-            });
-          }
-
-          // バッチ間の遅延
+          // RPC_RATE_LIMITミリ秒待機
           if (batchIndex < batches.length - 1) {
-            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await new Promise((resolve) => setTimeout(resolve, RPC_RATE_LIMIT));
           }
         }
 
