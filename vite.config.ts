@@ -1,10 +1,13 @@
+/// <reference types="vitest" />
+import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   plugins: [
+    tsconfigPaths(),
     react(),
     // Vite 向けの Node.js ポリフィルプラグイン
     nodePolyfills({
@@ -20,7 +23,6 @@ export default defineConfig({
   },
   define: {
     global: 'globalThis',
-    'process.env': {},
   },
   resolve: {
     alias: {
@@ -30,6 +32,7 @@ export default defineConfig({
       events: 'events',
       path: 'path-browserify',
       os: 'os-browserify/browser',
+      '@': '/src',
     },
   },
   optimizeDeps: {
@@ -63,5 +66,11 @@ export default defineConfig({
     commonjsOptions: {
       transformMixedEsModules: true,
     },
+  },
+  test: {
+    environment: 'jsdom', // React コンポーネントをテストするために jsdom を使用
+    globals: true, // Jest のように 'describe', 'test', 'expect' などをグローバルに使用できる
+    include: ['tests/**/*.test.{ts,tsx}'],
+    setupFiles: ['./tests/setupTests.ts'], // テスト前に実行するファイル（後述）
   },
 });
