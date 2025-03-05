@@ -10,4 +10,5 @@ export interface TransferResult {
   error?: string;
   timestamp: number;
   recipients: string[];
+  amounts?: number[];
 }
