@@ -1,10 +1,11 @@
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
-import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfill';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   plugins: [
+    tsconfigPaths(),
     react(),
     // Vite 向けの Node.js ポリフィルプラグイン
     nodePolyfills({
@@ -29,6 +30,7 @@ export default defineConfig({
       events: 'events',
       path: 'path-browserify',
       os: 'os-browserify/browser',
+      '@': '/src',
     },
   },
   optimizeDeps: {
