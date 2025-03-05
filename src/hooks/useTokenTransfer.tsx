@@ -12,6 +12,7 @@ import { getNetworkName } from './util/network';
 import { getWalletAdapter } from './util/wallet';
 
 const BATCH_SIZE = Number(import.meta.env.VITE_TRANSFER_BATCH_SIZE) || 9;
+const RPC_RATE_LIMIT = Number(import.meta.env.VITE_RPC_RATE_LIMIT) || 1000;
 
 export function useTokenTransfer(
   connection: Connection,
