@@ -1,0 +1,11 @@
+name: config
+description: config
+
+inputs:
+  environment:
+    description: 'Select Environment'
+    required: true
+    default: 'warning'
+
+runs:
+  using:
