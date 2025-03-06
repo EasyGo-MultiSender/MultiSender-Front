@@ -46,11 +46,11 @@ export const WalletConnectionProvider: FC<Props> = ({ children }) => {
         // 各項目を確認
         listItems.forEach(item => {
           const button = item.querySelector('button');
-          // ボタンがない、またはPhantomまたはSolflare以外のボタンの場合は非表示
-          if (!button || !button.textContent?.includes('Phantom') && !button.textContent?.includes('Solflare')) {
-            item.style.display = 'none'; // PhantomまたはSolflare以外は非表示
+          // ボタンがない、またはPhantom/Solflare/Backpack以外のボタンの場合は非表示
+          if (!button || !button.textContent?.includes('Phantom') && !button.textContent?.includes('Solflare') && !button.textContent?.includes('Backpack')) {
+            item.style.display = 'none'; // Phantom/Solflare/Backpack以外は非表示
           } else {
-            item.style.display = 'block'; // PhantomまたはSolflareは表示
+            item.style.display = 'block'; // Phantom/Solflare/Backpackは表示
           }
         });
 
