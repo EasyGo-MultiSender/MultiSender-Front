@@ -798,7 +798,7 @@ const Sender: React.FC = () => {
                     {t('Valid entries')}: {parsedEntries.length}
                   </Typography>
                   <Box display="flex" alignItems="center" gap={1}>
-                    <Tooltip title="template" arrow placement="top">
+                    <Tooltip title="download" arrow placement="top">
                       <Button
                         onClick={downloadTemplate}
                         size="small"
@@ -811,10 +811,14 @@ const Sender: React.FC = () => {
                           fontSize: '0.75rem',
                         }}
                       >
-                        template
+                        {t('template')}
                       </Button>
                     </Tooltip>
-                    <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                    <Tooltip title="upload" arrow placement="top">
+                      <Box>
+                        <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                      </Box>
+                    </Tooltip>
                   </Box>
                 </Box>
                 <Typography
