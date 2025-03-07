@@ -1,5 +1,5 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, ContentCopy, OpenInNew } from '@mui/icons-material';
+import { ContentPaste, ContentCopy, OpenInNew, Download } from '@mui/icons-material';
 import {
   Box,
   Container,
@@ -23,6 +23,7 @@ import {
   ListItemText,
   Chip,
   ListItemAvatar,
+  Tooltip,
 } from '@mui/material';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -467,6 +468,18 @@ const Sender: React.FC = () => {
   const isTokenListLoading =
     tokensLoading || (tokenListRef.current?.isLoading() ?? false);
 
+  // テンプレートダウンロード関数を追加
+  const downloadTemplate = () => {
+    const template = "wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547";
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <Header />
@@ -508,7 +521,16 @@ const Sender: React.FC = () => {
               <Typography variant="h6" mb={2} textAlign="center">
                 {t('SOL Balance')}
               </Typography>
-              {loadingSol ? (
+              {!connected ? (
+                <Typography
+                  variant="h4"
+                  fontWeight="bold"
+                  color="text.secondary"
+                  textAlign="center"
+                >
+                  0.00000000 SOL
+                </Typography>
+              ) : loadingSol ? (
                 <Box textAlign="center" p={2}>
                   <CircularProgress size={24} />
                 </Box>
@@ -541,31 +563,60 @@ const Sender: React.FC = () => {
               >
                 <Typography
                   variant="body2"
-                  sx={{ flex: 1, textAlign: 'center' }}
+                  sx={{ flex: 1, textAlign: 'center', color: !connected ? 'text.secondary' : 'inherit' }}
                 >
-                  {publicKey?.toBase58()}
+                  {connected ? publicKey?.toBase58() : 'Please connect your wallet'}
                 </Typography>
-                <IconButton
-                  onClick={() => publicKey && copyAddress(publicKey.toBase58())}
-                  sx={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                  }}
-                >
-                  <ContentCopy />
-                </IconButton>
+                {connected && (
+                  <Tooltip title="Copy" arrow placement="top">
+                    <IconButton
+                      onClick={() => publicKey && copyAddress(publicKey.toBase58())}
+                      sx={{
+                        position: 'absolute',
+                        right: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                      }}
+                    >
+                      <ContentCopy />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          bottom: -5.0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontSize: '0.6rem',
+                        }}
+                      >
+                        copy
+                      </Typography>
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Box>
             </CardContent>
           </Card>
 
           {/* Token List - 改善版 */}
-          <TokenList
-            publicKey={publicKey}
-            ref={tokenListRef}
-            onDataLoaded={handleTokenDataLoaded}
-          />
+          {connected ? (
+            <TokenList
+              publicKey={publicKey}
+              ref={tokenListRef}
+              onDataLoaded={handleTokenDataLoaded}
+            />
+          ) : (
+            <Card sx={{ mb: 4 }}>
+              <CardContent>
+                <Typography variant="h6" textAlign="center">
+                  {t('SPL Tokens')}
+                </Typography>
+                <Box textAlign="center" p={2}>
+                  {t('No SPL tokens found')}
+                </Box>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Transfer Form */}
           <Card sx={{ mb: 4 }}>
@@ -681,6 +732,8 @@ const Sender: React.FC = () => {
               <Box mb={3}>
                 <Typography variant="body2" fontWeight="bold" mb={1}>
                   {t('Recipient Addresses and Amounts')}
+                  <br />
+                  {t('Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -713,12 +766,26 @@ const Sender: React.FC = () => {
                           : ''
                   }
                 />
-                  <IconButton
-                    onClick={pasteAddresses}
-                    sx={{ position: 'absolute', top: 8, right: 18 }}
-                  >
-                    <ContentPaste />
-                  </IconButton>
+                  <Tooltip title="Paste" arrow placement="top">
+                    <IconButton
+                      onClick={pasteAddresses}
+                      sx={{ position: 'absolute', top: 8, right: 18 }}
+                    >
+                      <ContentPaste />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          bottom: -5.0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontSize: '0.6rem',
+                        }}
+                      >
+                        Paste
+                      </Typography>
+                    </IconButton>
+                  </Tooltip>
                 </Box>
                 <Box
                   position="relative"
@@ -730,7 +797,29 @@ const Sender: React.FC = () => {
                   <Typography variant="caption" color="gray">
                     {t('Valid entries')}: {parsedEntries.length}
                   </Typography>
-                  <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Tooltip title="download" arrow placement="top">
+                      <Button
+                        onClick={downloadTemplate}
+                        size="small"
+                        startIcon={<Download fontSize="small" />}
+                        sx={{
+                          textTransform: 'none',
+                          color: 'inherit',
+                          minWidth: 'auto',
+                          padding: '4px 8px',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        {t('template')}
+                      </Button>
+                    </Tooltip>
+                    <Tooltip title="upload" arrow placement="top">
+                      <Box>
+                        <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                      </Box>
+                    </Tooltip>
+                  </Box>
                 </Box>
                 <Typography
                   variant="caption"
@@ -768,6 +857,16 @@ const Sender: React.FC = () => {
                   t('Transfer')
                 )}
               </Button>
+              <Typography 
+                variant="caption" 
+                color="text.secondary" 
+                mt={1}
+                textAlign="center"
+                display="block"
+              >
+                {t('The lowest across the network, each transaction only requires 0.0075 SOL.')}
+              </Typography>
+              
 
               {/* Transaction Results */}
               {transactionResults.length > 0 && (
@@ -875,21 +974,53 @@ const Sender: React.FC = () => {
                                 rel="noopener noreferrer"
                                 sx={{ display: 'flex', alignItems: 'center' }}
                               >
-                                {result.signature}
-                                <OpenInNew sx={{ ml: 1, fontSize: 16 }} />
+                                {`${result.signature.slice(0, 15)}......${result.signature.slice(-15)}`}
+                                <Tooltip title="link" arrow placement="top">
+                                  <Box sx={{ position: 'relative', ml: 1 }}>
+                                    <OpenInNew sx={{ fontSize: 16 }} />
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        position: 'absolute',
+                                        bottom: -10.0,
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        fontSize: '0.6rem',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      link
+                                    </Typography>
+                                  </Box>
+                                </Tooltip>
                               </Link>
                             }
                           />
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyAddress(result.signature);
-                            }}
-                            sx={{ ml: 1 }}
-                          >
-                            <ContentCopy fontSize="small" />
-                          </IconButton>
+                          <Tooltip title="Copy" arrow placement="top">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyAddress(result.signature);
+                              }}
+                              sx={{ ml: 1 }}
+                            >
+                              <ContentCopy fontSize="small" />
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  position: 'absolute',
+                                  bottom: -10.0,
+                                  left: '50%',
+                                  transform: 'translateX(-50%)',
+                                  fontSize: '0.6rem',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                copy
+                              </Typography>
+                            </IconButton>
+                          </Tooltip>
                         </Box>
 
                         {/* Error Message */}

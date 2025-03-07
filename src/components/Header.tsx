@@ -28,8 +28,8 @@ const Header = memo(() => {
   const { connected, connecting, walletInfo } = useWallet();
 
   useEffect(() => {
-    if (location.pathname.includes("/bulksender")) {
-      setNavValue("BulkSender");
+    if (location.pathname.includes("/sender")) {
+      setNavValue("Multi Sender");
     } else if (location.pathname.includes("/comingsoon")) {
       setNavValue("comingsoon");
     } else {
@@ -93,10 +93,10 @@ const Header = memo(() => {
           >
             <Tab
               disableRipple
-              value="BulkSender"
-              label="BulkSender"
+              value="Multi Sender"
+              label="Multi Sender"
               component={Link}
-              to="/bulksender"
+              to="/sender"
             />
             <Tab disableRipple disabled value="comingsoon" label="comingsoon" component={Link} to="/comingsoon" />
           </Tabs>
