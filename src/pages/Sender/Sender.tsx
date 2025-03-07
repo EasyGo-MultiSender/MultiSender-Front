@@ -23,6 +23,7 @@ import {
   ListItemText,
   Chip,
   ListItemAvatar,
+  Tooltip,
 } from '@mui/material';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -545,17 +546,31 @@ const Sender: React.FC = () => {
                 >
                   {publicKey?.toBase58()}
                 </Typography>
-                <IconButton
-                  onClick={() => publicKey && copyAddress(publicKey.toBase58())}
-                  sx={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                  }}
-                >
-                  <ContentCopy />
-                </IconButton>
+                <Tooltip title="Copy" arrow placement="top">
+                  <IconButton
+                    onClick={() => publicKey && copyAddress(publicKey.toBase58())}
+                    sx={{
+                      position: 'absolute',
+                      right: 8,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  >
+                    <ContentCopy />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        position: 'absolute',
+                        bottom: -5.0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        fontSize: '0.6rem',
+                      }}
+                    >
+                      copy
+                    </Typography>
+                  </IconButton>
+                </Tooltip>
               </Box>
             </CardContent>
           </Card>
@@ -713,12 +728,26 @@ const Sender: React.FC = () => {
                           : ''
                   }
                 />
-                  <IconButton
-                    onClick={pasteAddresses}
-                    sx={{ position: 'absolute', top: 8, right: 18 }}
-                  >
-                    <ContentPaste />
-                  </IconButton>
+                  <Tooltip title="Paste" arrow placement="top">
+                    <IconButton
+                      onClick={pasteAddresses}
+                      sx={{ position: 'absolute', top: 8, right: 18 }}
+                    >
+                      <ContentPaste />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          bottom: -5.0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontSize: '0.6rem',
+                        }}
+                      >
+                        Paste
+                      </Typography>
+                    </IconButton>
+                  </Tooltip>
                 </Box>
                 <Box
                   position="relative"
@@ -875,21 +904,53 @@ const Sender: React.FC = () => {
                                 rel="noopener noreferrer"
                                 sx={{ display: 'flex', alignItems: 'center' }}
                               >
-                                {result.signature}
-                                <OpenInNew sx={{ ml: 1, fontSize: 16 }} />
+                                {`${result.signature.slice(0, 15)}......${result.signature.slice(-15)}`}
+                                <Tooltip title="link" arrow placement="top">
+                                  <Box sx={{ position: 'relative', ml: 1 }}>
+                                    <OpenInNew sx={{ fontSize: 16 }} />
+                                    <Typography
+                                      variant="caption"
+                                      sx={{
+                                        position: 'absolute',
+                                        bottom: -10.0,
+                                        left: '50%',
+                                        transform: 'translateX(-50%)',
+                                        fontSize: '0.6rem',
+                                        whiteSpace: 'nowrap'
+                                      }}
+                                    >
+                                      link
+                                    </Typography>
+                                  </Box>
+                                </Tooltip>
                               </Link>
                             }
                           />
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyAddress(result.signature);
-                            }}
-                            sx={{ ml: 1 }}
-                          >
-                            <ContentCopy fontSize="small" />
-                          </IconButton>
+                          <Tooltip title="Copy" arrow placement="top">
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyAddress(result.signature);
+                              }}
+                              sx={{ ml: 1 }}
+                            >
+                              <ContentCopy fontSize="small" />
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  position: 'absolute',
+                                  bottom: -10.0,
+                                  left: '50%',
+                                  transform: 'translateX(-50%)',
+                                  fontSize: '0.6rem',
+                                  whiteSpace: 'nowrap'
+                                }}
+                              >
+                                copy
+                              </Typography>
+                            </IconButton>
+                          </Tooltip>
                         </Box>
 
                         {/* Error Message */}
