@@ -587,11 +587,24 @@ const Sender: React.FC = () => {
           </Card>
 
           {/* Token List - 改善版 */}
-          <TokenList
-            publicKey={publicKey}
-            ref={tokenListRef}
-            onDataLoaded={handleTokenDataLoaded}
-          />
+          {connected ? (
+            <TokenList
+              publicKey={publicKey}
+              ref={tokenListRef}
+              onDataLoaded={handleTokenDataLoaded}
+            />
+          ) : (
+            <Card sx={{ mb: 4 }}>
+              <CardContent>
+                <Typography variant="h6" textAlign="center">
+                  {t('SPL Tokens')}
+                </Typography>
+                <Box textAlign="center" p={2}>
+                  {t('No SPL tokens found')}
+                </Box>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Transfer Form */}
           <Card sx={{ mb: 4 }}>
