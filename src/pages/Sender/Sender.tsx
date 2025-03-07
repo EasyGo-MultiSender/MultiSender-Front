@@ -720,6 +720,8 @@ const Sender: React.FC = () => {
               <Box mb={3}>
                 <Typography variant="body2" fontWeight="bold" mb={1}>
                   {t('Recipient Addresses and Amounts')}
+                  <br />
+                  {t('Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.')}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -821,6 +823,16 @@ const Sender: React.FC = () => {
                   t('Transfer')
                 )}
               </Button>
+              <Typography 
+                variant="caption" 
+                color="text.secondary" 
+                mt={1}
+                textAlign="center"
+                display="block"
+              >
+                {t('The lowest across the network, each transaction only requires 0.0075 SOL.')}
+              </Typography>
+              
 
               {/* Transaction Results */}
               {transactionResults.length > 0 && (
