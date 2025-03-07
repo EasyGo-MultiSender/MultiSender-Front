@@ -1,5 +1,5 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, ContentCopy, OpenInNew } from '@mui/icons-material';
+import { ContentPaste, ContentCopy, OpenInNew, Download } from '@mui/icons-material';
 import {
   Box,
   Container,
@@ -468,6 +468,18 @@ const Sender: React.FC = () => {
   const isTokenListLoading =
     tokensLoading || (tokenListRef.current?.isLoading() ?? false);
 
+  // テンプレートダウンロード関数を追加
+  const downloadTemplate = () => {
+    const template = "wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547";
+    const blob = new Blob([template], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <Header />
@@ -785,7 +797,25 @@ const Sender: React.FC = () => {
                   <Typography variant="caption" color="gray">
                     {t('Valid entries')}: {parsedEntries.length}
                   </Typography>
-                  <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <Tooltip title="template" arrow placement="top">
+                      <Button
+                        onClick={downloadTemplate}
+                        size="small"
+                        startIcon={<Download fontSize="small" />}
+                        sx={{
+                          textTransform: 'none',
+                          color: 'inherit',
+                          minWidth: 'auto',
+                          padding: '4px 8px',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        template
+                      </Button>
+                    </Tooltip>
+                    <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                  </Box>
                 </Box>
                 <Typography
                   variant="caption"
