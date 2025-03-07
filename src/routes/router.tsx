@@ -9,7 +9,7 @@ export const router = createBrowserRouter([
     element: <Top />,
   },
   {
-    path: "/bulksender",
+    path: "/sender",
     element: <Sender />,
   },
   {
