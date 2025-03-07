@@ -509,7 +509,16 @@ const Sender: React.FC = () => {
               <Typography variant="h6" mb={2} textAlign="center">
                 {t('SOL Balance')}
               </Typography>
-              {loadingSol ? (
+              {!connected ? (
+                <Typography
+                  variant="h4"
+                  fontWeight="bold"
+                  color="text.secondary"
+                  textAlign="center"
+                >
+                  0.00000000 SOL
+                </Typography>
+              ) : loadingSol ? (
                 <Box textAlign="center" p={2}>
                   <CircularProgress size={24} />
                 </Box>
@@ -542,35 +551,37 @@ const Sender: React.FC = () => {
               >
                 <Typography
                   variant="body2"
-                  sx={{ flex: 1, textAlign: 'center' }}
+                  sx={{ flex: 1, textAlign: 'center', color: !connected ? 'text.secondary' : 'inherit' }}
                 >
-                  {publicKey?.toBase58()}
+                  {connected ? publicKey?.toBase58() : 'Please connect your wallet'}
                 </Typography>
-                <Tooltip title="Copy" arrow placement="top">
-                  <IconButton
-                    onClick={() => publicKey && copyAddress(publicKey.toBase58())}
-                    sx={{
-                      position: 'absolute',
-                      right: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                    }}
-                  >
-                    <ContentCopy />
-                    <Typography
-                      variant="caption"
+                {connected && (
+                  <Tooltip title="Copy" arrow placement="top">
+                    <IconButton
+                      onClick={() => publicKey && copyAddress(publicKey.toBase58())}
                       sx={{
                         position: 'absolute',
-                        bottom: -5.0,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: '0.6rem',
+                        right: 8,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
                       }}
                     >
-                      copy
-                    </Typography>
-                  </IconButton>
-                </Tooltip>
+                      <ContentCopy />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          bottom: -5.0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontSize: '0.6rem',
+                        }}
+                      >
+                        copy
+                      </Typography>
+                    </IconButton>
+                  </Tooltip>
+                )}
               </Box>
             </CardContent>
           </Card>
