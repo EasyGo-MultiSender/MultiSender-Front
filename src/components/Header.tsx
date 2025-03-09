@@ -1,5 +1,5 @@
 // src/components/Header.tsx
-import { Buffer } from "buffer";
+import { Buffer } from 'buffer';
 window.Buffer = Buffer;
 
 import {
@@ -11,16 +11,16 @@ import {
   Tabs,
   CircularProgress,
   Box,
-} from "@mui/material";
-import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
-import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-import { Link } from "react-router-dom";
-import { memo, useEffect, useState } from "react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { useWallet } from "../hooks/useWallet";
-import { NetworkSelector } from "./NetworkSelector";
-import { useTranslation } from "react-i18next";
-import TranslateSelector from "./TranslateSelector";
+} from '@mui/material';
+import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import { Link } from 'react-router-dom';
+import { memo, useEffect, useState } from 'react';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { useWallet } from '../hooks/useWallet';
+import { NetworkSelector } from './NetworkSelector';
+import { useTranslation } from 'react-i18next';
+import TranslateSelector from './TranslateSelector';
 
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック
@@ -28,12 +28,12 @@ const Header = memo(() => {
   const { connected, connecting, walletInfo } = useWallet();
 
   useEffect(() => {
-    if (location.pathname.includes("/sender")) {
-      setNavValue("Multi Sender");
-    } else if (location.pathname.includes("/comingsoon")) {
-      setNavValue("comingsoon");
+    if (location.pathname.includes('/sender')) {
+      setNavValue('Multi Sender');
+    } else if (location.pathname.includes('/Log')) {
+      setNavValue('Log');
     } else {
-      setNavValue("");
+      setNavValue('');
     }
   }, [location.pathname]);
 
@@ -66,14 +66,23 @@ const Header = memo(() => {
 
   return (
     <Box>
-      <AppBar position="fixed" sx={{ backgroundColor: "#17062e", height: "12vh" }}>
+      <AppBar
+        position="fixed"
+        sx={{ backgroundColor: '#17062e', height: '12vh' }}
+      >
         <Toolbar>
-          <IconButton edge="start" color="inherit" aria-label="menu" component={Link} to="/">
-            <RocketLaunchIcon sx={{ color: "#47dded" }} />
+          <IconButton
+            edge="start"
+            color="inherit"
+            aria-label="menu"
+            component={Link}
+            to="/"
+          >
+            <RocketLaunchIcon sx={{ color: '#47dded' }} />
           </IconButton>
 
           <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 2 }}>
-            {t("easy go")}
+            {t('easy go')}
           </Typography>
 
           <Tabs
@@ -83,12 +92,18 @@ const Header = memo(() => {
             indicatorColor="secondary"
             aria-label="secondary tabs example"
             sx={{
-              position: "absolute",
-              left: "50%",
-              transform: "translateX(-50%)",
-              "& .MuiTabs-indicator": { backgroundColor: "#47dded", transition: "none" },
-              "& .Mui-selected": { color: "#47dded" },
-              "& .MuiTab-root:not(.Mui-selected):hover": { color: "#47dded", opacity: 0.7 },
+              position: 'absolute',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              '& .MuiTabs-indicator': {
+                backgroundColor: '#47dded',
+                transition: 'none',
+              },
+              '& .Mui-selected': { color: '#47dded' },
+              '& .MuiTab-root:not(.Mui-selected):hover': {
+                color: '#47dded',
+                opacity: 0.7,
+              },
             }}
           >
             <Tab
@@ -98,7 +113,13 @@ const Header = memo(() => {
               component={Link}
               to="/sender"
             />
-            <Tab disableRipple disabled value="comingsoon" label="comingsoon" component={Link} to="/comingsoon" />
+            <Tab
+              disableRipple
+              value="Log"
+              label="Log"
+              component={Link}
+              to="/log"
+            />
           </Tabs>
 
           {/* Add NetworkSelector before WalletMultiButton */}
@@ -109,15 +130,15 @@ const Header = memo(() => {
 
           <WalletMultiButton
             style={{
-              backgroundColor: "#78c1fd",
-              color: "#06234e",
-              transition: "all 0.2s ease",
-              padding: "8px 15px",
-              fontSize: "16px",
-              height: "42px",
-              display: "flex",
-              alignItems: "center",
-              gap: connected ? "0px" : "8px",
+              backgroundColor: '#78c1fd',
+              color: '#06234e',
+              transition: 'all 0.2s ease',
+              padding: '8px 15px',
+              fontSize: '16px',
+              height: '42px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: connected ? '0px' : '8px',
             }}
           >
             {getWalletButtonContent()}
