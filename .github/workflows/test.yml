@@ -1,11 +1,11 @@
-name: ESLint Check
+name: Run Vitest
 
 on:
   pull_request:
   push:
 
 jobs:
-  lint:
+  test:
     runs-on: ubuntu-latest
 
     steps:
