@@ -37,7 +37,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^15.4.1",
-    "react-router-dom": "^7.1.5"
+    "react-router-dom": "^7.1.5",
+    "vitest": "^3.0.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.26.4",
