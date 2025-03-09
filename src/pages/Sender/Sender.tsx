@@ -833,6 +833,86 @@ const Sender: React.FC = () => {
                 </Typography>
               </Box>
 
+              {/* Token simulation */}
+              <Box mb={3}>
+                <Typography variant="body2" fontWeight="bold" mb={2}>
+                  {t('Transaction Simulation')}
+                </Typography>
+                <Box
+                  sx={{
+                    display: 'grid',
+                    gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+                    gap: 2,
+                  }}
+                >
+                  {/* 全てのBoxに共通のスタイルを適用 */}
+                  {[
+                    {
+                      title: 'Total Addresses',
+                      value: parsedEntries.length,
+                    },
+                    {
+                      title: 'Total Token Sent',
+                      value: totalAmount.toFixed(3),
+                      subText: `${t('Service Fee')}: 0.008SOL`,
+                    },
+                    {
+                      title: 'Total Transactions',
+                      value: Math.ceil(parsedEntries.length / 9),
+                    },
+                    {
+                      title: 'SOL Balance',
+                      value: balance?.toFixed(3) ?? '0.000',
+                    },
+                  ].map((item, index) => (
+                    <Box
+                      key={index}
+                      sx={{
+                        background: 'linear-gradient(135deg, rgba(120, 193, 253, 0.15) 0%, rgba(255, 255, 255, 0.9) 100%)',
+                        borderRadius: 2,
+                        p: 2,
+                        textAlign: 'center',
+                        border: '1px solid rgba(120, 193, 253, 0.3)',
+                        boxShadow: '0 2px 8px rgba(120, 193, 253, 0.1)',
+                        transition: 'all 0.2s ease',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        '&::before': {
+                          content: '""',
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          width: '100%',
+                          height: '100%',
+                          background: 'linear-gradient(135deg, rgba(120, 193, 253, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                          opacity: 0,
+                          transition: 'opacity 0.2s ease',
+                        },
+                        '&:hover': {
+                          boxShadow: '0 4px 12px rgba(120, 193, 253, 0.15)',
+                          transform: 'translateY(-2px)',
+                          '&::before': {
+                            opacity: 1,
+                          },
+                        },
+                      }}
+                    >
+                      <Typography variant="h4" fontWeight="bold" color="rgb(0, 0, 0)">
+                        {item.value}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {t(item.title)}
+                      </Typography>
+                      {item.subText && (
+                        <Typography variant="caption" color="text.secondary">
+                          {item.subText}
+                        </Typography>
+                      )}
+                    </Box>
+                  ))}
+                </Box>
+              </Box>
+
               {/* Transfer Button */}
               <Button
                 variant="contained"
