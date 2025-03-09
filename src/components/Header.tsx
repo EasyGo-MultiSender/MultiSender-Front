@@ -30,8 +30,8 @@ const Header = memo(() => {
   useEffect(() => {
     if (location.pathname.includes('/sender')) {
       setNavValue('Multi Sender');
-    } else if (location.pathname.includes('/log')) {
-      setNavValue('Log');
+    } else if (location.pathname.includes('/history')) {
+      setNavValue('History');
     } else {
       setNavValue('');
     }
@@ -115,10 +115,10 @@ const Header = memo(() => {
             />
             <Tab
               disableRipple
-              value="Log"
-              label="Log"
+              value="History"
+              label="History"
               component={Link}
-              to="/log"
+              to="/history"
             />
           </Tabs>
 
