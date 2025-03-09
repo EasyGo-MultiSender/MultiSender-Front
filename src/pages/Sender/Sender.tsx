@@ -1,5 +1,10 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, ContentCopy, OpenInNew, Download } from '@mui/icons-material';
+import {
+  ContentPaste,
+  ContentCopy,
+  OpenInNew,
+  Download,
+} from '@mui/icons-material';
 import {
   Box,
   Container,
@@ -197,7 +202,11 @@ const Sender: React.FC = () => {
       const amount = parseFloat(amountStr);
 
       // SOL選択時の最小額チェック
-      if (selectedToken === 'SOL' && amount < minSolAmount && minSolAmount > 0) {
+      if (
+        selectedToken === 'SOL' &&
+        amount < minSolAmount &&
+        minSolAmount > 0
+      ) {
         belowMinimumSolLines.push(line);
         // 最小額未満でもエントリには追加して、後で警告を表示できるようにする
       }
@@ -226,7 +235,12 @@ const Sender: React.FC = () => {
     // 合計金額を計算
     const sum = entries.reduce((total, entry) => total + entry.amount, 0);
     setTotalAmount(sum);
-  }, [recipientAddresses, isValidSolanaAddress, selectedToken, SOL_VALIDATION_AMOUNT]);
+  }, [
+    recipientAddresses,
+    isValidSolanaAddress,
+    selectedToken,
+    SOL_VALIDATION_AMOUNT,
+  ]);
 
   // recipientAddressesが変更されたときにだけパースを実行
   useEffect(() => {
@@ -470,7 +484,8 @@ const Sender: React.FC = () => {
 
   // テンプレートダウンロード関数を追加
   const downloadTemplate = () => {
-    const template = "wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547";
+    const template =
+      'wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -563,14 +578,22 @@ const Sender: React.FC = () => {
               >
                 <Typography
                   variant="body2"
-                  sx={{ flex: 1, textAlign: 'center', color: !connected ? 'text.secondary' : 'inherit' }}
+                  sx={{
+                    flex: 1,
+                    textAlign: 'center',
+                    color: !connected ? 'text.secondary' : 'inherit',
+                  }}
                 >
-                  {connected ? publicKey?.toBase58() : 'Please connect your wallet'}
+                  {connected
+                    ? publicKey?.toBase58()
+                    : 'Please connect your wallet'}
                 </Typography>
                 {connected && (
                   <Tooltip title="Copy" arrow placement="top">
                     <IconButton
-                      onClick={() => publicKey && copyAddress(publicKey.toBase58())}
+                      onClick={() =>
+                        publicKey && copyAddress(publicKey.toBase58())
+                      }
                       sx={{
                         position: 'absolute',
                         right: 8,
@@ -733,7 +756,9 @@ const Sender: React.FC = () => {
                 <Typography variant="body2" fontWeight="bold" mb={1}>
                   {t('Recipient Addresses and Amounts')}
                   <br />
-                  {t('Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.')}
+                  {t(
+                    'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
+                  )}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -744,28 +769,29 @@ const Sender: React.FC = () => {
                   Format: address,amount (one entry per line)
                 </Typography>
                 <Box position="relative">
-                <TextField
-                  multiline
-                  rows={10}
-                  fullWidth
-                  value={recipientAddresses}
-                  onChange={(e) => setRecipientAddresses(e.target.value)}
-                  placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
-                  error={
-                    invalidEntries.length > 0 || 
-                    duplicateAddresses.length > 0 || 
-                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                  }
-                  helperText={
-                    invalidEntries.length > 0
-                      ? `Invalid entries: ${invalidEntries.length}`
-                      : duplicateAddresses.length > 0
-                        ? `Duplicate addresses: ${duplicateAddresses.length}`
-                        : (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                          ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
-                          : ''
-                  }
-                />
+                  <TextField
+                    multiline
+                    rows={10}
+                    fullWidth
+                    value={recipientAddresses}
+                    onChange={(e) => setRecipientAddresses(e.target.value)}
+                    placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
+                    error={
+                      invalidEntries.length > 0 ||
+                      duplicateAddresses.length > 0 ||
+                      (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                    }
+                    helperText={
+                      invalidEntries.length > 0
+                        ? `Invalid entries: ${invalidEntries.length}`
+                        : duplicateAddresses.length > 0
+                          ? `Duplicate addresses: ${duplicateAddresses.length}`
+                          : selectedToken === 'SOL' &&
+                              belowMinSolEntries.length > 0
+                            ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
+                            : ''
+                    }
+                  />
                   <Tooltip title="Paste" arrow placement="top">
                     <IconButton
                       onClick={pasteAddresses}
@@ -816,7 +842,9 @@ const Sender: React.FC = () => {
                     </Tooltip>
                     <Tooltip title="upload" arrow placement="top">
                       <Box>
-                        <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                        <UploadButton
+                          onRecipientsLoaded={handleRecipientsLoaded}
+                        />
                       </Box>
                     </Tooltip>
                   </Box>
@@ -857,16 +885,17 @@ const Sender: React.FC = () => {
                   t('Transfer')
                 )}
               </Button>
-              <Typography 
-                variant="caption" 
-                color="text.secondary" 
+              <Typography
+                variant="caption"
+                color="text.secondary"
                 mt={1}
                 textAlign="center"
                 display="block"
               >
-                {t('The lowest across the network, each transaction only requires 0.0075 SOL.')}
+                {t(
+                  'The lowest across the network, each transaction only requires 0.0075 SOL.'
+                )}
               </Typography>
-              
 
               {/* Transaction Results */}
               {transactionResults.length > 0 && (
@@ -879,6 +908,7 @@ const Sender: React.FC = () => {
                       <ListItem
                         key={`${result.signature}-${index}`}
                         sx={{
+                          position: 'relative',
                           bgcolor: '#f5f5f5',
                           borderRadius: 1,
                           mb: 1,
@@ -910,14 +940,15 @@ const Sender: React.FC = () => {
                         {/* Transfer Information */}
                         <Box
                           sx={{
-                            width: '100%',
+                            width: '100%', // または具体的なピクセル値
                             mb: 1,
                             display: 'flex',
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             bgcolor: 'rgba(0, 0, 0, 0.03)',
                             borderRadius: 1,
-                            p: 1,
+                            py: 1,
+                            mx: 'auto', // 中央寄せ
                           }}
                         >
                           {result.recipients.length === 1 ? (
@@ -930,7 +961,11 @@ const Sender: React.FC = () => {
                           ) : (
                             // 複数受取人の場合（バッチ処理された場合）
                             <Box width="100%">
-                              <Typography variant="body2" fontWeight="bold">
+                              <Typography
+                                variant="body2"
+                                fontWeight="bold"
+                                mx={2}
+                              >
                                 Batch transfer: {result.recipients.length}{' '}
                                 recipients
                               </Typography>
@@ -938,6 +973,7 @@ const Sender: React.FC = () => {
                                 variant="body2"
                                 color="primary"
                                 mb={1}
+                                mx={2}
                               >
                                 Total:{' '}
                                 {(
@@ -986,7 +1022,7 @@ const Sender: React.FC = () => {
                                         left: '50%',
                                         transform: 'translateX(-50%)',
                                         fontSize: '0.6rem',
-                                        whiteSpace: 'nowrap'
+                                        whiteSpace: 'nowrap',
                                       }}
                                     >
                                       link
@@ -1014,7 +1050,7 @@ const Sender: React.FC = () => {
                                   left: '50%',
                                   transform: 'translateX(-50%)',
                                   fontSize: '0.6rem',
-                                  whiteSpace: 'nowrap'
+                                  whiteSpace: 'nowrap',
                                 }}
                               >
                                 copy
