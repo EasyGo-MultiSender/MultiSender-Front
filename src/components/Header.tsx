@@ -30,7 +30,7 @@ const Header = memo(() => {
   useEffect(() => {
     if (location.pathname.includes('/sender')) {
       setNavValue('Multi Sender');
-    } else if (location.pathname.includes('/Log')) {
+    } else if (location.pathname.includes('/log')) {
       setNavValue('Log');
     } else {
       setNavValue('');
