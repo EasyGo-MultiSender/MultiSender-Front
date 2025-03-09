@@ -7,6 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "test": "vitest",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
     "i18next-extract": "NODE_ENV=development babel './src/**/*.{js,jsx,ts,tsx}' --config-file ./src/locales/babel.config.json",
     "prepare": "husky install"
