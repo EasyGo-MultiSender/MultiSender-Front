@@ -953,7 +953,7 @@ const Sender: React.FC = () => {
                         >
                           {result.recipients.length === 1 ? (
                             // 単一受取人の場合
-                            <Typography variant="body2">
+                            <Typography variant="body2" mx={2}>
                               {result.amount} {result.token} to{' '}
                               {result.recipients[0].slice(0, 6)}...
                               {result.recipients[0].slice(-4)}
