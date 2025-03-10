@@ -16,16 +16,18 @@ interface AddressEntry {
   amount: number;
 }
 
+interface TransactionResult {
+  signature: string;
+  status: 'success' | 'error';
+  timestamp: number;
+  error?: string;
+  recipients: string[];
+  amount: number;
+  token: string;
+}
+
 interface TransactionResultItemProps {
-  result: {
-    signature: string;
-    status: string;
-    timestamp: number;
-    recipients: string[];
-    amount: number;
-    token: string;
-    error?: string;
-  };
+  result: TransactionResult;
   recipientAddresses: AddressEntry[];
   connection: {
     rpcEndpoint: string;
