@@ -79,7 +79,6 @@ export const TransactionResultItem = ({
             size="small"
             sx={{
               mr: 1,
-              color: 'text.secondary',
               borderColor: 'rgba(27, 27, 27, 0.37)',
               backgroundColor: 'rgba(215, 217, 222, 0.43)',
               '&:hover': {
