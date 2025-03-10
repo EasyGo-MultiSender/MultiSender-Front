@@ -37,6 +37,7 @@ interface TransactionResultItemProps {
 
 export const TransactionResultItem = ({
   result,
+  recipientAddresses,
   connection,
   copyAddress,
 }: TransactionResultItemProps) => {
@@ -262,7 +263,7 @@ export const TransactionResultItem = ({
                           fontSize: '0.875rem',
                         }}
                       >
-                        {result.amount} {result.token}
+                        {recipientAddresses[index].amount} {result.token}
                       </td>
                     </tr>
                   ))}
