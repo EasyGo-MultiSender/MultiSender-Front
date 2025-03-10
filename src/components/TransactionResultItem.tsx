@@ -3,7 +3,6 @@ import {
   Chip,
   Typography,
   ListItem,
-  ListItemText,
   IconButton,
   Link,
   Tooltip,
@@ -165,224 +164,211 @@ export const TransactionResultItem = ({
           mx: 'auto',
         }}
       >
-        {result.recipients.length === 1 ? (
-          <Typography variant="body2">
-            {result.amount} {result.token} to {result.recipients[0].slice(0, 6)}
-            ...
-            {result.recipients[0].slice(-4)}
-          </Typography>
-        ) : (
-          <Box width="100%">
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                pb: 1,
-              }}
-            >
-              <Tooltip title="Copy All" arrow placement="top">
-                <Button
-                  variant="text"
-                  size="small"
-                  startIcon={<ContentCopy fontSize="small" />}
-                  onClick={() => {
-                    const dataToCopy = recipientAddresses
-                      .map(
-                        (entry) =>
-                          `${entry.address}, ${entry.amount} ${result.token}`
-                      )
-                      .join('\n');
-                    navigator.clipboard.writeText(dataToCopy);
-                    copyAddress('all-data');
-                  }}
-                  sx={{
-                    fontSize: '0.75rem',
-                    textTransform: 'none',
-                    minWidth: 'auto',
+        <Box width="100%">
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              alignItems: 'center',
+              pb: 1,
+            }}
+          >
+            <Tooltip title="Copy All" arrow placement="top">
+              <Button
+                variant="text"
+                size="small"
+                startIcon={<ContentCopy fontSize="small" />}
+                onClick={() => {
+                  const dataToCopy = recipientAddresses
+                    .map(
+                      (entry) =>
+                        `${entry.address}, ${entry.amount} ${result.token}`
+                    )
+                    .join('\n');
+                  navigator.clipboard.writeText(dataToCopy);
+                  copyAddress('all-data');
+                }}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  minWidth: 'auto',
 
-                    p: '2px 8px',
-                    color: 'text.secondary',
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  Copy All
-                </Button>
-              </Tooltip>
-            </Box>
-
-            <Box
-              sx={{
-                maxHeight: '200px',
-                overflowY: 'auto',
-                width: '100%',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                borderRadius: '6px',
-                paddingRight: '4px',
-                '&::-webkit-scrollbar': {
-                  width: '6px',
-                },
-                '&::-webkit-scrollbar-track': {
-                  background: 'rgba(0, 0, 0, 0.05)',
-                  borderRadius: '4px',
-                  marginLeft: '4px',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  borderRadius: '4px',
+                  p: '2px 8px',
+                  color: 'text.secondary',
                   '&:hover': {
-                    background: 'rgba(0, 0, 0, 0.3)',
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
                   },
-                },
-              }}
-            >
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  borderRadius: '6px',
-                  overflow: 'hidden',
                 }}
               >
-                <thead>
-                  <tr
+                Copy All
+              </Button>
+            </Tooltip>
+          </Box>
+
+          <Box
+            sx={{
+              maxHeight: '200px',
+              overflowY: 'auto',
+              width: '100%',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+              borderRadius: '6px',
+              paddingRight: '4px',
+              '&::-webkit-scrollbar': {
+                width: '6px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: 'rgba(0, 0, 0, 0.05)',
+                borderRadius: '4px',
+                marginLeft: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: 'rgba(0, 0, 0, 0.2)',
+                borderRadius: '4px',
+                '&:hover': {
+                  background: 'rgba(0, 0, 0, 0.3)',
+                },
+              },
+            }}
+          >
+            <table
+              style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                borderRadius: '6px',
+                overflow: 'hidden',
+              }}
+            >
+              <thead>
+                <tr
+                  style={{
+                    background:
+                      'linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.10) 100%)',
+                    color: 'rgba(0, 0, 0, 0.87)',
+                  }}
+                >
+                  <th
                     style={{
-                      background:
-                        'linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.10) 100%)',
-                      color: 'rgba(0, 0, 0, 0.87)',
+                      padding: '12px 16px',
+                      textAlign: 'left',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
                     }}
                   >
-                    <th
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        color="text.primary"
+                      >
+                        Wallet Addresses
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontWeight: '600', ml: 0.5 }}
+                      >
+                        ({result.recipients.length} items)
+                      </Typography>
+                    </Box>
+                  </th>
+                  <th
+                    style={{
+                      padding: '12px 16px',
+                      textAlign: 'right',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-end',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        fontWeight="bold"
+                        color="text.primary"
+                      >
+                        Amount
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ fontWeight: '600', ml: 0.5 }}
+                      >
+                        (total:{' '}
+                        {(result.amount * result.recipients.length).toFixed(8)}{' '}
+                        {result.token})
+                      </Typography>
+                    </Box>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {result.recipients.map((recipient, index) => (
+                  <tr
+                    key={recipient}
+                    style={{
+                      borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                      backgroundColor:
+                        index % 2 === 0 ? 'rgba(0, 0, 0, 0.02)' : 'transparent',
+                    }}
+                  >
+                    <td
                       style={{
                         padding: '12px 16px',
-                        textAlign: 'left',
                         fontSize: '0.875rem',
-                        fontWeight: 600,
-                        borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                        fontFamily: 'monospace',
                       }}
                     >
                       <Box
                         sx={{
                           display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'flex-start',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
                         }}
                       >
                         <Typography
                           variant="body2"
-                          fontWeight="bold"
-                          color="text.primary"
+                          sx={{
+                            fontFamily: 'monospace',
+                            color: 'rgba(0, 0, 0, 0.87)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            maxWidth: 'calc(100% - 40px)',
+                          }}
                         >
-                          Wallet Addresses
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontWeight: '600', ml: 0.5 }}
-                        >
-                          ({result.recipients.length} items)
+                          {recipient}
                         </Typography>
                       </Box>
-                    </th>
-                    <th
+                    </td>
+                    <td
                       style={{
                         padding: '12px 16px',
                         textAlign: 'right',
                         fontSize: '0.875rem',
-                        fontWeight: 600,
-                        borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                        fontWeight: 500,
                       }}
                     >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'flex-end',
-                        }}
-                      >
-                        <Typography
-                          variant="body2"
-                          fontWeight="bold"
-                          color="text.primary"
-                        >
-                          Amount
-                        </Typography>
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ fontWeight: '600', ml: 0.5 }}
-                        >
-                          (total:{' '}
-                          {(result.amount * result.recipients.length).toFixed(
-                            8
-                          )}{' '}
-                          {result.token})
-                        </Typography>
-                      </Box>
-                    </th>
+                      {recipientAddresses[index].amount} {result.token}
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {result.recipients.map((recipient, index) => (
-                    <tr
-                      key={recipient}
-                      style={{
-                        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
-                        backgroundColor:
-                          index % 2 === 0
-                            ? 'rgba(0, 0, 0, 0.02)'
-                            : 'transparent',
-                      }}
-                    >
-                      <td
-                        style={{
-                          padding: '12px 16px',
-                          fontSize: '0.875rem',
-                          fontFamily: 'monospace',
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                          }}
-                        >
-                          <Typography
-                            variant="body2"
-                            sx={{
-                              fontFamily: 'monospace',
-                              color: 'rgba(0, 0, 0, 0.87)',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              maxWidth: 'calc(100% - 40px)',
-                            }}
-                          >
-                            {recipient}
-                          </Typography>
-                        </Box>
-                      </td>
-                      <td
-                        style={{
-                          padding: '12px 16px',
-                          textAlign: 'right',
-                          fontSize: '0.875rem',
-                          fontWeight: 500,
-                        }}
-                      >
-                        {recipientAddresses[index].amount} {result.token}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Box>
+                ))}
+              </tbody>
+            </table>
           </Box>
-        )}
+        </Box>
       </Box>
-
       {/* Error Message */}
       {result.error && (
         <Box
