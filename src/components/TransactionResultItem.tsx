@@ -176,42 +176,39 @@ export const TransactionResultItem = ({
             <Box
               sx={{
                 display: 'flex',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 alignItems: 'center',
-                mb: 2,
-                borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
                 pb: 1,
               }}
             >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Button
-                  variant="text"
-                  size="small"
-                  startIcon={<ContentCopy fontSize="small" />}
-                  onClick={() => {
-                    const dataToCopy = recipientAddresses
-                      .map(
-                        (entry) =>
-                          `${entry.address}, ${entry.amount} ${result.token}`
-                      )
-                      .join('\n');
-                    navigator.clipboard.writeText(dataToCopy);
-                    copyAddress('all-data');
-                  }}
-                  sx={{
-                    fontSize: '0.75rem',
-                    textTransform: 'none',
-                    minWidth: 'auto',
-                    p: '2px 8px',
-                    color: 'text.secondary',
-                    '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                    },
-                  }}
-                >
-                  Copy All
-                </Button>
-              </Box>
+              <Button
+                variant="text"
+                size="small"
+                startIcon={<ContentCopy fontSize="small" />}
+                onClick={() => {
+                  const dataToCopy = recipientAddresses
+                    .map(
+                      (entry) =>
+                        `${entry.address}, ${entry.amount} ${result.token}`
+                    )
+                    .join('\n');
+                  navigator.clipboard.writeText(dataToCopy);
+                  copyAddress('all-data');
+                }}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  minWidth: 'auto',
+
+                  p: '2px 8px',
+                  color: 'text.secondary',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  },
+                }}
+              >
+                Copy All
+              </Button>
             </Box>
 
             <Box
