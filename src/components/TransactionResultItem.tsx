@@ -93,105 +93,75 @@ export const TransactionResultItem = ({
       </Box>
 
       {/* Signature with Copy and Link */}
-      <Box display="flex" alignItems="center" sx={{ wordBreak: 'break-all' }}>
-        <ListItemText
-          primary={
-            <Link
-              href={`https://solscan.io/tx/${result.signature}${
-                connection.rpcEndpoint.includes('devnet')
-                  ? '?cluster=devnet'
-                  : ''
-              }`}
-              target="_blank"
-              rel="noopener noreferrer"
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                ml: 1,
-                height: '100%',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                maxWidth: '100%',
-                whiteSpace: 'nowrap',
-                textDecoration: 'none',
-              }}
-            >
-              {`${result.signature.slice(0, 15)}......${result.signature.slice(-15)}`}
-              <Tooltip title="link" arrow placement="top">
-                <Box
-                  sx={{
-                    position: 'relative',
-                    ml: 1,
-                    mt: 0.3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                  }}
-                >
-                  <OpenInNew sx={{ fontSize: 16 }} />
-                  <Typography
-                    variant="caption"
-                    sx={{
-                      fontSize: '0.6rem',
-                      whiteSpace: 'nowrap',
-                      lineHeight: 1,
-                      mt: 0,
-                    }}
-                  >
-                    link
-                  </Typography>
-                </Box>
-              </Tooltip>
-            </Link>
-          }
-        />
-
-        <Tooltip title="Copy" arrow placement="top">
-          <Box
+      <Box
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          width: '97%',
+          mb: 2,
+          p: 1,
+          mt: 1.5,
+          backgroundColor: 'rgba(0, 0, 0, 0.065)',
+          borderRadius: '4px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+        }}
+      >
+        <Link
+          href={`https://solscan.io/tx/${result.signature}${
+            connection.rpcEndpoint.includes('devnet') ? '?cluster=devnet' : ''
+          }`}
+          target="_blank"
+          rel="noopener noreferrer"
+          sx={{
+            color: 'primary.main',
+            display: 'flex',
+            alignItems: 'center',
+            flex: 1,
+            textDecoration: 'none',
+            '&:hover': {
+              textDecoration: 'underline',
+            },
+          }}
+        >
+          <Typography
             sx={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              ml: 1.5,
+              fontFamily: 'monospace',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
             }}
           >
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                copyAddress(result.signature);
-              }}
-            >
-              <ContentCopy fontSize="small" />
-            </IconButton>
-            <Typography
-              variant="caption"
-              sx={{
-                fontSize: '0.6rem',
-                whiteSpace: 'nowrap',
-                lineHeight: 1,
-                mt: -0.5,
-              }}
-            >
-              copy
-            </Typography>
-          </Box>
+            {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
+          </Typography>
+          <OpenInNew sx={{ fontSize: 20, ml: 1 }} />
+        </Link>
+
+        <Tooltip title="Copy Signature" arrow>
+          <IconButton
+            size="small"
+            onClick={(e) => {
+              e.stopPropagation();
+              copyAddress(result.signature);
+            }}
+          >
+            <ContentCopy fontSize="small" />
+          </IconButton>
         </Tooltip>
       </Box>
 
       {/* Transfer Information */}
+
       <Box
         sx={{
-          width: '95%',
+          width: '100%',
           mb: 1,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           alignItems: 'center',
-          bgcolor: 'rgba(0, 0, 0, 0.03)',
           borderRadius: 1,
           py: 1,
-          px: 2,
+          px: 1,
           mx: 'auto',
         }}
       >
@@ -203,34 +173,155 @@ export const TransactionResultItem = ({
           </Typography>
         ) : (
           <Box width="100%">
-            <Typography variant="body2" fontWeight="bold">
-              Batch transfer: {result.recipients.length} recipients
-            </Typography>
-            <Typography variant="body2" color="primary" mb={1}>
-              Total: {(result.amount * result.recipients.length).toFixed(6)}{' '}
-              {result.token}
-            </Typography>
-            <Box sx={{ maxHeight: '200px', overflowY: 'auto', width: '100%' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                mb: 2,
+                borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                pb: 1,
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Button
+                  variant="text"
+                  size="small"
+                  startIcon={<ContentCopy fontSize="small" />}
+                  onClick={() => {
+                    const dataToCopy = recipientAddresses
+                      .map(
+                        (entry) =>
+                          `${entry.address}, ${entry.amount} ${result.token}`
+                      )
+                      .join('\n');
+                    navigator.clipboard.writeText(dataToCopy);
+                    copyAddress('all-data');
+                  }}
+                  sx={{
+                    fontSize: '0.75rem',
+                    textTransform: 'none',
+                    minWidth: 'auto',
+                    p: '2px 8px',
+                    color: 'text.secondary',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  Copy All
+                </Button>
+              </Box>
+            </Box>
+
+            <Box
+              sx={{
+                maxHeight: '200px',
+                overflowY: 'auto',
+                width: '100%',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                borderRadius: '6px',
+                paddingRight: '4px',
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'rgba(0, 0, 0, 0.05)',
+                  borderRadius: '4px',
+                  marginLeft: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: '4px',
+                  '&:hover': {
+                    background: 'rgba(0, 0, 0, 0.3)',
+                  },
+                },
+              }}
+            >
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                }}
+              >
                 <thead>
-                  <tr style={{ backgroundColor: 'rgba(0, 0, 0, 0.04)' }}>
+                  <tr
+                    style={{
+                      background:
+                        'linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.10) 100%)',
+                      color: 'rgba(0, 0, 0, 0.87)',
+                    }}
+                  >
                     <th
                       style={{
-                        padding: '8px',
+                        padding: '12px 16px',
                         textAlign: 'left',
                         fontSize: '0.875rem',
+                        fontWeight: 600,
+                        borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
                       }}
                     >
-                      Wallet Address
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-start',
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          fontWeight="bold"
+                          color="text.primary"
+                        >
+                          Wallet Addresses
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontWeight: '600', ml: 0.5 }}
+                        >
+                          ({result.recipients.length} items)
+                        </Typography>
+                      </Box>
                     </th>
                     <th
                       style={{
-                        padding: '8px',
+                        padding: '12px 16px',
                         textAlign: 'right',
                         fontSize: '0.875rem',
+                        fontWeight: 600,
+                        borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
                       }}
                     >
-                      Amount
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'flex-end',
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          fontWeight="bold"
+                          color="text.primary"
+                        >
+                          Amount
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          sx={{ fontWeight: '600', ml: 0.5 }}
+                        >
+                          (total:{' '}
+                          {(result.amount * result.recipients.length).toFixed(
+                            8
+                          )}{' '}
+                          {result.token})
+                        </Typography>
+                      </Box>
                     </th>
                   </tr>
                 </thead>
@@ -238,28 +329,48 @@ export const TransactionResultItem = ({
                   {result.recipients.map((recipient, index) => (
                     <tr
                       key={recipient}
-                      style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.08)' }}
+                      style={{
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                        backgroundColor:
+                          index % 2 === 0
+                            ? 'rgba(0, 0, 0, 0.02)'
+                            : 'transparent',
+                      }}
                     >
-                      <td style={{ padding: '8px', fontSize: '0.875rem' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          {recipient}
-                          <IconButton
-                            size="small"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              copyAddress(recipient);
+                      <td
+                        style={{
+                          padding: '12px 16px',
+                          fontSize: '0.875rem',
+                          fontFamily: 'monospace',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: 'monospace',
+                              color: 'rgba(0, 0, 0, 0.87)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: 'calc(100% - 40px)',
                             }}
-                            sx={{ ml: 1 }}
                           >
-                            <ContentCopy fontSize="small" />
-                          </IconButton>
+                            {recipient}
+                          </Typography>
                         </Box>
                       </td>
                       <td
                         style={{
-                          padding: '8px',
+                          padding: '12px 16px',
                           textAlign: 'right',
                           fontSize: '0.875rem',
+                          fontWeight: 500,
                         }}
                       >
                         {recipientAddresses[index].amount} {result.token}
