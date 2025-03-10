@@ -1,10 +1,5 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import {
-  ContentPaste,
-  ContentCopy,
-  OpenInNew,
-  Download,
-} from '@mui/icons-material';
+import { ContentPaste, ContentCopy, Download } from '@mui/icons-material';
 import {
   Box,
   Container,
@@ -22,11 +17,8 @@ import {
   FormControl,
   MenuItem,
   Select,
-  Link,
   List,
-  ListItem,
   ListItemText,
-  Chip,
   ListItemAvatar,
   Tooltip,
 } from '@mui/material';
@@ -47,6 +39,7 @@ import { useConnection } from '../../hooks/useConnection';
 import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
+import { TransactionResultItem } from '../../components/TransactionResultItem';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -905,177 +898,10 @@ const Sender: React.FC = () => {
                   </Typography>
                   <List>
                     {transactionResults.map((result, index) => (
-                      <ListItem
+                      <TransactionResultItem
                         key={`${result.signature}-${index}`}
-                        sx={{
-                          position: 'relative',
-                          bgcolor: '#f5f5f5',
-                          borderRadius: 1,
-                          mb: 1,
-                          flexDirection: 'column',
-                          alignItems: 'flex-start',
-                          p: 2,
-                        }}
-                      >
-                        {/* Status and Timestamp */}
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          width="100%"
-                          mb={1}
-                        >
-                          <Chip
-                            label={result.status}
-                            color={
-                              result.status === 'success' ? 'success' : 'error'
-                            }
-                            size="small"
-                            sx={{ mr: 1 }}
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(result.timestamp).toLocaleString()}
-                          </Typography>
-                        </Box>
-
-                        {/* Transfer Information */}
-                        <Box
-                          sx={{
-                            width: '100%', // または具体的なピクセル値
-                            mb: 1,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            bgcolor: 'rgba(0, 0, 0, 0.03)',
-                            borderRadius: 1,
-                            py: 1,
-                            mx: 'auto', // 中央寄せ
-                          }}
-                        >
-                          {result.recipients.length === 1 ? (
-                            // 単一受取人の場合
-                            <Typography variant="body2" mx={2}>
-                              {result.amount} {result.token} to{' '}
-                              {result.recipients[0].slice(0, 6)}...
-                              {result.recipients[0].slice(-4)}
-                            </Typography>
-                          ) : (
-                            // 複数受取人の場合（バッチ処理された場合）
-                            <Box width="100%">
-                              <Typography
-                                variant="body2"
-                                fontWeight="bold"
-                                mx={2}
-                              >
-                                Batch transfer: {result.recipients.length}{' '}
-                                recipients
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="primary"
-                                mb={1}
-                                mx={2}
-                              >
-                                Total:{' '}
-                                {(
-                                  result.amount * result.recipients.length
-                                ).toFixed(6)}{' '}
-                                {result.token}
-                              </Typography>
-
-                              {/* オプション: 詳細表示ボタンを追加して全受取人リストを表示/非表示切り替え */}
-                            </Box>
-                          )}
-                        </Box>
-
-                        {/* Signature with Copy and Link */}
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          width="100%"
-                          sx={{ wordBreak: 'break-all' }}
-                        >
-                          <ListItemText
-                            primary={
-                              <Link
-                                href={`https://${
-                                  connection.rpcEndpoint.includes('devnet')
-                                    ? 'solscan.io/tx/'
-                                    : 'solscan.io/tx/'
-                                }${result.signature}${
-                                  connection.rpcEndpoint.includes('devnet')
-                                    ? '?cluster=devnet'
-                                    : ''
-                                }`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                sx={{ display: 'flex', alignItems: 'center' }}
-                              >
-                                {`${result.signature.slice(0, 15)}......${result.signature.slice(-15)}`}
-                                <Tooltip title="link" arrow placement="top">
-                                  <Box sx={{ position: 'relative', ml: 1 }}>
-                                    <OpenInNew sx={{ fontSize: 16 }} />
-                                    <Typography
-                                      variant="caption"
-                                      sx={{
-                                        position: 'absolute',
-                                        bottom: -10.0,
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        fontSize: '0.6rem',
-                                        whiteSpace: 'nowrap',
-                                      }}
-                                    >
-                                      link
-                                    </Typography>
-                                  </Box>
-                                </Tooltip>
-                              </Link>
-                            }
-                          />
-                          <Tooltip title="Copy" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                copyAddress(result.signature);
-                              }}
-                              sx={{ ml: 1 }}
-                            >
-                              <ContentCopy fontSize="small" />
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  position: 'absolute',
-                                  bottom: -10.0,
-                                  left: '50%',
-                                  transform: 'translateX(-50%)',
-                                  fontSize: '0.6rem',
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                copy
-                              </Typography>
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-
-                        {/* Error Message */}
-                        {result.error && (
-                          <Box
-                            sx={{
-                              mt: 1,
-                              width: '100%',
-                              backgroundColor: 'error.light',
-                              borderRadius: 1,
-                              p: 1,
-                            }}
-                          >
-                            <Typography variant="caption" color="error.dark">
-                              Error: {result.error}
-                            </Typography>
-                          </Box>
-                        )}
-                      </ListItem>
+                        result={result}
+                      />
                     ))}
                   </List>
                 </Box>
