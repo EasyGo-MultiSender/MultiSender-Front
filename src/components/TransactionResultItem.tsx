@@ -57,13 +57,7 @@ export const TransactionResultItem = ({
       </Box>
 
       {/* Signature with Copy and Link */}
-      <Box
-        display="flex"
-        alignItems="center"
-        width="100%"
-        height={40}
-        sx={{ wordBreak: 'break-all' }}
-      >
+      <Box display="flex" alignItems="center" sx={{ wordBreak: 'break-all' }}>
         <ListItemText
           primary={
             <Link
@@ -115,13 +109,14 @@ export const TransactionResultItem = ({
             </Link>
           }
         />
+
         <Tooltip title="Copy" arrow placement="top">
           <Box
             sx={{
-              ml: 1,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              ml: 1.5,
             }}
           >
             <IconButton
