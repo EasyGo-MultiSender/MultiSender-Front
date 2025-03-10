@@ -903,6 +903,7 @@ const Sender: React.FC = () => {
                         result={result}
                         connection={connection}
                         copyAddress={copyAddress}
+                        recipientAddresses={parsedEntries}
                       />
                     ))}
                   </List>

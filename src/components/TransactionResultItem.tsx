@@ -11,6 +11,11 @@ import {
 } from '@mui/material';
 import { ContentCopy, OpenInNew } from '@mui/icons-material';
 
+interface AddressEntry {
+  address: string;
+  amount: number;
+}
+
 interface TransactionResultItemProps {
   result: {
     signature: string;
@@ -21,6 +26,7 @@ interface TransactionResultItemProps {
     token: string;
     error?: string;
   };
+  recipientAddresses: AddressEntry[];
   connection: {
     rpcEndpoint: string;
   };
@@ -202,6 +208,65 @@ export const TransactionResultItem = ({
               Total: {(result.amount * result.recipients.length).toFixed(6)}{' '}
               {result.token}
             </Typography>
+            <Box sx={{ maxHeight: '200px', overflowY: 'auto', width: '100%' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ backgroundColor: 'rgba(0, 0, 0, 0.04)' }}>
+                    <th
+                      style={{
+                        padding: '8px',
+                        textAlign: 'left',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Wallet Address
+                    </th>
+                    <th
+                      style={{
+                        padding: '8px',
+                        textAlign: 'right',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Amount
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.recipients.map((recipient, index) => (
+                    <tr
+                      key={recipient}
+                      style={{ borderBottom: '1px solid rgba(0, 0, 0, 0.08)' }}
+                    >
+                      <td style={{ padding: '8px', fontSize: '0.875rem' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          {recipient}
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyAddress(recipient);
+                            }}
+                            sx={{ ml: 1 }}
+                          >
+                            <ContentCopy fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </td>
+                      <td
+                        style={{
+                          padding: '8px',
+                          textAlign: 'right',
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        {result.amount} {result.token}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Box>
           </Box>
         )}
       </Box>
