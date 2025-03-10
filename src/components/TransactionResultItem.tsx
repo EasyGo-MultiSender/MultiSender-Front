@@ -7,6 +7,7 @@ import {
   IconButton,
   Link,
   Tooltip,
+  Button,
 } from '@mui/material';
 import { ContentCopy, OpenInNew } from '@mui/icons-material';
 
@@ -43,17 +44,44 @@ export const TransactionResultItem = ({
         p: 2,
       }}
     >
-      {/* Status and Timestamp */}
-      <Box display="flex" alignItems="center" width="100%" mb={1}>
-        <Chip
-          label={result.status}
-          color={result.status === 'success' ? 'success' : 'error'}
-          size="small"
-          sx={{ mr: 1 }}
-        />
-        <Typography variant="caption" color="text.secondary">
-          {new Date(result.timestamp).toLocaleString()}
-        </Typography>
+      {/* Status , Timestamp  and download button*/}
+      <Box
+        display="flex"
+        alignItems="center"
+        width="100%"
+        mb={1}
+        justifyContent="space-between"
+      >
+        <Box>
+          <Chip
+            label={result.status}
+            color={result.status === 'success' ? 'success' : 'error'}
+            size="small"
+            sx={{ mr: 1 }}
+          />
+          <Typography variant="caption" color="text.secondary">
+            {new Date(result.timestamp).toLocaleString()}
+          </Typography>
+        </Box>
+        <Tooltip title="Download" arrow placement="top">
+          <Button
+            variant="outlined"
+            color="inherit"
+            size="small"
+            sx={{
+              mr: 1,
+              color: 'text.secondary',
+              borderColor: 'rgba(27, 27, 27, 0.37)',
+              backgroundColor: 'rgba(215, 217, 222, 0.43)',
+              '&:hover': {
+                backgroundColor: 'rgba(185, 187, 193, 0.43)',
+                borderColor: 'rgba(0, 0, 0, 0.23)',
+              },
+            }}
+          >
+            Download
+          </Button>
+        </Tooltip>
       </Box>
 
       {/* Signature with Copy and Link */}
