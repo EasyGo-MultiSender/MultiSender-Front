@@ -901,6 +901,8 @@ const Sender: React.FC = () => {
                       <TransactionResultItem
                         key={`${result.signature}-${index}`}
                         result={result}
+                        connection={connection}
+                        copyAddress={copyAddress}
                       />
                     ))}
                   </List>

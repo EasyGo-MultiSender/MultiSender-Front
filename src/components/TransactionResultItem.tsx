@@ -1,4 +1,14 @@
-import { Box, Chip, Typography, ListItem } from '@mui/material';
+import {
+  Box,
+  Chip,
+  Typography,
+  ListItem,
+  ListItemText,
+  IconButton,
+  Link,
+  Tooltip,
+} from '@mui/material';
+import { ContentCopy, OpenInNew } from '@mui/icons-material';
 
 interface TransactionResultItemProps {
   result: {
@@ -10,10 +20,16 @@ interface TransactionResultItemProps {
     token: string;
     error?: string;
   };
+  connection: {
+    rpcEndpoint: string;
+  };
+  copyAddress: (address: string) => void;
 }
 
 export const TransactionResultItem = ({
   result,
+  connection,
+  copyAddress,
 }: TransactionResultItemProps) => {
   return (
     <ListItem
@@ -40,6 +56,98 @@ export const TransactionResultItem = ({
         </Typography>
       </Box>
 
+      {/* Signature with Copy and Link */}
+      <Box
+        display="flex"
+        alignItems="center"
+        width="100%"
+        height={40}
+        sx={{ wordBreak: 'break-all' }}
+      >
+        <ListItemText
+          primary={
+            <Link
+              href={`https://solscan.io/tx/${result.signature}${
+                connection.rpcEndpoint.includes('devnet')
+                  ? '?cluster=devnet'
+                  : ''
+              }`}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                ml: 1,
+                height: '100%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%',
+                whiteSpace: 'nowrap',
+                textDecoration: 'none',
+              }}
+            >
+              {`${result.signature.slice(0, 15)}......${result.signature.slice(-15)}`}
+              <Tooltip title="link" arrow placement="top">
+                <Box
+                  sx={{
+                    position: 'relative',
+                    ml: 1,
+                    mt: 0.3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                  }}
+                >
+                  <OpenInNew sx={{ fontSize: 16 }} />
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      fontSize: '0.6rem',
+                      whiteSpace: 'nowrap',
+                      lineHeight: 1,
+                      mt: 0,
+                    }}
+                  >
+                    link
+                  </Typography>
+                </Box>
+              </Tooltip>
+            </Link>
+          }
+        />
+        <Tooltip title="Copy" arrow placement="top">
+          <Box
+            sx={{
+              ml: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            <IconButton
+              size="small"
+              onClick={(e) => {
+                e.stopPropagation();
+                copyAddress(result.signature);
+              }}
+            >
+              <ContentCopy fontSize="small" />
+            </IconButton>
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: '0.6rem',
+                whiteSpace: 'nowrap',
+                lineHeight: 1,
+                mt: -0.5,
+              }}
+            >
+              copy
+            </Typography>
+          </Box>
+        </Tooltip>
+      </Box>
+
       {/* Transfer Information */}
       <Box
         sx={{
@@ -56,25 +164,6 @@ export const TransactionResultItem = ({
           mx: 'auto',
         }}
       >
-        <Typography
-          component="a"
-          href={`https://solscan.io/tx/${result.signature}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{
-            color: 'primary.main',
-            textDecoration: 'none',
-            '&:hover': {
-              textDecoration: 'underline',
-            },
-            fontSize: '0.875rem',
-            width: '100%',
-            display: 'block',
-            textAlign: 'left',
-          }}
-        >
-          {`${result.signature.slice(0, 10)}...${result.signature.slice(-8)}`}
-        </Typography>
         {result.recipients.length === 1 ? (
           <Typography variant="body2">
             {result.amount} {result.token} to {result.recipients[0].slice(0, 6)}
@@ -92,16 +181,6 @@ export const TransactionResultItem = ({
             </Typography>
           </Box>
         )}
-      </Box>
-
-      {/* Signature with Copy and Link */}
-      <Box
-        display="flex"
-        alignItems="center"
-        width="100%"
-        sx={{ wordBreak: 'break-all' }}
-      >
-        {/* ... 既存のSignatureコード ... */}
       </Box>
 
       {/* Error Message */}
