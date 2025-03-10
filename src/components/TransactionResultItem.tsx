@@ -136,7 +136,7 @@ export const TransactionResultItem = ({
           <OpenInNew sx={{ fontSize: 20, ml: 1 }} />
         </Link>
 
-        <Tooltip title="Copy Signature" arrow>
+        <Tooltip title="Copy Signature" arrow placement="top">
           <IconButton
             size="small"
             onClick={(e) => {
@@ -181,34 +181,36 @@ export const TransactionResultItem = ({
                 pb: 1,
               }}
             >
-              <Button
-                variant="text"
-                size="small"
-                startIcon={<ContentCopy fontSize="small" />}
-                onClick={() => {
-                  const dataToCopy = recipientAddresses
-                    .map(
-                      (entry) =>
-                        `${entry.address}, ${entry.amount} ${result.token}`
-                    )
-                    .join('\n');
-                  navigator.clipboard.writeText(dataToCopy);
-                  copyAddress('all-data');
-                }}
-                sx={{
-                  fontSize: '0.75rem',
-                  textTransform: 'none',
-                  minWidth: 'auto',
+              <Tooltip title="Copy All" arrow placement="top">
+                <Button
+                  variant="text"
+                  size="small"
+                  startIcon={<ContentCopy fontSize="small" />}
+                  onClick={() => {
+                    const dataToCopy = recipientAddresses
+                      .map(
+                        (entry) =>
+                          `${entry.address}, ${entry.amount} ${result.token}`
+                      )
+                      .join('\n');
+                    navigator.clipboard.writeText(dataToCopy);
+                    copyAddress('all-data');
+                  }}
+                  sx={{
+                    fontSize: '0.75rem',
+                    textTransform: 'none',
+                    minWidth: 'auto',
 
-                  p: '2px 8px',
-                  color: 'text.secondary',
-                  '&:hover': {
-                    backgroundColor: 'rgba(0, 0, 0, 0.04)',
-                  },
-                }}
-              >
-                Copy All
-              </Button>
+                    p: '2px 8px',
+                    color: 'text.secondary',
+                    '&:hover': {
+                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                    },
+                  }}
+                >
+                  Copy All
+                </Button>
+              </Tooltip>
             </Box>
 
             <Box
