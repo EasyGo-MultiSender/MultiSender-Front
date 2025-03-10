@@ -1,5 +1,5 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, ContentCopy, OpenInNew, Download } from '@mui/icons-material';
+import { ContentPaste, ContentCopy, Download } from '@mui/icons-material';
 import {
   Box,
   Container,
@@ -17,11 +17,8 @@ import {
   FormControl,
   MenuItem,
   Select,
-  Link,
   List,
-  ListItem,
   ListItemText,
-  Chip,
   ListItemAvatar,
   Tooltip,
 } from '@mui/material';
@@ -42,6 +39,7 @@ import { useConnection } from '../../hooks/useConnection';
 import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
+import { TransactionResultItem } from '../../components/TransactionResultItem';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -53,8 +51,8 @@ interface TransactionResult {
   status: 'success' | 'error';
   timestamp: number;
   error?: string;
-  recipients: string[];
-  amount: number;
+  recipients: AddressEntry[];
+  totalAmount: number;
   token: string;
 }
 
@@ -197,7 +195,11 @@ const Sender: React.FC = () => {
       const amount = parseFloat(amountStr);
 
       // SOL選択時の最小額チェック
-      if (selectedToken === 'SOL' && amount < minSolAmount && minSolAmount > 0) {
+      if (
+        selectedToken === 'SOL' &&
+        amount < minSolAmount &&
+        minSolAmount > 0
+      ) {
         belowMinimumSolLines.push(line);
         // 最小額未満でもエントリには追加して、後で警告を表示できるようにする
       }
@@ -226,7 +228,12 @@ const Sender: React.FC = () => {
     // 合計金額を計算
     const sum = entries.reduce((total, entry) => total + entry.amount, 0);
     setTotalAmount(sum);
-  }, [recipientAddresses, isValidSolanaAddress, selectedToken, SOL_VALIDATION_AMOUNT]);
+  }, [
+    recipientAddresses,
+    isValidSolanaAddress,
+    selectedToken,
+    SOL_VALIDATION_AMOUNT,
+  ]);
 
   // recipientAddressesが変更されたときにだけパースを実行
   useEffect(() => {
@@ -395,13 +402,17 @@ const Sender: React.FC = () => {
           status: result.status,
           timestamp: result.timestamp || Date.now(),
           error: result.error,
-          recipients: recipientAddresses,
+          recipients: recipientAddresses.map((addr) => ({
+            address: addr,
+            amount: recipientAmounts[recipientAddresses.indexOf(addr)],
+          })),
           // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
           amount:
             recipientAddresses.length === 1
               ? recipientAmounts[0]
               : totalBatchAmount / recipientAddresses.length,
           token: tokenDisplayName,
+          totalAmount: totalBatchAmount,
           // 追加フィールド: このバッチに含まれるすべての受取人と金額
           recipientDetails: recipientAddresses.map((addr, idx) => ({
             address: addr,
@@ -470,7 +481,8 @@ const Sender: React.FC = () => {
 
   // テンプレートダウンロード関数を追加
   const downloadTemplate = () => {
-    const template = "wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547";
+    const template =
+      'wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547';
     const blob = new Blob([template], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -563,14 +575,22 @@ const Sender: React.FC = () => {
               >
                 <Typography
                   variant="body2"
-                  sx={{ flex: 1, textAlign: 'center', color: !connected ? 'text.secondary' : 'inherit' }}
+                  sx={{
+                    flex: 1,
+                    textAlign: 'center',
+                    color: !connected ? 'text.secondary' : 'inherit',
+                  }}
                 >
-                  {connected ? publicKey?.toBase58() : 'Please connect your wallet'}
+                  {connected
+                    ? publicKey?.toBase58()
+                    : 'Please connect your wallet'}
                 </Typography>
                 {connected && (
                   <Tooltip title="Copy" arrow placement="top">
                     <IconButton
-                      onClick={() => publicKey && copyAddress(publicKey.toBase58())}
+                      onClick={() =>
+                        publicKey && copyAddress(publicKey.toBase58())
+                      }
                       sx={{
                         position: 'absolute',
                         right: 8,
@@ -733,7 +753,9 @@ const Sender: React.FC = () => {
                 <Typography variant="body2" fontWeight="bold" mb={1}>
                   {t('Recipient Addresses and Amounts')}
                   <br />
-                  {t('Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.')}
+                  {t(
+                    'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
+                  )}
                 </Typography>
                 <Typography
                   variant="caption"
@@ -744,28 +766,29 @@ const Sender: React.FC = () => {
                   Format: address,amount (one entry per line)
                 </Typography>
                 <Box position="relative">
-                <TextField
-                  multiline
-                  rows={10}
-                  fullWidth
-                  value={recipientAddresses}
-                  onChange={(e) => setRecipientAddresses(e.target.value)}
-                  placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
-                  error={
-                    invalidEntries.length > 0 || 
-                    duplicateAddresses.length > 0 || 
-                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                  }
-                  helperText={
-                    invalidEntries.length > 0
-                      ? `Invalid entries: ${invalidEntries.length}`
-                      : duplicateAddresses.length > 0
-                        ? `Duplicate addresses: ${duplicateAddresses.length}`
-                        : (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                          ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
-                          : ''
-                  }
-                />
+                  <TextField
+                    multiline
+                    rows={10}
+                    fullWidth
+                    value={recipientAddresses}
+                    onChange={(e) => setRecipientAddresses(e.target.value)}
+                    placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
+                    error={
+                      invalidEntries.length > 0 ||
+                      duplicateAddresses.length > 0 ||
+                      (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                    }
+                    helperText={
+                      invalidEntries.length > 0
+                        ? `Invalid entries: ${invalidEntries.length}`
+                        : duplicateAddresses.length > 0
+                          ? `Duplicate addresses: ${duplicateAddresses.length}`
+                          : selectedToken === 'SOL' &&
+                              belowMinSolEntries.length > 0
+                            ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
+                            : ''
+                    }
+                  />
                   <Tooltip title="Paste" arrow placement="top">
                     <IconButton
                       onClick={pasteAddresses}
@@ -816,7 +839,9 @@ const Sender: React.FC = () => {
                     </Tooltip>
                     <Tooltip title="upload" arrow placement="top">
                       <Box>
-                        <UploadButton onRecipientsLoaded={handleRecipientsLoaded} />
+                        <UploadButton
+                          onRecipientsLoaded={handleRecipientsLoaded}
+                        />
                       </Box>
                     </Tooltip>
                   </Box>
@@ -937,16 +962,17 @@ const Sender: React.FC = () => {
                   t('Transfer')
                 )}
               </Button>
-              <Typography 
-                variant="caption" 
-                color="text.secondary" 
+              <Typography
+                variant="caption"
+                color="text.secondary"
                 mt={1}
                 textAlign="center"
                 display="block"
               >
-                {t('The lowest across the network, each transaction only requires 0.0075 SOL.')}
+                {t(
+                  'The lowest across the network, each transaction only requires 0.0075 SOL.'
+                )}
               </Typography>
-              
 
               {/* Transaction Results */}
               {transactionResults.length > 0 && (
@@ -956,170 +982,13 @@ const Sender: React.FC = () => {
                   </Typography>
                   <List>
                     {transactionResults.map((result, index) => (
-                      <ListItem
+                      <TransactionResultItem
                         key={`${result.signature}-${index}`}
-                        sx={{
-                          bgcolor: '#f5f5f5',
-                          borderRadius: 1,
-                          mb: 1,
-                          flexDirection: 'column',
-                          alignItems: 'flex-start',
-                          p: 2,
-                        }}
-                      >
-                        {/* Status and Timestamp */}
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          width="100%"
-                          mb={1}
-                        >
-                          <Chip
-                            label={result.status}
-                            color={
-                              result.status === 'success' ? 'success' : 'error'
-                            }
-                            size="small"
-                            sx={{ mr: 1 }}
-                          />
-                          <Typography variant="caption" color="text.secondary">
-                            {new Date(result.timestamp).toLocaleString()}
-                          </Typography>
-                        </Box>
-
-                        {/* Transfer Information */}
-                        <Box
-                          sx={{
-                            width: '100%',
-                            mb: 1,
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            bgcolor: 'rgba(0, 0, 0, 0.03)',
-                            borderRadius: 1,
-                            p: 1,
-                          }}
-                        >
-                          {result.recipients.length === 1 ? (
-                            // 単一受取人の場合
-                            <Typography variant="body2">
-                              {result.amount} {result.token} to{' '}
-                              {result.recipients[0].slice(0, 6)}...
-                              {result.recipients[0].slice(-4)}
-                            </Typography>
-                          ) : (
-                            // 複数受取人の場合（バッチ処理された場合）
-                            <Box width="100%">
-                              <Typography variant="body2" fontWeight="bold">
-                                Batch transfer: {result.recipients.length}{' '}
-                                recipients
-                              </Typography>
-                              <Typography
-                                variant="body2"
-                                color="primary"
-                                mb={1}
-                              >
-                                Total:{' '}
-                                {(
-                                  result.amount * result.recipients.length
-                                ).toFixed(6)}{' '}
-                                {result.token}
-                              </Typography>
-
-                              {/* オプション: 詳細表示ボタンを追加して全受取人リストを表示/非表示切り替え */}
-                            </Box>
-                          )}
-                        </Box>
-
-                        {/* Signature with Copy and Link */}
-                        <Box
-                          display="flex"
-                          alignItems="center"
-                          width="100%"
-                          sx={{ wordBreak: 'break-all' }}
-                        >
-                          <ListItemText
-                            primary={
-                              <Link
-                                href={`https://${
-                                  connection.rpcEndpoint.includes('devnet')
-                                    ? 'solscan.io/tx/'
-                                    : 'solscan.io/tx/'
-                                }${result.signature}${
-                                  connection.rpcEndpoint.includes('devnet')
-                                    ? '?cluster=devnet'
-                                    : ''
-                                }`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                sx={{ display: 'flex', alignItems: 'center' }}
-                              >
-                                {`${result.signature.slice(0, 15)}......${result.signature.slice(-15)}`}
-                                <Tooltip title="link" arrow placement="top">
-                                  <Box sx={{ position: 'relative', ml: 1 }}>
-                                    <OpenInNew sx={{ fontSize: 16 }} />
-                                    <Typography
-                                      variant="caption"
-                                      sx={{
-                                        position: 'absolute',
-                                        bottom: -10.0,
-                                        left: '50%',
-                                        transform: 'translateX(-50%)',
-                                        fontSize: '0.6rem',
-                                        whiteSpace: 'nowrap'
-                                      }}
-                                    >
-                                      link
-                                    </Typography>
-                                  </Box>
-                                </Tooltip>
-                              </Link>
-                            }
-                          />
-                          <Tooltip title="Copy" arrow placement="top">
-                            <IconButton
-                              size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                copyAddress(result.signature);
-                              }}
-                              sx={{ ml: 1 }}
-                            >
-                              <ContentCopy fontSize="small" />
-                              <Typography
-                                variant="caption"
-                                sx={{
-                                  position: 'absolute',
-                                  bottom: -10.0,
-                                  left: '50%',
-                                  transform: 'translateX(-50%)',
-                                  fontSize: '0.6rem',
-                                  whiteSpace: 'nowrap'
-                                }}
-                              >
-                                copy
-                              </Typography>
-                            </IconButton>
-                          </Tooltip>
-                        </Box>
-
-                        {/* Error Message */}
-                        {result.error && (
-                          <Box
-                            sx={{
-                              mt: 1,
-                              width: '100%',
-                              backgroundColor: 'error.light',
-                              borderRadius: 1,
-                              p: 1,
-                            }}
-                          >
-                            <Typography variant="caption" color="error.dark">
-                              Error: {result.error}
-                            </Typography>
-                          </Box>
-                        )}
-                      </ListItem>
+                        result={result}
+                        connection={connection}
+                        copyAddress={copyAddress}
+                        recipientAddresses={parsedEntries}
+                      />
                     ))}
                   </List>
                 </Box>
