@@ -20,8 +20,8 @@ interface TransactionResult {
   status: 'success' | 'error';
   timestamp: number;
   error?: string;
-  recipients: string[];
-  amount: number;
+  recipients: AddressEntry[];
+  totalAmount: number;
   token: string;
 }
 
@@ -307,7 +307,9 @@ export const TransactionResultItem = ({
                         sx={{ fontWeight: '600', ml: 0.5 }}
                       >
                         (total:{' '}
-                        {(result.amount * result.recipients.length).toFixed(8)}{' '}
+                        {(
+                          result.totalAmount * result.recipients.length
+                        ).toFixed(8)}{' '}
                         {result.token})
                       </Typography>
                     </Box>
@@ -317,7 +319,7 @@ export const TransactionResultItem = ({
               <tbody>
                 {result.recipients.map((recipient, index) => (
                   <tr
-                    key={recipient}
+                    key={recipient.address}
                     style={{
                       borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
                       backgroundColor:
@@ -348,7 +350,7 @@ export const TransactionResultItem = ({
                             maxWidth: 'calc(100% - 40px)',
                           }}
                         >
-                          {recipient}
+                          {recipient.address}
                         </Typography>
                       </Box>
                     </td>
@@ -360,7 +362,7 @@ export const TransactionResultItem = ({
                         fontWeight: 500,
                       }}
                     >
-                      {recipientAddresses[index].amount} {result.token}
+                      {recipient.amount} {result.token}
                     </td>
                   </tr>
                 ))}

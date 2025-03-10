@@ -51,8 +51,8 @@ interface TransactionResult {
   status: 'success' | 'error';
   timestamp: number;
   error?: string;
-  recipients: string[];
-  amount: number;
+  recipients: AddressEntry[];
+  totalAmount: number;
   token: string;
 }
 
@@ -402,13 +402,17 @@ const Sender: React.FC = () => {
           status: result.status,
           timestamp: result.timestamp || Date.now(),
           error: result.error,
-          recipients: recipientAddresses,
+          recipients: recipientAddresses.map((addr) => ({
+            address: addr,
+            amount: recipientAmounts[recipientAddresses.indexOf(addr)],
+          })),
           // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
           amount:
             recipientAddresses.length === 1
               ? recipientAmounts[0]
               : totalBatchAmount / recipientAddresses.length,
           token: tokenDisplayName,
+          totalAmount: totalBatchAmount,
           // 追加フィールド: このバッチに含まれるすべての受取人と金額
           recipientDetails: recipientAddresses.map((addr, idx) => ({
             address: addr,
