@@ -403,8 +403,8 @@ const Header = memo(() => {
                   }
                 : {
                     // デスクトップ用スタイル
-                    height: '36px',
-                    padding: '0px 15px',
+                    height: '32px',
+                    padding: '0px 10px',
                     display: 'flex',
                     fontSize: '16px',
                     alignItems: 'center',
