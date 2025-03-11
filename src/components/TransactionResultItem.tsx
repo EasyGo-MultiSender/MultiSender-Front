@@ -245,7 +245,7 @@ export const TransactionResultItem = ({
 
           <Box
             sx={{
-              maxHeight: '200px',
+              maxHeight: '182px',
               overflowY: 'auto',
               width: '100%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
@@ -286,7 +286,7 @@ export const TransactionResultItem = ({
                 >
                   <th
                     style={{
-                      padding: '12px 16px',
+                      padding: '9px 24px',
                       textAlign: 'left',
                       fontSize: '0.875rem',
                       fontWeight: 600,
@@ -318,7 +318,7 @@ export const TransactionResultItem = ({
                   </th>
                   <th
                     style={{
-                      padding: '12px 16px',
+                      padding: '9px 16px',
                       textAlign: 'right',
                       fontSize: '0.875rem',
                       fontWeight: 600,
@@ -366,9 +366,10 @@ export const TransactionResultItem = ({
                   >
                     <td
                       style={{
-                        padding: '12px 16px',
+                        padding: '0px 16px',
                         fontSize: '0.875rem',
                         fontFamily: 'monospace',
+                        height: '40px',
                       }}
                     >
                       <Box
@@ -394,10 +395,11 @@ export const TransactionResultItem = ({
                     </td>
                     <td
                       style={{
-                        padding: '12px 16px',
+                        padding: '0px 16px',
                         textAlign: 'right',
                         fontSize: '0.875rem',
                         fontWeight: 500,
+                        height: '40px',
                       }}
                     >
                       {recipient.amount} {result.token}
