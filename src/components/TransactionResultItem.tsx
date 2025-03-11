@@ -135,7 +135,9 @@ export const TransactionResultItem = ({
           >
             {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
           </Typography>
-          <OpenInNew sx={{ fontSize: 20, ml: 1 }} />
+          <Tooltip title="Open in Solscan" arrow placement="top">
+            <OpenInNew sx={{ fontSize: 20, ml: 1 }} />
+          </Tooltip>
         </Link>
 
         <Tooltip title="Copy Signature" arrow placement="top">
