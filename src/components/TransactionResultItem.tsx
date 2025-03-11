@@ -9,6 +9,7 @@ import {
   Button,
 } from '@mui/material';
 import { ContentCopy, OpenInNew } from '@mui/icons-material';
+import { useState } from 'react';
 
 interface AddressEntry {
   address: string;
@@ -31,15 +32,25 @@ interface TransactionResultItemProps {
   connection: {
     rpcEndpoint: string;
   };
-  copyAddress: (address: string) => void;
 }
 
 export const TransactionResultItem = ({
   result,
   recipientAddresses,
   connection,
-  copyAddress,
 }: TransactionResultItemProps) => {
+  const [isCopiedSignature, setIsCopiedSignature] = useState(false);
+  const [isCopiedAll, setIsCopiedAll] = useState(false);
+
+  const handleCopy = async (
+    text: string,
+    setCopied: (value: boolean) => void
+  ) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1000);
+  };
+
   return (
     <ListItem
       sx={{
@@ -154,12 +165,16 @@ export const TransactionResultItem = ({
           </Tooltip>
         </Link>
 
-        <Tooltip title="Copy Signature" arrow placement="top">
+        <Tooltip
+          title={isCopiedSignature ? 'Copied !' : 'Copy Signature'}
+          arrow
+          placement="top"
+        >
           <IconButton
             size="small"
             onClick={(e) => {
               e.stopPropagation();
-              copyAddress(result.signature);
+              handleCopy(result.signature, setIsCopiedSignature);
             }}
             sx={{
               display: 'flex',
@@ -209,26 +224,25 @@ export const TransactionResultItem = ({
               pb: 1,
             }}
           >
-            <Tooltip title="Copy All" arrow placement="top">
+            <Tooltip
+              title={isCopiedAll ? 'Copied !' : 'Copy All'}
+              arrow
+              placement="top"
+            >
               <Button
                 variant="text"
                 size="small"
                 startIcon={<ContentCopy fontSize="small" />}
                 onClick={() => {
                   const dataToCopy = recipientAddresses
-                    .map(
-                      (entry) =>
-                        `${entry.address}, ${entry.amount} ${result.token}`
-                    )
+                    .map((entry) => `${entry.address}, ${entry.amount} `)
                     .join('\n');
-                  navigator.clipboard.writeText(dataToCopy);
-                  copyAddress('all-data');
+                  handleCopy(dataToCopy, setIsCopiedAll);
                 }}
                 sx={{
                   fontSize: '0.75rem',
                   textTransform: 'none',
                   minWidth: 'auto',
-
                   p: '2px 8px',
                   color: 'text.secondary',
                   '&:hover': {
