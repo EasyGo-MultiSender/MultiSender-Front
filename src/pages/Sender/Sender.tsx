@@ -586,7 +586,7 @@ const Sender: React.FC = () => {
               >
                 {connected
                   ? formatAddress(publicKey?.toBase58() || '')
-                  : 'Please connect your wallet'}
+                  : t('Please connect your wallet')}
               </Typography>
               {connected && (
                 <Tooltip title="Copy" arrow placement="top">

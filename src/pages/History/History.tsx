@@ -9,6 +9,8 @@ import {
   IconButton,
   Button,
   Snackbar,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   History as HistoryIcon,
@@ -25,6 +27,8 @@ const Logs = () => {
   const { publicKey } = useWallet();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
 
   // アドレスコピー機能
   const copyAddress = async (addr: string) => {
@@ -33,10 +37,17 @@ const Logs = () => {
     setSnackbarOpen(true);
   };
 
+  const formatAddress = (address: string) => {
+    if (isMobile) {
+      return `${address.slice(0, 13)}...${address.slice(-13)}`;
+    }
+    return address;
+  };
+
   return (
     <Box
       sx={{
-        height: 'calc(100vh - 6vh - 64px)', // ヘッダー(6vh)とフッター(64px)の高さを引く
+        height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(64px)の高さを引く
         bgcolor: '#2b2e45',
         position: 'relative',
         overflowY: 'auto',
@@ -63,7 +74,9 @@ const Logs = () => {
               }}
             >
               <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>
-                {publicKey?.toBase58() || t('Not connected')}
+                {formatAddress(
+                  publicKey?.toBase58() || t('Please connect your wallet')
+                )}
               </Typography>
               {publicKey && (
                 <IconButton
