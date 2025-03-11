@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import Header from '../../components/Header';
 import {
   Box,
   Card,
@@ -35,128 +34,119 @@ const Logs = () => {
   };
 
   return (
-    <Box>
-      <Header />
-
-      <Box
-        sx={{
-          pt: 0.01,
-          mt: '12vh',
-          height: '88vh',
-          bgcolor: '#2b2e45',
-          position: 'relative',
-          overflowY: 'auto',
-        }}
-      >
-        <Container maxWidth="md" sx={{ my: 4 }}>
-          {/* ウォレットアドレス表示カード */}
-          <Card sx={{ mb: 3, borderRadius: 2 }}>
-            <CardContent>
-              <Typography variant="h6" mb={1} textAlign="center">
-                {t('Wallet Address')}
-              </Typography>
-              <Box
-                sx={{
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  border: '1px solid #ccc',
-                  borderRadius: 1,
-                  p: 1,
-                  height: 36,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{ flex: 1, textAlign: 'center' }}
-                >
-                  {publicKey?.toBase58() || t('Not connected')}
-                </Typography>
-                {publicKey && (
-                  <IconButton
-                    onClick={() =>
-                      publicKey && copyAddress(publicKey.toBase58())
-                    }
-                    sx={{
-                      position: 'absolute',
-                      right: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                    }}
-                  >
-                    <ContentCopy />
-                  </IconButton>
-                )}
-              </Box>
-            </CardContent>
-          </Card>
-
-          {/* 履歴表示カード */}
-          <Card sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+    <Box
+      sx={{
+        height: 'calc(100vh - 6vh - 64px)', // ヘッダー(6vh)とフッター(64px)の高さを引く
+        bgcolor: '#2b2e45',
+        position: 'relative',
+        overflowY: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+      }}
+    >
+      <Container maxWidth="md" sx={{ flex: 1 }}>
+        {/* ウォレットアドレス表示カード */}
+        <Card sx={{ mt: 2, mb: 3, borderRadius: 2 }}>
+          <CardContent>
+            <Typography variant="h6" mb={1} textAlign="center">
+              {t('Wallet Address')}
+            </Typography>
             <Box
               sx={{
-                bgcolor: '#4b5079',
-                py: 3,
-                px: 4,
+                position: 'relative',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                border: '1px solid #ccc',
+                borderRadius: 1,
+                p: 1,
+                height: 36,
               }}
             >
-              <Box display="flex" alignItems="center">
-                <HistoryIcon sx={{ fontSize: 28, color: '#fff', mr: 2 }} />
-                <Typography variant="h5" fontWeight="bold" color="#fff">
-                  {t('Token Transfer History')}
-                </Typography>
-              </Box>
-
-              <Box>
-                <IconButton size="small" sx={{ color: '#fff', mr: 1 }}>
-                  <RefreshIcon />
+              <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>
+                {publicKey?.toBase58() || t('Not connected')}
+              </Typography>
+              {publicKey && (
+                <IconButton
+                  onClick={() => publicKey && copyAddress(publicKey.toBase58())}
+                  sx={{
+                    position: 'absolute',
+                    right: 8,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                  }}
+                >
+                  <ContentCopy />
                 </IconButton>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
 
-                <IconButton size="small" sx={{ color: '#fff', mr: 1 }}>
-                  <FilterIcon />
-                </IconButton>
-
-                <IconButton size="small" sx={{ color: '#fff' }}>
-                  <DownloadIcon />
-                </IconButton>
-              </Box>
+        {/* 履歴表示カード */}
+        <Card sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+          <Box
+            sx={{
+              bgcolor: '#4b5079',
+              py: 3,
+              px: 4,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Box display="flex" alignItems="center">
+              <HistoryIcon sx={{ fontSize: 28, color: '#fff', mr: 2 }} />
+              <Typography variant="h5" fontWeight="bold" color="#fff">
+                {t('Token Transfer History')}
+              </Typography>
             </Box>
 
-            <Divider />
+            <Box>
+              <IconButton size="small" sx={{ color: '#fff', mr: 1 }}>
+                <RefreshIcon />
+              </IconButton>
 
-            <CardContent sx={{ py: 3 }}>
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                flexDirection="column"
-                py={4}
+              <IconButton size="small" sx={{ color: '#fff', mr: 1 }}>
+                <FilterIcon />
+              </IconButton>
+
+              <IconButton size="small" sx={{ color: '#fff' }}>
+                <DownloadIcon />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Divider />
+
+          <CardContent sx={{ py: 3 }}>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              flexDirection="column"
+              py={4}
+            >
+              <HistoryIcon sx={{ fontSize: 48, color: '#aaa', mb: 2 }} />
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                {t('No transaction history found')}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                align="center"
+                sx={{ maxWidth: 400, mb: 3 }}
               >
-                <HistoryIcon sx={{ fontSize: 48, color: '#aaa', mb: 2 }} />
-                <Typography variant="body1" color="text.secondary" gutterBottom>
-                  {t('No transaction history found')}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  align="center"
-                  sx={{ maxWidth: 400, mb: 3 }}
-                >
-                  {t(
-                    "Your token transfer history will appear here once you've made transactions"
-                  )}
-                </Typography>
-                <Button variant="contained" color="primary" href="/sender">
-                  {t('Make a Transfer')}
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Container>
-      </Box>
+                {t(
+                  "Your token transfer history will appear here once you've made transactions"
+                )}
+              </Typography>
+              <Button variant="contained" color="primary" href="/sender">
+                {t('Make a Transfer')}
+              </Button>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
 
       {/* 通知用スナックバー */}
       <Snackbar

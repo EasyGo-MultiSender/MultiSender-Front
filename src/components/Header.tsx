@@ -68,20 +68,24 @@ const Header = memo(() => {
     <Box>
       <AppBar
         position="fixed"
-        sx={{ backgroundColor: '#17062e', height: '12vh' }}
+        sx={{ backgroundColor: '#17062e', height: '6vh' }}
       >
-        <Toolbar>
+        <Toolbar sx={{ minHeight: '6vh !important' }}>
           <IconButton
             edge="start"
             color="inherit"
             aria-label="menu"
             component={Link}
             to="/"
+            sx={{ padding: '4px' }}
           >
-            <RocketLaunchIcon sx={{ color: '#47dded' }} />
+            <RocketLaunchIcon sx={{ color: '#47dded', fontSize: '1.2rem' }} />
           </IconButton>
 
-          <Typography variant="h6" sx={{ flexGrow: 1, marginLeft: 2 }}>
+          <Typography
+            variant="h6"
+            sx={{ flexGrow: 1, marginLeft: 2, fontSize: '1rem' }}
+          >
             {t('easy go')}
           </Typography>
 
@@ -95,11 +99,17 @@ const Header = memo(() => {
               position: 'absolute',
               left: '50%',
               transform: 'translateX(-50%)',
+              minHeight: '6vh',
               '& .MuiTabs-indicator': {
                 backgroundColor: '#47dded',
                 transition: 'none',
               },
               '& .Mui-selected': { color: '#47dded' },
+              '& .MuiTab-root': {
+                minHeight: '6vh',
+                padding: '0 16px',
+                fontSize: '0.9rem',
+              },
               '& .MuiTab-root:not(.Mui-selected):hover': {
                 color: '#47dded',
                 opacity: 0.7,
