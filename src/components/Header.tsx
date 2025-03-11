@@ -305,7 +305,9 @@ const Header = memo(() => {
             to="/"
             sx={{ padding: '4px' }}
           >
-            <RocketLaunchIcon sx={{ color: '#47dded', fontSize: '1.2rem' }} />
+            <RocketLaunchIcon
+              sx={{ color: '#47dded', fontSize: '1.2rem', ml: 1 }}
+            />
           </IconButton>
 
           <Typography
