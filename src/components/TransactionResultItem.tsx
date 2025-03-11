@@ -191,13 +191,11 @@ export const TransactionResultItem = ({
       <Box
         sx={{
           width: '100%',
-          mb: 1,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           alignItems: 'center',
           borderRadius: 1,
-          py: 1,
           px: 1,
           mx: 'auto',
         }}
@@ -250,6 +248,7 @@ export const TransactionResultItem = ({
               width: '100%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               borderRadius: '6px',
+              border: '1px solid rgba(0, 0, 0, 0.16)',
               paddingRight: '4px',
               '&::-webkit-scrollbar': {
                 width: '6px',
