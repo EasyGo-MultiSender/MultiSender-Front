@@ -123,7 +123,7 @@ const Header = memo(() => {
               component={Link}
               to="/sender"
               sx={{
-                fontSize: '1rem !important',
+                fontSize: '0.8rem !important',
               }}
             />
             <Tab
@@ -133,7 +133,7 @@ const Header = memo(() => {
               component={Link}
               to="/history"
               sx={{
-                fontSize: '1rem !important',
+                fontSize: '0.8rem !important',
               }}
             />
           </Tabs>
@@ -149,9 +149,9 @@ const Header = memo(() => {
               backgroundColor: '#78c1fd',
               color: '#06234e',
               transition: 'all 0.2s ease',
-              padding: '8px 15px',
+              padding: '0px 15px',
               fontSize: '16px',
-              height: '42px',
+              height: '36px',
               display: 'flex',
               alignItems: 'center',
               gap: connected ? '0px' : '8px',
