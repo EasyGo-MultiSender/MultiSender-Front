@@ -422,8 +422,17 @@ const Header = memo(() => {
               color="inherit"
               aria-label="menu"
               onClick={handleDrawerToggle}
+              sx={{
+                width: '48px', // アイコンボタンの幅を大きくする
+                height: '48px', // アイコンボタンの高さを大きくする
+              }}
             >
-              <MenuIcon sx={{ color: 'white' }} />
+              <MenuIcon
+                sx={{
+                  color: 'white',
+                  fontSize: '32px', // アイコンのサイズを大きくする
+                }}
+              />
             </IconButton>
           )}
         </Toolbar>
