@@ -348,7 +348,7 @@ export const TransactionResultItem = ({
 
                 // Webkit系ブラウザ用スクロールバースタイル
                 '&::-webkit-scrollbar': {
-                  width: '6px',
+                  width: '5px',
                 },
                 '&::-webkit-scrollbar-track': {
                   background: 'transparent',
