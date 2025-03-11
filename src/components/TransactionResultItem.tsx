@@ -243,46 +243,30 @@ export const TransactionResultItem = ({
 
           <Box
             sx={{
-              maxHeight: '182px',
-              overflowY: 'auto',
               width: '100%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               borderRadius: '6px',
               border: '1px solid rgba(0, 0, 0, 0.16)',
-              paddingRight: '4px',
-              '&::-webkit-scrollbar': {
-                width: '6px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'rgba(0, 0, 0, 0.05)',
-                borderRadius: '4px',
-                marginLeft: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(0, 0, 0, 0.2)',
-                borderRadius: '4px',
-                '&:hover': {
-                  background: 'rgba(0, 0, 0, 0.3)',
-                },
-              },
+              overflow: 'hidden',
             }}
           >
             <table
               style={{
                 width: '100%',
                 borderCollapse: 'collapse',
-                borderRadius: '6px',
-                overflow: 'hidden',
               }}
             >
-              <thead>
-                <tr
-                  style={{
-                    background:
-                      'linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.10) 100%)',
-                    color: 'rgba(0, 0, 0, 0.87)',
-                  }}
-                >
+              <thead
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.10) 100%)',
+                  color: 'rgba(0, 0, 0, 0.87)',
+                  display: 'table',
+                  width: '100%',
+                  tableLayout: 'fixed',
+                }}
+              >
+                <tr>
                   <th
                     style={{
                       padding: '9px 24px',
@@ -290,6 +274,7 @@ export const TransactionResultItem = ({
                       fontSize: '0.875rem',
                       fontWeight: 600,
                       borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                      width: '70%',
                     }}
                   >
                     <Box
@@ -322,6 +307,7 @@ export const TransactionResultItem = ({
                       fontSize: '0.875rem',
                       fontWeight: 600,
                       borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                      width: '30%',
                     }}
                   >
                     <Box
@@ -353,60 +339,97 @@ export const TransactionResultItem = ({
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                {result.recipients.map((recipient, index) => (
-                  <tr
-                    key={recipient.address}
-                    style={{
-                      borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
-                      backgroundColor:
-                        index % 2 === 0 ? 'rgba(0, 0, 0, 0.02)' : 'transparent',
-                    }}
-                  >
-                    <td
+            </table>
+            <Box
+              sx={{
+                maxHeight: '120px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+
+                // Webkit系ブラウザ用スクロールバースタイル
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: '3px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: 'rgba(0, 0, 0, 0.3)',
+                },
+              }}
+            >
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                }}
+              >
+                <tbody>
+                  {result.recipients.map((recipient, index) => (
+                    <tr
+                      key={recipient.address}
                       style={{
-                        padding: '0px 16px',
-                        fontSize: '0.875rem',
-                        fontFamily: 'monospace',
-                        height: '40px',
+                        display: 'table',
+                        width: '100%',
+                        tableLayout: 'fixed',
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                        backgroundColor:
+                          index % 2 === 0
+                            ? 'rgba(0, 0, 0, 0.02)'
+                            : 'transparent',
                       }}
                     >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
+                      <td
+                        style={{
+                          padding: '0px 24px',
+                          fontSize: '0.875rem',
+                          fontFamily: 'monospace',
+                          height: '40px',
+                          width: '70%',
                         }}
                       >
-                        <Typography
-                          variant="body2"
+                        <Box
                           sx={{
-                            fontFamily: 'monospace',
-                            color: 'rgba(0, 0, 0, 0.87)',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: 'calc(100% - 40px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
                           }}
                         >
-                          {recipient.address}
-                        </Typography>
-                      </Box>
-                    </td>
-                    <td
-                      style={{
-                        padding: '0px 16px',
-                        textAlign: 'right',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        height: '40px',
-                      }}
-                    >
-                      {recipient.amount} {result.token}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: 'monospace',
+                              color: 'rgba(0, 0, 0, 0.87)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: 'calc(100% - 40px)',
+                            }}
+                          >
+                            {recipient.address}
+                          </Typography>
+                        </Box>
+                      </td>
+                      <td
+                        style={{
+                          padding: '0px 16px',
+                          textAlign: 'right',
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          height: '40px',
+                          width: '30%',
+                        }}
+                      >
+                        {recipient.amount} {result.token}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Box>
           </Box>
         </Box>
       </Box>
