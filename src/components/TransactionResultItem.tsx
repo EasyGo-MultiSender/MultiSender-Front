@@ -235,10 +235,7 @@ export const TransactionResultItem = ({
                 startIcon={<ContentCopy fontSize="small" />}
                 onClick={() => {
                   const dataToCopy = recipientAddresses
-                    .map(
-                      (entry) =>
-                        `${entry.address}, ${entry.amount} ${result.token}`
-                    )
+                    .map((entry) => `${entry.address}, ${entry.amount} `)
                     .join('\n');
                   handleCopy(dataToCopy, setIsCopiedAll);
                 }}
