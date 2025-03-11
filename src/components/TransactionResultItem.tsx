@@ -100,6 +100,7 @@ export const TransactionResultItem = ({
           display: 'flex',
           alignItems: 'center',
           width: '97%',
+          height: '36px',
           mb: 2,
           p: 1,
           mt: 1.5,
@@ -136,7 +137,20 @@ export const TransactionResultItem = ({
             {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
           </Typography>
           <Tooltip title="Open in Solscan" arrow placement="top">
-            <OpenInNew sx={{ fontSize: 20, ml: 1 }} />
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                ml: 1,
+                mt: 1,
+              }}
+            >
+              <OpenInNew sx={{ fontSize: 18 }} />
+              <Typography variant="caption" sx={{ mt: -0.4 }}>
+                link
+              </Typography>
+            </Box>
           </Tooltip>
         </Link>
 
@@ -147,8 +161,21 @@ export const TransactionResultItem = ({
               e.stopPropagation();
               copyAddress(result.signature);
             }}
+            sx={{ display: 'flex', flexDirection: 'column' }}
           >
-            <ContentCopy fontSize="small" />
+            <ContentCopy fontSize="small" sx={{ mt: -0.5 }} />
+            <Typography
+              variant="caption"
+              sx={{
+                position: 'absolute',
+                bottom: -8.0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '0.6rem',
+              }}
+            >
+              copy
+            </Typography>
           </IconButton>
         </Tooltip>
       </Box>
