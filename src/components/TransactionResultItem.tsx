@@ -45,7 +45,7 @@ export const TransactionResultItem = ({
       sx={{
         position: 'relative',
         bgcolor: '#f5f5f5',
-        borderRadius: 1,
+        borderRadius: 2,
         mb: 2,
         flexDirection: 'column',
         alignItems: 'flex-start',
