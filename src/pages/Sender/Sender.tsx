@@ -28,7 +28,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // ヘッダーコンポーネント
-import Header from '../../components/Header';
 import TokenList, {
   TokenListRef,
   TokenWithMetadata,
