@@ -22,15 +22,16 @@ const Footer: React.FC = () => {
         bottom: 0,
         left: 0,
         right: 0,
+        height: '8vh',
+        backgroundColor: '#1E2142',
         zIndex: 1000,
       }}
     >
       <Box
         component="footer"
         sx={{
-          bgcolor: '#1E2142',
+          height: '100%',
           color: 'white',
-          py: 2,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'flex-end',
@@ -62,7 +63,7 @@ const Footer: React.FC = () => {
           </IconButton>
 
           <IconButton
-            href="https://x.com/MurasakiBV"
+            href="https://x.com/easymultisender"
             target="_blank"
             rel="noopener noreferrer"
             color="inherit"
@@ -84,8 +85,8 @@ const Footer: React.FC = () => {
             ml: 3,
             bgcolor: '#2D325A',
             color: 'white',
-            px: 2,
-            py: 1,
+            px: 1.6,
+            py: 0.8,
             borderRadius: 2,
             textTransform: 'none',
             display: 'flex',

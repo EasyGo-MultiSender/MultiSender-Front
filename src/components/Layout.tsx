@@ -13,8 +13,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       sx={{
         display: 'flex',
         flexDirection: 'column',
-        height: '100%',
-        width: '100%',
+        height: '100vh',
+        position: 'relative',
+        backgroundColor: '#2b2e45',
       }}
     >
       <Header />
@@ -24,13 +25,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           flexGrow: 1,
           width: '100%',
           overflowY: 'auto',
-          marginTop: '6vh', // ヘッダーの高さに合わせて調整
+          marginTop: '8vh', // ヘッダーの高さに合わせて調整
+          paddingBottom: '8vh', // フッターの高さ分の余白
           '&::-webkit-scrollbar': {
             display: 'none',
           },
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
-          paddingBottom: '64px', // フッターの高さ分の余白
         }}
       >
         {children}
