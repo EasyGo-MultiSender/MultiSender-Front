@@ -21,8 +21,6 @@ import {
   ListItemText,
   ListItemAvatar,
   Tooltip,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -252,13 +250,6 @@ const Sender: React.FC = () => {
     // テキストフィールドを更新
     setRecipientAddresses(formattedAddresses);
   }, []);
-
-  // ユーティリティ関数
-  const copyAddress = async (addr: string) => {
-    await navigator.clipboard.writeText(addr);
-    setSnackbarMessage('Copied Address: ' + addr);
-    setSnackbarOpen(true);
-  };
 
   const pasteAddresses = async () => {
     try {

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Box,
   Card,
@@ -19,13 +18,6 @@ const Logs = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
   const { connected } = useWallet();
-
-  const formatAddress = (address: string) => {
-    if (isMobile) {
-      return `${address.slice(0, 13)}...${address.slice(-13)}`;
-    }
-    return address;
-  };
 
   return (
     <Box
