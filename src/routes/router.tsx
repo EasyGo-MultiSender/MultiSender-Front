@@ -1,19 +1,41 @@
-import { createBrowserRouter } from "react-router-dom";
-import Top from "../pages/Top/Top";
-import NotFound from "../pages/NotFound/NotFound";
-import Sender from "../pages/Sender/Sender";
+import { createBrowserRouter } from 'react-router-dom';
+import Layout from '../components/Layout';
+import Top from '../pages/Top/Top';
+import NotFound from '../pages/NotFound/NotFound';
+import Sender from '../pages/Sender/Sender';
+import History from '../pages/History/History';
 
 export const router = createBrowserRouter([
   {
-    path: "/",
-    element: <Top />,
+    path: '/',
+    element: (
+      <Layout>
+        <Top />
+      </Layout>
+    ),
   },
   {
-    path: "/bulksender",
-    element: <Sender />,
+    path: '/sender',
+    element: (
+      <Layout>
+        <Sender />
+      </Layout>
+    ),
   },
   {
-    path: "*",
-    element: <NotFound />,
+    path: '/history',
+    element: (
+      <Layout>
+        <History />
+      </Layout>
+    ),
+  },
+  {
+    path: '*',
+    element: (
+      <Layout>
+        <NotFound />
+      </Layout>
+    ),
   },
 ]);
