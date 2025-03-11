@@ -310,7 +310,11 @@ const Header = memo(() => {
 
           <Typography
             variant="h6"
-            sx={{ flexGrow: 1, marginLeft: 2, fontSize: '1rem' }}
+            sx={{
+              flexGrow: 1,
+              marginLeft: 2,
+              fontSize: isMobile ? '1.5rem' : '1.2rem',
+            }}
           >
             {t('easy go')}
           </Typography>
