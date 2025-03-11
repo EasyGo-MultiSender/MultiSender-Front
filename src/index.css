@@ -62,3 +62,30 @@ button:hover {
     background-color: #f9f9f9;
   }
 }
+
+
+
+/* モバイル時のヘッダーのwalletのphantomなどのボタンのスタイルを変更 */
+@media (max-width: 767px) {
+  .wallet-adapter-button-trigger span:not(.wallet-adapter-button-start-icon) {
+    display: none !important;
+  }
+
+  .wallet-adapter-button.wallet-adapter-button-trigger {
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: relative !important;
+  }
+  
+  .wallet-adapter-button-trigger .wallet-adapter-button-start-icon {
+    margin: 0 !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}

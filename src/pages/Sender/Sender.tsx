@@ -21,6 +21,8 @@ import {
   ListItemText,
   ListItemAvatar,
   Tooltip,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -76,6 +78,8 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -491,6 +495,13 @@ const Sender: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const formatAddress = (address: string) => {
+    if (isMobile) {
+      return `${address.slice(0, 13)}...${address.slice(-13)}`;
+    }
+    return address;
+  };
+
   return (
     <Box
       sx={{
@@ -574,7 +585,7 @@ const Sender: React.FC = () => {
                 }}
               >
                 {connected
-                  ? publicKey?.toBase58()
+                  ? formatAddress(publicKey?.toBase58() || '')
                   : 'Please connect your wallet'}
               </Typography>
               {connected && (
