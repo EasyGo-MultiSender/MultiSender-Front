@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
+import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 
 const Logs = () => {
   const { t } = useTranslation();
@@ -73,39 +74,12 @@ const Logs = () => {
         {/* ウォレットアドレス表示カード */}
         <Card sx={{ my: 4, borderRadius: 2 }}>
           <CardContent>
-            <Typography variant="h6" mb={1} textAlign="center">
-              {t('Wallet Address')}
-            </Typography>
-            <Box
-              sx={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid #ccc',
-                borderRadius: 1,
-                p: 1,
-                height: 36,
-              }}
-            >
-              <Typography variant="body2" sx={{ flex: 1, textAlign: 'center' }}>
-                {formatAddress(
-                  publicKey?.toBase58() || t('Please connect your wallet')
-                )}
-              </Typography>
-              {publicKey && (
-                <IconButton
-                  onClick={() => publicKey && copyAddress(publicKey.toBase58())}
-                  sx={{
-                    position: 'absolute',
-                    right: 8,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                  }}
-                >
-                  <ContentCopy />
-                </IconButton>
-              )}
-            </Box>
+            <WalletAddressDisplay
+              connected={connected}
+              publicKey={publicKey}
+              copyAddress={copyAddress}
+              formatAddress={formatAddress}
+            />
           </CardContent>
         </Card>
 
