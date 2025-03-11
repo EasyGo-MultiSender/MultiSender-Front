@@ -63,7 +63,7 @@ const Footer: React.FC = () => {
           </IconButton>
 
           <IconButton
-            href="https://x.com/MurasakiBV"
+            href="https://x.com/easymultisender"
             target="_blank"
             rel="noopener noreferrer"
             color="inherit"
