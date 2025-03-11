@@ -20,12 +20,12 @@ import {
   ContentCopy,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-import { useWallet } from '@solana/wallet-adapter-react';
+import { useWallet } from '../../hooks/useWallet';
 
 const Logs = () => {
   const { t } = useTranslation();
-  const { publicKey } = useWallet();
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const { publicKey, connected } = useWallet();
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
@@ -56,6 +56,20 @@ const Logs = () => {
       }}
     >
       <Container maxWidth="md" sx={{ flex: 1 }}>
+        {!connected && (
+          <Card sx={{ mt: 2, p: 3, borderRadius: 2, bgcolor: '#ffffff' }}>
+            <Typography
+              variant="h4"
+              sx={{
+                textAlign: 'center',
+                fontWeight: 'bold',
+                color: '#000000',
+              }}
+            >
+              {t('Please connect your wallet in the header')}
+            </Typography>
+          </Card>
+        )}
         {/* ウォレットアドレス表示カード */}
         <Card sx={{ mt: 2, mb: 3, borderRadius: 2 }}>
           <CardContent>
@@ -160,14 +174,6 @@ const Logs = () => {
           </CardContent>
         </Card>
       </Container>
-
-      {/* 通知用スナックバー */}
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        message={snackbarMessage}
-      />
     </Box>
   );
 };
