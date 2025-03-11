@@ -114,7 +114,7 @@ const Logs = () => {
           <Box
             sx={{
               bgcolor: '#4b5079',
-              py: 3,
+              py: 2.5,
               px: 4,
               display: 'flex',
               alignItems: 'center',
@@ -126,20 +126,6 @@ const Logs = () => {
               <Typography variant="h5" fontWeight="bold" color="#fff">
                 {t('Token Transfer History')}
               </Typography>
-            </Box>
-
-            <Box>
-              <IconButton size="small" sx={{ color: '#fff', mr: 1 }}>
-                <RefreshIcon />
-              </IconButton>
-
-              <IconButton size="small" sx={{ color: '#fff', mr: 1 }}>
-                <FilterIcon />
-              </IconButton>
-
-              <IconButton size="small" sx={{ color: '#fff' }}>
-                <DownloadIcon />
-              </IconButton>
             </Box>
           </Box>
 
@@ -157,19 +143,6 @@ const Logs = () => {
               <Typography variant="body1" color="text.secondary" gutterBottom>
                 {t('No transaction history found')}
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                align="center"
-                sx={{ maxWidth: 400, mb: 3 }}
-              >
-                {t(
-                  "Your token transfer history will appear here once you've made transactions"
-                )}
-              </Typography>
-              <Button variant="contained" color="primary" href="/sender">
-                {t('Make a Transfer')}
-              </Button>
             </Box>
           </CardContent>
         </Card>
