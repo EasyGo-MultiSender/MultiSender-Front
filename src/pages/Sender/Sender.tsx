@@ -494,7 +494,7 @@ const Sender: React.FC = () => {
   return (
     <Box
       sx={{
-        height: 'calc(100vh - 6vh - 64px)', // ヘッダー(6vh)とフッター(64px)の高さを引く
+        height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(8vh)引く
         backgroundImage: `url("../../../public/image.webp")`,
         backgroundSize: '120%',
         backgroundPosition: '0% 80%',
@@ -982,7 +982,6 @@ const Sender: React.FC = () => {
                       key={`${result.signature}-${index}`}
                       result={result}
                       connection={connection}
-                      copyAddress={copyAddress}
                       recipientAddresses={parsedEntries}
                     />
                   ))}

@@ -24,7 +24,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           flexGrow: 1,
           width: '100%',
           overflowY: 'auto',
-          marginTop: '6vh', // ヘッダーの高さに合わせて調整
+          marginTop: '8vh', // ヘッダーの高さに合わせて調整
           '&::-webkit-scrollbar': {
             display: 'none',
           },

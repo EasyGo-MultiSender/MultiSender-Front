@@ -23,6 +23,7 @@ const Footer: React.FC = () => {
         left: 0,
         right: 0,
         zIndex: 1000,
+        height: '8vh',
       }}
     >
       <Box
