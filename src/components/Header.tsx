@@ -38,7 +38,7 @@ import TranslateSelector from './TranslateSelector';
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック
   const [navValue, setNavValue] = useState<string | false>(false);
-  const { connected, connecting, walletInfo } = useWallet();
+  const { connected, connecting, walletInfo, wallet } = useWallet();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -144,7 +144,11 @@ const Header = memo(() => {
               mr: 1.5,
             }}
           >
-            <AccountBalanceWalletIcon sx={{ fontSize: '1rem' }} />
+            <img
+              src={wallet?.adapter?.icon}
+              alt={`${wallet?.adapter?.name || 'Wallet'} icon`}
+              style={{ width: '100%', height: '100%' }}
+            />
           </Avatar>
           <Box>
             <Typography
