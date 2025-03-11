@@ -27,6 +27,7 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import MenuIcon from '@mui/icons-material/Menu';
 import HistoryIcon from '@mui/icons-material/History';
 import SendIcon from '@mui/icons-material/Send';
+import CloseIcon from '@mui/icons-material/Close';
 import { Link } from 'react-router-dom';
 import { memo, useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
@@ -123,6 +124,11 @@ const Header = memo(() => {
         <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
           {t('easy go')}
         </Typography>
+
+        {/* 閉じるボタン */}
+        <IconButton onClick={handleDrawerToggle} sx={{ ml: 'auto' }}>
+          <CloseIcon sx={{ color: 'white', fontSize: '28px' }} />
+        </IconButton>
       </Box>
 
       {/* Wallet info section (if connected) */}
