@@ -5,8 +5,6 @@ import {
   Typography,
   Divider,
   CardContent,
-  useTheme,
-  useMediaQuery,
 } from '@mui/material';
 import { History as HistoryIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +13,6 @@ import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 
 const Logs = () => {
   const { t } = useTranslation();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
   const { connected } = useWallet();
 
   return (
