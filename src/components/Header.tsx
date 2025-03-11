@@ -68,9 +68,9 @@ const Header = memo(() => {
     <Box>
       <AppBar
         position="fixed"
-        sx={{ backgroundColor: '#17062e', height: '6vh' }}
+        sx={{ backgroundColor: '#17062e', height: '8vh' }}
       >
-        <Toolbar sx={{ minHeight: '6vh !important' }}>
+        <Toolbar sx={{ minHeight: '8vh !important' }}>
           <IconButton
             edge="start"
             color="inherit"
@@ -108,7 +108,7 @@ const Header = memo(() => {
               '& .MuiTab-root': {
                 minHeight: '6vh',
                 padding: '0 16px',
-                fontSize: '0.9rem',
+                fontSize: '1rem',
               },
               '& .MuiTab-root:not(.Mui-selected):hover': {
                 color: '#47dded',
@@ -122,6 +122,9 @@ const Header = memo(() => {
               label="Multi Sender"
               component={Link}
               to="/sender"
+              sx={{
+                fontSize: '1rem !important',
+              }}
             />
             <Tab
               disableRipple
@@ -129,6 +132,9 @@ const Header = memo(() => {
               label="History"
               component={Link}
               to="/history"
+              sx={{
+                fontSize: '1rem !important',
+              }}
             />
           </Tabs>
 
