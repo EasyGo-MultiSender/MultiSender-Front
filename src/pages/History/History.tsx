@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Box,
   Card,
@@ -6,37 +6,19 @@ import {
   Typography,
   Divider,
   CardContent,
-  IconButton,
-  Button,
-  Snackbar,
   useTheme,
   useMediaQuery,
 } from '@mui/material';
-import {
-  History as HistoryIcon,
-  FilterList as FilterIcon,
-  GetApp as DownloadIcon,
-  Refresh as RefreshIcon,
-  ContentCopy,
-} from '@mui/icons-material';
+import { History as HistoryIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 
 const Logs = () => {
   const { t } = useTranslation();
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const { publicKey, connected } = useWallet();
-  const [snackbarMessage, setSnackbarMessage] = useState('');
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
-
-  // アドレスコピー機能
-  const copyAddress = async (addr: string) => {
-    await navigator.clipboard.writeText(addr);
-    setSnackbarMessage('Copied Address: ' + addr);
-    setSnackbarOpen(true);
-  };
+  const { connected } = useWallet();
 
   const formatAddress = (address: string) => {
     if (isMobile) {
@@ -74,12 +56,7 @@ const Logs = () => {
         {/* ウォレットアドレス表示カード */}
         <Card sx={{ my: 4, borderRadius: 2 }}>
           <CardContent>
-            <WalletAddressDisplay
-              connected={connected}
-              publicKey={publicKey}
-              copyAddress={copyAddress}
-              formatAddress={formatAddress}
-            />
+            <WalletAddressDisplay />
           </CardContent>
         </Card>
 

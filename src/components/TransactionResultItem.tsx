@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { ContentCopy, OpenInNew } from '@mui/icons-material';
 import { useState } from 'react';
+import { handleCopy } from '../hooks/util/copy';
 
 interface AddressEntry {
   address: string;
@@ -41,15 +42,6 @@ export const TransactionResultItem = ({
 }: TransactionResultItemProps) => {
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
   const [isCopiedAll, setIsCopiedAll] = useState(false);
-
-  const handleCopy = async (
-    text: string,
-    setCopied: (value: boolean) => void
-  ) => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1000);
-  };
 
   return (
     <ListItem

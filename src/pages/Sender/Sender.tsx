@@ -1,5 +1,5 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, ContentCopy, Download } from '@mui/icons-material';
+import { ContentPaste, Download } from '@mui/icons-material';
 import {
   Box,
   Container,
@@ -79,8 +79,6 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -496,13 +494,6 @@ const Sender: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const formatAddress = (address: string) => {
-    if (isMobile) {
-      return `${address.slice(0, 13)}...${address.slice(-13)}`;
-    }
-    return address;
-  };
-
   return (
     <Box
       sx={{
@@ -563,12 +554,7 @@ const Sender: React.FC = () => {
 
             <Divider sx={{ my: 2 }} />
 
-            <WalletAddressDisplay
-              connected={connected}
-              publicKey={publicKey}
-              copyAddress={copyAddress}
-              formatAddress={formatAddress}
-            />
+            <WalletAddressDisplay />
           </CardContent>
         </Card>
 
