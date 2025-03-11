@@ -71,7 +71,7 @@ const Logs = () => {
           </Card>
         )}
         {/* ウォレットアドレス表示カード */}
-        <Card sx={{ mt: 2, mb: 3, borderRadius: 2 }}>
+        <Card sx={{ my: 4, borderRadius: 2 }}>
           <CardContent>
             <Typography variant="h6" mb={1} textAlign="center">
               {t('Wallet Address')}
