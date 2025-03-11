@@ -389,6 +389,7 @@ const Header = memo(() => {
                     padding: 0,
                     display: 'grid',
                     placeItems: 'center',
+                    marginRight: '10px',
                   }
                 : {
                     // デスクトップ用スタイル
