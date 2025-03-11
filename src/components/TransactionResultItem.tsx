@@ -161,14 +161,20 @@ export const TransactionResultItem = ({
               e.stopPropagation();
               copyAddress(result.signature);
             }}
-            sx={{ display: 'flex', flexDirection: 'column' }}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              width: 38,
+              height: 38,
+              padding: 0,
+            }}
           >
             <ContentCopy fontSize="small" sx={{ mt: -0.5 }} />
             <Typography
               variant="caption"
               sx={{
                 position: 'absolute',
-                bottom: -8.0,
+                bottom: -1.0,
                 left: '50%',
                 transform: 'translateX(-50%)',
                 fontSize: '0.6rem',
