@@ -1,8 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   List,
   ListItem,
-  ListItemButton,
   Collapse,
   IconButton,
   Typography,
@@ -11,7 +10,7 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import { ExpandMore } from '@mui/icons-material';
+import { ExpandMore, Download } from '@mui/icons-material';
 import {
   TransactionResult,
   Serializer as SerializerType,
@@ -28,10 +27,28 @@ const SerializerList: React.FC<SerializerListProps> = ({
   connection,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleGroupToggle = () => {
     setIsExpanded(!isExpanded);
   };
+
+  const handleDownload = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // ダウンロード処理をここに実装
+    console.log('Download clicked for:', serializer);
+  };
+
+  useEffect(() => {
+    if (isExpanded && contentRef.current) {
+      setTimeout(() => {
+        contentRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 100); // 少し遅延させてアニメーションが始まった後にスクロール
+    }
+  }, [isExpanded]);
 
   const successCount = serializer.results.filter(
     (result) => result.status === 'success'
@@ -48,21 +65,23 @@ const SerializerList: React.FC<SerializerListProps> = ({
     <Card
       sx={{
         mb: 2,
-        border: '1px solid rgba(0, 0, 0, 0.12)',
+        border: '2px solid rgba(0, 0, 0, 0.2)',
         borderRadius: 2,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
       }}
     >
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>
-        <ListItemButton
+        <Box
           onClick={handleGroupToggle}
           sx={{
             backgroundColor: (theme) =>
               isExpanded
-                ? theme.palette.primary.main + '14'
-                : 'rgba(0, 0, 0, 0.02)',
-            borderRadius: 2,
+                ? theme.palette.primary.main + '22'
+                : 'rgba(0, 0, 0, 0.04)',
+            cursor: 'pointer',
             '&:hover': {
-              backgroundColor: (theme) => theme.palette.primary.main + '1A',
+              backgroundColor: (theme) => theme.palette.primary.main + '30',
+              transition: 'background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
             },
           }}
         >
@@ -72,18 +91,21 @@ const SerializerList: React.FC<SerializerListProps> = ({
               alignItems: 'center',
               justifyContent: 'space-between',
               width: '100%',
-              p: 1.5,
+              py: 1.2,
             }}
           >
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <IconButton
                   size="small"
                   sx={{
                     color: (theme) => theme.palette.primary.main,
                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.8s cubic-bezier(0.4, 0, 0.2, 1)',
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
                   }}
-                  onClick={(e) => e.stopPropagation()}
                 >
                   <ExpandMore />
                 </IconButton>
@@ -95,7 +117,7 @@ const SerializerList: React.FC<SerializerListProps> = ({
                     color: (theme) => theme.palette.text.primary,
                   }}
                 >
-                  Transaction Group ({token})
+                  Serializer ({token})
                 </Typography>
               </Box>
               <Typography
@@ -103,13 +125,16 @@ const SerializerList: React.FC<SerializerListProps> = ({
                 sx={{
                   ml: 5,
                   color: (theme) => theme.palette.text.secondary,
-                  fontSize: '0.85rem',
+                  fontSize: '0.8rem',
+                  lineHeight: 1.2,
                 }}
               >
                 {new Date(timestamp).toLocaleString()}
               </Typography>
             </Box>
-            <Box sx={{ display: 'flex', gap: 1.5 }}>
+            <Box
+              sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mr: 2 }}
+            >
               <Chip
                 label={`Success: ${successCount}/${totalCount}`}
                 color={successCount === totalCount ? 'success' : 'warning'}
@@ -134,39 +159,52 @@ const SerializerList: React.FC<SerializerListProps> = ({
                   },
                 }}
               />
+              <IconButton
+                size="small"
+                color="primary"
+                sx={{
+                  ml: 0.5,
+                  transition: 'transform 0.3s ease',
+                  '&:hover': {
+                    transform: 'scale(1.1)',
+                  },
+                }}
+                onClick={handleDownload}
+              >
+                <Download fontSize="small" />
+              </IconButton>
             </Box>
           </Box>
-        </ListItemButton>
-        <Collapse in={isExpanded} unmountOnExit>
-          <List
-            component="div"
-            disablePadding
-            sx={{
-              backgroundColor: (theme) => theme.palette.background.paper,
-              borderTop: '1px solid rgba(0, 0, 0, 0.12)',
-            }}
-          >
-            {serializer.results.map(
-              (result: TransactionResult, index: number) => (
-                <ListItem
-                  key={`${result.signature}-${index}`}
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    borderBottom:
-                      index !== serializer.results.length - 1
-                        ? '1px solid rgba(0, 0, 0, 0.06)'
-                        : 'none',
-                  }}
-                >
-                  <TransactionResultItem
-                    result={result}
-                    connection={connection}
-                  />
-                </ListItem>
-              )
-            )}
-          </List>
+        </Box>
+        <Collapse in={isExpanded} unmountOnExit timeout={800}>
+          <Box ref={contentRef}>
+            <List
+              component="div"
+              disablePadding
+              sx={{
+                backgroundColor: 'transparent',
+                borderTop: '2px solid rgba(0, 0, 0, 0.2)',
+                boxShadow: 'inset 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+              }}
+            >
+              {serializer.results.map(
+                (result: TransactionResult, index: number) => (
+                  <ListItem
+                    key={`${result.signature}-${index}`}
+                    sx={{
+                      px: 2,
+                      py: 1,
+                    }}
+                  >
+                    <TransactionResultItem
+                      result={result}
+                      connection={connection}
+                    />
+                  </ListItem>
+                )
+              )}
+            </List>
+          </Box>
         </Collapse>
       </CardContent>
     </Card>
