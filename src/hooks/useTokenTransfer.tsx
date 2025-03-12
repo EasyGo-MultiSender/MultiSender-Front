@@ -6,6 +6,7 @@ import {
   VersionedTransaction,
 } from '@solana/web3.js';
 import { useCallback, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { TransferResult } from './interfaces/transfer';
 import { createBatchTransferTransaction } from './transfer/createTransaction';
 import { waitForTransactionConfirmation } from './transfer/waitForTransaction';
@@ -43,7 +44,7 @@ export function useTokenTransfer(
     async (
       recipientsWithAmounts: Array<{ address: string; amount: number }>,
       mint?: string
-    ): Promise<TransferResult[]> => {
+    ): Promise<{ result: TransferResult[]; uuid: string }> => {
       console.warn('transferWithIndividualAmounts');
       if (!publicKey) throw new Error('Wallet not connected');
 
@@ -229,7 +230,10 @@ export function useTokenTransfer(
         }
 
         console.log(`Transfer operation completed. Results:`, results);
-        return results;
+        return {
+          result: results,
+          uuid: uuidv4(),
+        };
       } catch (error) {
         if (error instanceof Error) {
           // ユーザーによる拒否を検出
@@ -259,7 +263,10 @@ export function useTokenTransfer(
         setLoading(false);
       }
 
-      return results;
+      return {
+        result: results,
+        uuid: uuidv4(),
+      };
     },
     [connection, publicKey]
   );
