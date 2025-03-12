@@ -1,10 +1,4 @@
-import {
-  ContentCopy,
-  OpenInNew,
-  CheckCircleOutline,
-  ErrorOutline,
-  WarningAmber,
-} from '@mui/icons-material';
+import { ContentCopy, OpenInNew } from '@mui/icons-material';
 import {
   Box,
   Chip,
@@ -35,7 +29,6 @@ interface TransactionResult {
 
 interface TransactionResultItemProps {
   result: TransactionResult;
-  recipientAddresses: AddressEntry[];
   connection: {
     rpcEndpoint: string;
   };
@@ -43,7 +36,6 @@ interface TransactionResultItemProps {
 
 export const TransactionResultItem = ({
   result,
-  recipientAddresses,
   connection,
 }: TransactionResultItemProps) => {
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
@@ -72,13 +64,15 @@ export const TransactionResultItem = ({
         position: 'relative',
         bgcolor: '#f5f5f5',
         borderRadius: 2,
-        mb: 2,
+        my: 1,
         flexDirection: 'column',
         alignItems: 'flex-start',
         p: 2,
         backgroundColor: 'rgba(0, 0, 0, 0.05)',
         border: '0.3px solid rgba(0, 0, 0, 0.2)',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+        width: '97%',
+        mx: 'auto',
       }}
     >
       {/* Status , Timestamp  and download button*/}
@@ -253,8 +247,11 @@ export const TransactionResultItem = ({
                 size="small"
                 startIcon={<ContentCopy fontSize="small" />}
                 onClick={() => {
-                  const dataToCopy = recipientAddresses
-                    .map((entry) => `${entry.address}, ${entry.amount} `)
+                  const dataToCopy = result.recipients
+                    .map(
+                      (recipient) =>
+                        `${recipient.address}, ${recipient.amount} `
+                    )
                     .join('\n');
                   handleCopy(dataToCopy, setIsCopiedAll);
                 }}
