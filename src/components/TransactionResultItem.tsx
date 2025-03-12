@@ -47,6 +47,41 @@ export const TransactionResultItem = ({
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
   const [isCopiedAll, setIsCopiedAll] = useState(false);
 
+  // トランザクション結果をJSONファイルとしてダウンロードする関数
+  const handleDownload = () => {
+    // ダウンロードするデータを作成
+    const downloadData = {
+      signature: result.signature,
+      status: result.status,
+      timestamp: result.timestamp,
+      recipients: result.recipients,
+      totalAmount: result.totalAmount,
+      token: result.token,
+      error: result.error,
+    };
+
+    // JSONデータをBlobに変換
+    const blob = new Blob([JSON.stringify(downloadData, null, 2)], {
+      type: 'application/json',
+    });
+
+    // ダウンロードリンクを作成
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `transaction-${result.signature.slice(0, 8)}-${
+      new Date(result.timestamp).toISOString().split('T')[0]
+    }.json`;
+
+    // リンクをクリックしてダウンロード開始
+    document.body.appendChild(link);
+    link.click();
+
+    // クリーンアップ
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   // 'warn'を'warning'に変換
   const getStatusColor = (
     status: 'success' | 'error' | 'warn'
@@ -105,6 +140,7 @@ export const TransactionResultItem = ({
             variant="outlined"
             color="inherit"
             size="small"
+            onClick={handleDownload}
             sx={{
               mr: 1,
               borderColor: 'rgba(27, 27, 27, 0.37)',
@@ -230,7 +266,7 @@ export const TransactionResultItem = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           borderRadius: 1,
-          px: 1,
+          px: 0,
           mx: 'auto',
         }}
       >
@@ -279,11 +315,12 @@ export const TransactionResultItem = ({
 
           <Box
             sx={{
-              width: '100%',
+              width: '%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               borderRadius: '6px',
               border: '1px solid rgba(0, 0, 0, 0.16)',
               overflow: 'hidden',
+              mx: 'auto ',
             }}
           >
             <table
@@ -469,6 +506,7 @@ export const TransactionResultItem = ({
           </Box>
         </Box>
       </Box>
+
       {/* Error Message */}
       {result.error && (
         <Box
