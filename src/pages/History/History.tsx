@@ -10,7 +10,6 @@ import {
 import { History as HistoryIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
-import { getHistoryFiles } from '../../hooks/getHistoryFiles';
 import { useConnection } from '../../hooks/useConnection';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import SerializerList from '../../components/SerializerList';
@@ -21,38 +20,66 @@ const History = () => {
   const { t } = useTranslation();
   const { connected, walletInfo } = useWallet();
   const { connection } = useConnection();
-  const { files, loading, error } = getHistoryFiles(
-    walletInfo?.address ?? null
-  );
-  const [serializers, setSerializers] = useState<Serializer[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // ファイルリストからSerializerデータを生成
-  useEffect(() => {
-    if (files.length > 0) {
-      // ダミーデータを作成（実際のアプリケーションでは、APIからデータを取得するなど）
-      const dummySerializers: Serializer[] = files.map((file, index) => ({
-        uuid: `serializer-${index}`,
-        results: [
-          {
-            signature: `sig-${index}`,
-            status: 'success',
-            timestamp: Date.now() - index * 86400000, // 1日ずつ過去の日付
-            recipients: [
-              {
-                address: `recipient-${index}`,
-                amount: 0.1 + index * 0.05,
-              },
-            ],
-            totalAmount: 0.1 + index * 0.05,
-            token: 'SOL',
-          },
-        ],
-      }));
-      setSerializers(dummySerializers);
-    } else {
-      setSerializers([]);
-    }
-  }, [files]);
+  // ダミーのSerializerデータを作成
+  const dummySerializers: Serializer[] = [
+    {
+      uuid: 'serializer-1',
+      results: [
+        {
+          signature: 'sig-1',
+          status: 'success',
+          timestamp: Date.now(),
+          recipients: [
+            {
+              address: 'recipient-1',
+              amount: 0.1,
+            },
+          ],
+          totalAmount: 0.1,
+          token: 'SOL',
+        },
+      ],
+    },
+    {
+      uuid: 'serializer-2',
+      results: [
+        {
+          signature: 'sig-2',
+          status: 'success',
+          timestamp: Date.now() - 86400000, // 1日前
+          recipients: [
+            {
+              address: 'recipient-2',
+              amount: 0.15,
+            },
+          ],
+          totalAmount: 0.15,
+          token: 'SOL',
+        },
+      ],
+    },
+    {
+      uuid: 'serializer-3',
+      results: [
+        {
+          signature: 'sig-3',
+          status: 'error',
+          timestamp: Date.now() - 172800000, // 2日前
+          recipients: [
+            {
+              address: 'recipient-3',
+              amount: 0.2,
+            },
+          ],
+          totalAmount: 0.2,
+          token: 'USDC',
+        },
+      ],
+    },
+  ];
 
   return (
     <Box
@@ -134,7 +161,7 @@ const History = () => {
                   {error}
                 </Typography>
               </Box>
-            ) : serializers.length === 0 ? (
+            ) : dummySerializers.length === 0 ? (
               <Box
                 display="flex"
                 alignItems="center"
@@ -149,7 +176,7 @@ const History = () => {
               </Box>
             ) : (
               <Box>
-                {serializers.map((serializer) => (
+                {dummySerializers.map((serializer) => (
                   <SerializerList
                     key={serializer.uuid}
                     serializer={serializer}
