@@ -1,4 +1,11 @@
 import {
+  CheckCircleOutline,
+  ContentCopy,
+  ErrorOutline,
+  OpenInNew,
+  WarningAmber,
+} from '@mui/icons-material';
+import {
   Box,
   Chip,
   Typography,
@@ -7,17 +14,8 @@ import {
   Link,
   Tooltip,
   Button,
-  Collapse,
 } from '@mui/material';
-import {
-  ContentCopy,
-  OpenInNew,
-  Error as ErrorIcon,
-  ExpandMore,
-  ExpandLess,
-} from '@mui/icons-material';
 import { useState } from 'react';
-import { handleCopy } from '../hooks/util/copy';
 
 interface AddressEntry {
   address: string;
@@ -26,9 +24,10 @@ interface AddressEntry {
 
 interface TransactionResult {
   signature: string;
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'warn';
   timestamp: number;
   error?: string;
+  errorMessage?: string;
   recipients: AddressEntry[];
   totalAmount: number;
   token: string;
@@ -47,8 +46,6 @@ export const TransactionResultItem = ({
 }: TransactionResultItemProps) => {
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
   const [isCopiedAll, setIsCopiedAll] = useState(false);
-  const [errorExpanded, setErrorExpanded] = useState(false);
-  const [isCopiedError, setIsCopiedError] = useState(false);
 
   // トランザクション結果をJSONファイルとしてダウンロードする関数
   const handleDownload = () => {
@@ -85,6 +82,23 @@ export const TransactionResultItem = ({
     URL.revokeObjectURL(url);
   };
 
+  // 'warn'を'warning'に変換
+  const getStatusColor = (
+    status: 'success' | 'error' | 'warn'
+  ): 'success' | 'error' | 'warning' => {
+    if (status === 'warn') return 'warning';
+    return status;
+  };
+
+  const handleCopy = async (
+    text: string,
+    setCopied: (value: boolean) => void
+  ) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1000);
+  };
+
   return (
     <ListItem
       sx={{
@@ -112,8 +126,8 @@ export const TransactionResultItem = ({
       >
         <Box>
           <Chip
-            label={result.status}
-            color={result.status === 'success' ? 'success' : 'error'}
+            label={getStatusColor(result.status)}
+            color={getStatusColor(result.status)}
             size="small"
             sx={{ mr: 1 }}
           />
@@ -157,50 +171,54 @@ export const TransactionResultItem = ({
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
         }}
       >
-        <Link
-          href={`https://solscan.io/tx/${result.signature}${
-            connection.rpcEndpoint.includes('devnet') ? '?cluster=devnet' : ''
-          }`}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{
-            color: 'primary.main',
-            display: 'flex',
-            alignItems: 'center',
-            flex: 1,
-            textDecoration: 'none',
-            '&:hover': {
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          <Typography
+        {getStatusColor(result.status) === 'success' ? (
+          <Link
+            href={`https://solscan.io/tx/${result.signature}${
+              connection.rpcEndpoint.includes('devnet') ? '?cluster=devnet' : ''
+            }`}
+            target="_blank"
+            rel="noopener noreferrer"
             sx={{
-              fontFamily: 'monospace',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              color: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              flex: 1,
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline',
+              },
             }}
           >
-            {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
-          </Typography>
-          <Tooltip title="Open in Solscan" arrow placement="top">
-            <Box
+            <Typography
               sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                ml: 1,
-                mt: 1,
+                fontFamily: 'monospace',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              <OpenInNew sx={{ fontSize: 18 }} />
-              <Typography variant="caption" sx={{ mt: -0.4 }}>
-                link
-              </Typography>
-            </Box>
-          </Tooltip>
-        </Link>
+              {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
+            </Typography>
+            <Tooltip title="Open in Solscan" arrow placement="top">
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  ml: 1,
+                  mt: 1,
+                }}
+              >
+                <OpenInNew sx={{ fontSize: 18 }} />
+                <Typography variant="caption" sx={{ mt: -0.4 }}>
+                  link
+                </Typography>
+              </Box>
+            </Tooltip>
+          </Link>
+        ) : (
+          result.errorMessage
+        )}
 
         <Tooltip
           title={isCopiedSignature ? 'Copied !' : 'Copy Signature'}
@@ -495,86 +513,85 @@ export const TransactionResultItem = ({
           sx={{
             mt: 2,
             width: '100%',
-            backgroundColor: 'rgba(211, 47, 47, 0.08)',
-            color: 'error.dark',
-            borderRadius: 1,
-            border: '1px solid rgba(211, 47, 47, 0.3)',
+            backgroundColor:
+              result.status === 'warn'
+                ? 'warning.light'
+                : result.error.includes('MultiSenderServerError')
+                  ? 'warning.light'
+                  : 'error.light',
+            borderRadius: 2,
             overflow: 'hidden',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           }}
         >
-          <Box
-            sx={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              px: 2,
-              py: 1,
-              cursor: 'pointer',
-            }}
-            onClick={() => setErrorExpanded(!errorExpanded)}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <ErrorIcon color="error" sx={{ mr: 1 }} />
-              <Typography
-                variant="body2"
-                fontWeight="medium"
-                color="error.dark"
-              >
-                トランザクションエラーが発生しました
-              </Typography>
-            </Box>
-            <IconButton
-              size="small"
-              sx={{ p: 0 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setErrorExpanded(!errorExpanded);
-              }}
-            >
-              {errorExpanded ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-          </Box>
-
-          <Collapse in={errorExpanded}>
-            <Box
-              sx={{ px: 2, py: 1, backgroundColor: 'rgba(211, 47, 47, 0.03)' }}
-            >
-              <Typography
-                variant="body2"
+          {/* 送金成功部分があるか確認 */}
+          {result.error.includes('送金は成功') ||
+          result.error.includes('MultiSenderServerError') ? (
+            <>
+              {/* 送金成功メッセージ */}
+              <Box
                 sx={{
-                  fontFamily: 'monospace',
-                  whiteSpace: 'pre-wrap',
-                  wordBreak: 'break-word',
+                  p: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: 'success.light',
+                  borderBottom: '1px solid rgba(255,255,255,0.2)',
                 }}
               >
-                {result.error}
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                <Tooltip
-                  title={isCopiedError ? 'Copied !' : 'エラー内容をコピー'}
-                  arrow
-                  placement="top"
-                >
-                  <Button
-                    variant="text"
-                    size="small"
-                    color="error"
-                    startIcon={<ContentCopy fontSize="small" />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopy(result.error || '', setIsCopiedError);
-                    }}
-                    sx={{
-                      fontSize: '0.75rem',
-                      textTransform: 'none',
-                    }}
+                <CheckCircleOutline sx={{ color: 'white', mr: 1.5 }} />
+                <Typography variant="subtitle2" fontWeight="bold" color="white">
+                  送金処理は正常に完了しています
+                </Typography>
+              </Box>
+
+              {/* エラー詳細 */}
+              <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start' }}>
+                <WarningAmber sx={{ color: 'white', mr: 1.5, mt: 0.2 }} />
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    color="white"
+                    fontWeight="medium"
                   >
-                    コピー
-                  </Button>
-                </Tooltip>
+                    データの保存に失敗しました
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="white"
+                    sx={{ opacity: 0.9, mt: 0.5 }}
+                  >
+                    {result.error.includes('MultiSenderServerError')
+                      ? 'サーバーと通信できませんでした。履歴ページには反映されません。'
+                      : 'データをサーバーに保存できませんでした。履歴ページには反映されません。'}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="white"
+                    sx={{ opacity: 0.8, display: 'block', mt: 0.5 }}
+                  >
+                    ※ ウォレットアプリで送金状況をご確認ください
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          ) : (
+            // 通常のエラーメッセージ
+            <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start' }}>
+              <ErrorOutline sx={{ color: 'white', mr: 1.5, mt: 0.2 }} />
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  color="white"
+                  fontWeight="medium"
+                >
+                  エラーが発生しました
+                </Typography>
+                <Typography variant="body2" color="white" sx={{ mt: 0.5 }}>
+                  {result.error}
+                </Typography>
               </Box>
             </Box>
-          </Collapse>
+          )}
         </Box>
       )}
     </ListItem>

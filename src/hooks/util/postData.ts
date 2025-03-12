@@ -226,7 +226,7 @@ export const postSignatureData = async (
   data: SignaturePayload,
   autoSetTokenSymbol: boolean = true,
   connection?: any
-): Promise<any> => {
+): Promise<void> => {
   try {
     let payloadToSend = { ...data };
 
@@ -248,12 +248,11 @@ export const postSignatureData = async (
     });
 
     if (!response.ok) {
-      throw new Error(`APIリクエストエラー: ${response.status}`);
+      throw new Error(`APIリクエストエラー : ${response.status}`);
     }
 
-    return await response.json();
+    return;
   } catch (error) {
-    console.error('データ送信エラー:', error);
-    throw error;
+    throw new Error(`MultiSenderServerError : ${error}`);
   }
 };

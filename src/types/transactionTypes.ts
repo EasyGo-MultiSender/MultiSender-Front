@@ -1,7 +1,7 @@
 // インターフェース定義
 export interface TransactionResult {
   signature: string;
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'warn';
   timestamp: number;
   error?: string;
   recipients: AddressEntry[];

@@ -17,7 +17,6 @@ import {
   FormControl,
   MenuItem,
   Select,
-  List,
   ListItemText,
   ListItemAvatar,
   Tooltip,
@@ -28,23 +27,23 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // ヘッダーコンポーネント
+import SerializerList from '../../components/SerializerList';
 import TokenList, {
   TokenListRef,
   TokenWithMetadata,
 } from '../../components/TokenList';
 import UploadButton from '../../components/UploadButton';
+import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import { useBalance } from '../../hooks/useBalance';
 import { useConnection } from '../../hooks/useConnection';
 import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
-import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import {
   TransactionResult,
   AddressEntry,
   Serializer,
 } from '../../types/transactionTypes';
-import SerializerList from '../../components/SerializerList';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -386,6 +385,7 @@ const Sender: React.FC = () => {
             status: result.status,
             timestamp: result.timestamp || Date.now(),
             error: result.error,
+            errorMessage: result.errorMessage,
             recipients: recipientAddresses.map((addr, idx) => ({
               address: addr,
               amount: recipientAmounts[idx],
