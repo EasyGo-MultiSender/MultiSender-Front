@@ -5,15 +5,20 @@ import {
   Typography,
   Divider,
   CardContent,
+  CircularProgress,
 } from '@mui/material';
 import { History as HistoryIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
+import { useHistoryFiles } from '../../hooks/useHistoryFiles';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 
 const Logs = () => {
   const { t } = useTranslation();
-  const { connected } = useWallet();
+  const { connected, walletInfo } = useWallet();
+  const { files, loading, error } = useHistoryFiles(
+    walletInfo?.address ?? null
+  );
 
   return (
     <Box
@@ -71,18 +76,57 @@ const Logs = () => {
           <Divider />
 
           <CardContent sx={{ py: 3 }}>
-            <Box
-              display="flex"
-              alignItems="center"
-              justifyContent="center"
-              flexDirection="column"
-              py={4}
-            >
-              <HistoryIcon sx={{ fontSize: 48, color: '#aaa', mb: 2 }} />
-              <Typography variant="body1" color="text.secondary" gutterBottom>
-                {t('No transaction history found')}
-              </Typography>
-            </Box>
+            {loading ? (
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                py={4}
+              >
+                <CircularProgress />
+              </Box>
+            ) : error ? (
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexDirection="column"
+                py={4}
+              >
+                <Typography variant="body1" color="error" gutterBottom>
+                  {error}
+                </Typography>
+              </Box>
+            ) : files.length === 0 ? (
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                flexDirection="column"
+                py={4}
+              >
+                <HistoryIcon sx={{ fontSize: 48, color: '#aaa', mb: 2 }} />
+                <Typography variant="body1" color="text.secondary" gutterBottom>
+                  {t('No transaction history found')}
+                </Typography>
+              </Box>
+            ) : (
+              <Box>
+                {files.map((file, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      p: 2,
+                      '&:not(:last-child)': {
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
+                      },
+                    }}
+                  >
+                    <Typography variant="body1">{file}</Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
           </CardContent>
         </Card>
       </Container>
