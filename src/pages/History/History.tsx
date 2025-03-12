@@ -10,13 +10,13 @@ import {
 import { History as HistoryIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
-import { useHistoryFiles } from '../../hooks/useHistoryFiles';
+import { getHistoryFiles } from '../../hooks/getHistoryFiles';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 
 const Logs = () => {
   const { t } = useTranslation();
   const { connected, walletInfo } = useWallet();
-  const { files, loading, error } = useHistoryFiles(
+  const { files, loading, error } = getHistoryFiles(
     walletInfo?.address ?? null
   );
 

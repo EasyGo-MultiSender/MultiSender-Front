@@ -11,7 +11,7 @@ interface UseHistoryFilesResult {
   error: string | null;
 }
 
-export const useHistoryFiles = (
+export const getHistoryFiles = (
   walletAddress: string | null
 ): UseHistoryFilesResult => {
   const [files, setFiles] = useState<string[]>([]);
