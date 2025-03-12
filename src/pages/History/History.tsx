@@ -10,76 +10,34 @@ import {
 import { History as HistoryIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
+import { getHistoryFiles } from '../../hooks/getHistoryFiles';
 import { useConnection } from '../../hooks/useConnection';
+import { useCSVData } from '../../hooks/useCSVData';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import SerializerList from '../../components/SerializerList';
-import { Serializer } from '../../types/transactionTypes';
-import { useState, useEffect } from 'react';
 
 const History = () => {
   const { t } = useTranslation();
   const { connected, walletInfo } = useWallet();
   const { connection } = useConnection();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
-  // ダミーのSerializerデータを作成
-  const dummySerializers: Serializer[] = [
-    {
-      uuid: 'serializer-1',
-      results: [
-        {
-          signature: 'sig-1',
-          status: 'success',
-          timestamp: Date.now(),
-          recipients: [
-            {
-              address: 'recipient-1',
-              amount: 0.1,
-            },
-          ],
-          totalAmount: 0.1,
-          token: 'SOL',
-        },
-      ],
-    },
-    {
-      uuid: 'serializer-2',
-      results: [
-        {
-          signature: 'sig-2',
-          status: 'success',
-          timestamp: Date.now() - 86400000, // 1日前
-          recipients: [
-            {
-              address: 'recipient-2',
-              amount: 0.15,
-            },
-          ],
-          totalAmount: 0.15,
-          token: 'SOL',
-        },
-      ],
-    },
-    {
-      uuid: 'serializer-3',
-      results: [
-        {
-          signature: 'sig-3',
-          status: 'error',
-          timestamp: Date.now() - 172800000, // 2日前
-          recipients: [
-            {
-              address: 'recipient-3',
-              amount: 0.2,
-            },
-          ],
-          totalAmount: 0.2,
-          token: 'USDC',
-        },
-      ],
-    },
-  ];
+  // ウォレットアドレスに関連するファイルのリストを取得
+  const {
+    files,
+    loading: filesLoading,
+    error: filesError,
+  } = getHistoryFiles(walletInfo?.address ?? null);
+
+  // ファイルの内容を読み取り、Serializerデータに変換
+  const {
+    serializers,
+    loading: csvLoading,
+    error: csvError,
+  } = useCSVData(files, walletInfo?.address ?? null);
+
+  // ローディング状態とエラー状態を統合
+  const loading = filesLoading || csvLoading;
+  const error = filesError || csvError;
 
   return (
     <Box
@@ -161,7 +119,7 @@ const History = () => {
                   {error}
                 </Typography>
               </Box>
-            ) : dummySerializers.length === 0 ? (
+            ) : serializers.length === 0 ? (
               <Box
                 display="flex"
                 alignItems="center"
@@ -176,7 +134,7 @@ const History = () => {
               </Box>
             ) : (
               <Box>
-                {dummySerializers.map((serializer) => (
+                {serializers.map((serializer) => (
                   <SerializerList
                     key={serializer.uuid}
                     serializer={serializer}
