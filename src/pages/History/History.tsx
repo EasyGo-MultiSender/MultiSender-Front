@@ -12,7 +12,6 @@ import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
 import { getHistoryFiles } from '../../hooks/getHistoryFiles';
 import { useConnection } from '../../hooks/useConnection';
-import { useCSVData } from '../../hooks/useCSVData';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import SerializerList from '../../components/SerializerList';
 
@@ -21,23 +20,10 @@ const History = () => {
   const { connected, walletInfo } = useWallet();
   const { connection } = useConnection();
 
-  // ウォレットアドレスに関連するファイルのリストを取得
-  const {
-    files,
-    loading: filesLoading,
-    error: filesError,
-  } = getHistoryFiles(walletInfo?.address ?? null);
-
-  // ファイルの内容を読み取り、Serializerデータに変換
-  const {
-    serializers,
-    loading: csvLoading,
-    error: csvError,
-  } = useCSVData(files, walletInfo?.address ?? null);
-
-  // ローディング状態とエラー状態を統合
-  const loading = filesLoading || csvLoading;
-  const error = filesError || csvError;
+  // ウォレットアドレスに関連するファイルのリストとSerializerデータを取得
+  const { serializers, loading, error } = getHistoryFiles(
+    walletInfo?.address ?? null
+  );
 
   return (
     <Box
