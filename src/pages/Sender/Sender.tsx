@@ -415,7 +415,7 @@ const Sender: React.FC = () => {
         // 新しいオブジェクトを追加
         {
           results: formattedResults, // 新しい結果
-          uuid: results.uuid, // 一意の識別子
+          uuid: results.uuid, // 一意の識別子,
         },
       ]);
 

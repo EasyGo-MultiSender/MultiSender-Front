@@ -218,7 +218,7 @@ export function useTokenTransfer(
                   timestamp: Date.now(),
                   recipients: batchRecipients,
                   amounts: recipientAmounts,
-                };
+                } as TransferResult;
 
                 console.log(
                   `Batch ${batchIndex + 1} confirmed successfully with ${batchRecipients.length} recipients`
@@ -231,7 +231,8 @@ export function useTokenTransfer(
                   errorMessage: 'Failed to retrieve error details.',
                   timestamp: Date.now(),
                   recipients: batchRecipients,
-                };
+                  signaturePayload,
+                } as TransferResult;
               }
 
               signaturePayload.signature = transactionResult.signature;
@@ -287,7 +288,8 @@ export function useTokenTransfer(
                 error: errorMessage || 'Transfer failed',
                 timestamp: Date.now(),
                 recipients: batchRecipients,
-              };
+                signaturePayload,
+              } as TransferResult;
             }
 
             results.push(transactionResult);
