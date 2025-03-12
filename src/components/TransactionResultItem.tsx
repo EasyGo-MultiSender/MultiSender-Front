@@ -9,6 +9,7 @@ import {
   Button,
 } from '@mui/material';
 import { ContentCopy, OpenInNew } from '@mui/icons-material';
+import { useState } from 'react';
 
 interface AddressEntry {
   address: string;
@@ -31,25 +32,38 @@ interface TransactionResultItemProps {
   connection: {
     rpcEndpoint: string;
   };
-  copyAddress: (address: string) => void;
 }
 
 export const TransactionResultItem = ({
   result,
   recipientAddresses,
   connection,
-  copyAddress,
 }: TransactionResultItemProps) => {
+  const [isCopiedSignature, setIsCopiedSignature] = useState(false);
+  const [isCopiedAll, setIsCopiedAll] = useState(false);
+
+  const handleCopy = async (
+    text: string,
+    setCopied: (value: boolean) => void
+  ) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1000);
+  };
+
   return (
     <ListItem
       sx={{
         position: 'relative',
         bgcolor: '#f5f5f5',
-        borderRadius: 1,
-        mb: 1,
+        borderRadius: 2,
+        mb: 2,
         flexDirection: 'column',
         alignItems: 'flex-start',
         p: 2,
+        backgroundColor: 'rgba(0, 0, 0, 0.05)',
+        border: '0.3px solid rgba(0, 0, 0, 0.2)',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
       }}
     >
       {/* Status , Timestamp  and download button*/}
@@ -97,10 +111,11 @@ export const TransactionResultItem = ({
           display: 'flex',
           alignItems: 'center',
           width: '97%',
+          height: '36px',
           mb: 2,
           p: 1,
           mt: 1.5,
-          backgroundColor: 'rgba(0, 0, 0, 0.065)',
+          backgroundColor: 'rgba(0, 0, 0, 0.07)',
           borderRadius: '4px',
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
         }}
@@ -132,18 +147,56 @@ export const TransactionResultItem = ({
           >
             {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
           </Typography>
-          <OpenInNew sx={{ fontSize: 20, ml: 1 }} />
+          <Tooltip title="Open in Solscan" arrow placement="top">
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                ml: 1,
+                mt: 1,
+              }}
+            >
+              <OpenInNew sx={{ fontSize: 18 }} />
+              <Typography variant="caption" sx={{ mt: -0.4 }}>
+                link
+              </Typography>
+            </Box>
+          </Tooltip>
         </Link>
 
-        <Tooltip title="Copy Signature" arrow placement="top">
+        <Tooltip
+          title={isCopiedSignature ? 'Copied !' : 'Copy Signature'}
+          arrow
+          placement="top"
+        >
           <IconButton
             size="small"
             onClick={(e) => {
               e.stopPropagation();
-              copyAddress(result.signature);
+              handleCopy(result.signature, setIsCopiedSignature);
+            }}
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              width: 38,
+              height: 38,
+              padding: 0,
             }}
           >
-            <ContentCopy fontSize="small" />
+            <ContentCopy fontSize="small" sx={{ mt: -0.5 }} />
+            <Typography
+              variant="caption"
+              sx={{
+                position: 'absolute',
+                bottom: -1.0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: '0.6rem',
+              }}
+            >
+              copy
+            </Typography>
           </IconButton>
         </Tooltip>
       </Box>
@@ -153,13 +206,11 @@ export const TransactionResultItem = ({
       <Box
         sx={{
           width: '100%',
-          mb: 1,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           alignItems: 'center',
           borderRadius: 1,
-          py: 1,
           px: 1,
           mx: 'auto',
         }}
@@ -173,26 +224,25 @@ export const TransactionResultItem = ({
               pb: 1,
             }}
           >
-            <Tooltip title="Copy All" arrow placement="top">
+            <Tooltip
+              title={isCopiedAll ? 'Copied !' : 'Copy All'}
+              arrow
+              placement="top"
+            >
               <Button
                 variant="text"
                 size="small"
                 startIcon={<ContentCopy fontSize="small" />}
                 onClick={() => {
                   const dataToCopy = recipientAddresses
-                    .map(
-                      (entry) =>
-                        `${entry.address}, ${entry.amount} ${result.token}`
-                    )
+                    .map((entry) => `${entry.address}, ${entry.amount} `)
                     .join('\n');
-                  navigator.clipboard.writeText(dataToCopy);
-                  copyAddress('all-data');
+                  handleCopy(dataToCopy, setIsCopiedAll);
                 }}
                 sx={{
                   fontSize: '0.75rem',
                   textTransform: 'none',
                   minWidth: 'auto',
-
                   p: '2px 8px',
                   color: 'text.secondary',
                   '&:hover': {
@@ -207,52 +257,38 @@ export const TransactionResultItem = ({
 
           <Box
             sx={{
-              maxHeight: '200px',
-              overflowY: 'auto',
               width: '100%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               borderRadius: '6px',
-              paddingRight: '4px',
-              '&::-webkit-scrollbar': {
-                width: '6px',
-              },
-              '&::-webkit-scrollbar-track': {
-                background: 'rgba(0, 0, 0, 0.05)',
-                borderRadius: '4px',
-                marginLeft: '4px',
-              },
-              '&::-webkit-scrollbar-thumb': {
-                background: 'rgba(0, 0, 0, 0.2)',
-                borderRadius: '4px',
-                '&:hover': {
-                  background: 'rgba(0, 0, 0, 0.3)',
-                },
-              },
+              border: '1px solid rgba(0, 0, 0, 0.16)',
+              overflow: 'hidden',
             }}
           >
             <table
               style={{
                 width: '100%',
                 borderCollapse: 'collapse',
-                borderRadius: '6px',
-                overflow: 'hidden',
               }}
             >
-              <thead>
-                <tr
-                  style={{
-                    background:
-                      'linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.10) 100%)',
-                    color: 'rgba(0, 0, 0, 0.87)',
-                  }}
-                >
+              <thead
+                style={{
+                  background:
+                    'linear-gradient(180deg, rgba(0, 0, 0, 0.14) 0%, rgba(0, 0, 0, 0.10) 100%)',
+                  color: 'rgba(0, 0, 0, 0.87)',
+                  display: 'table',
+                  width: '100%',
+                  tableLayout: 'fixed',
+                }}
+              >
+                <tr>
                   <th
                     style={{
-                      padding: '12px 16px',
+                      padding: '9px 24px',
                       textAlign: 'left',
                       fontSize: '0.875rem',
                       fontWeight: 600,
                       borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                      width: '70%',
                     }}
                   >
                     <Box
@@ -280,11 +316,12 @@ export const TransactionResultItem = ({
                   </th>
                   <th
                     style={{
-                      padding: '12px 16px',
+                      padding: '9px 16px',
                       textAlign: 'right',
                       fontSize: '0.875rem',
                       fontWeight: 600,
                       borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                      width: '30%',
                     }}
                   >
                     <Box
@@ -316,58 +353,97 @@ export const TransactionResultItem = ({
                   </th>
                 </tr>
               </thead>
-              <tbody>
-                {result.recipients.map((recipient, index) => (
-                  <tr
-                    key={recipient.address}
-                    style={{
-                      borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
-                      backgroundColor:
-                        index % 2 === 0 ? 'rgba(0, 0, 0, 0.02)' : 'transparent',
-                    }}
-                  >
-                    <td
+            </table>
+            <Box
+              sx={{
+                maxHeight: '120px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+
+                // Webkit系ブラウザ用スクロールバースタイル
+                '&::-webkit-scrollbar': {
+                  width: '5px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: 'transparent',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  borderRadius: '3px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: 'rgba(0, 0, 0, 0.3)',
+                },
+              }}
+            >
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                }}
+              >
+                <tbody>
+                  {result.recipients.map((recipient, index) => (
+                    <tr
+                      key={recipient.address}
                       style={{
-                        padding: '12px 16px',
-                        fontSize: '0.875rem',
-                        fontFamily: 'monospace',
+                        display: 'table',
+                        width: '100%',
+                        tableLayout: 'fixed',
+                        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                        backgroundColor:
+                          index % 2 === 0
+                            ? 'rgba(0, 0, 0, 0.02)'
+                            : 'transparent',
                       }}
                     >
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
+                      <td
+                        style={{
+                          padding: '0px 24px',
+                          fontSize: '0.875rem',
+                          fontFamily: 'monospace',
+                          height: '40px',
+                          width: '70%',
                         }}
                       >
-                        <Typography
-                          variant="body2"
+                        <Box
                           sx={{
-                            fontFamily: 'monospace',
-                            color: 'rgba(0, 0, 0, 0.87)',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            maxWidth: 'calc(100% - 40px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
                           }}
                         >
-                          {recipient.address}
-                        </Typography>
-                      </Box>
-                    </td>
-                    <td
-                      style={{
-                        padding: '12px 16px',
-                        textAlign: 'right',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                      }}
-                    >
-                      {recipient.amount} {result.token}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontFamily: 'monospace',
+                              color: 'rgba(0, 0, 0, 0.87)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              maxWidth: 'calc(100% - 40px)',
+                            }}
+                          >
+                            {recipient.address}
+                          </Typography>
+                        </Box>
+                      </td>
+                      <td
+                        style={{
+                          padding: '0px 16px',
+                          textAlign: 'right',
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          height: '40px',
+                          width: '30%',
+                        }}
+                      >
+                        {recipient.amount} {result.token}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Box>
           </Box>
         </Box>
       </Box>

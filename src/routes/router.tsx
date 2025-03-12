@@ -1,23 +1,41 @@
 import { createBrowserRouter } from 'react-router-dom';
+import Layout from '../components/Layout';
 import Top from '../pages/Top/Top';
 import NotFound from '../pages/NotFound/NotFound';
 import Sender from '../pages/Sender/Sender';
 import History from '../pages/History/History';
+
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <Top />,
+    element: (
+      <Layout>
+        <Top />
+      </Layout>
+    ),
   },
   {
     path: '/sender',
-    element: <Sender />,
+    element: (
+      <Layout>
+        <Sender />
+      </Layout>
+    ),
   },
   {
     path: '/history',
-    element: <History />,
+    element: (
+      <Layout>
+        <History />
+      </Layout>
+    ),
   },
   {
     path: '*',
-    element: <NotFound />,
+    element: (
+      <Layout>
+        <NotFound />
+      </Layout>
+    ),
   },
 ]);

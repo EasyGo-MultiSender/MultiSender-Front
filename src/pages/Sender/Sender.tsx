@@ -21,6 +21,8 @@ import {
   ListItemText,
   ListItemAvatar,
   Tooltip,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -28,7 +30,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // ヘッダーコンポーネント
-import Header from '../../components/Header';
 import TokenList, {
   TokenListRef,
   TokenWithMetadata,
@@ -77,6 +78,8 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -372,6 +375,7 @@ const Sender: React.FC = () => {
 
       // 改善: transferWithIndividualAmountsメソッドを使用
       // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
+      // トランザクション送信 & 検証 & サーバーに保存
       const results = await transferWithIndividualAmounts(
         parsedEntries.map((entry) => ({
           address: entry.address,
@@ -381,7 +385,7 @@ const Sender: React.FC = () => {
       );
 
       // 結果をフォーマット
-      const formattedResults: TransactionResult[] = results.map((result) => {
+      const formattedResults: TransactionResult[] = results.result.map((result) => {
         // バッチ処理された結果から適切な情報を抽出
         const recipientAddresses = result.recipients || [];
 
@@ -492,520 +496,522 @@ const Sender: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const formatAddress = (address: string) => {
+    if (isMobile) {
+      return `${address.slice(0, 13)}...${address.slice(-13)}`;
+    }
+    return address;
+  };
+
   return (
-    <>
-      <Header />
-      <Box
-        sx={{
-          pt: 0.01,
-          mt: '12vh',
-          height: '88vh',
-          // bgcolor: "#2b2e45",
-          backgroundImage: `url("../../../public/image.webp")`,
-          backgroundSize: '120%',
-          backgroundPosition: '0% 80%',
-          position: 'relative',
-          overflowY: 'auto',
-        }}
-      >
-        <Container maxWidth="md">
-          {/* Wallet Connection Warning */}
-          {!connected && (
-            <Card
-              sx={{ mt: 4, p: 3, my: 4, borderRadius: 2, bgcolor: '#ffffff' }}
+    <Box
+      sx={{
+        height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(8vh)引く
+        backgroundImage: `url("../../../public/image.webp")`,
+        backgroundSize: '120%',
+        backgroundPosition: '0% 80%',
+        position: 'relative',
+        overflowY: 'auto',
+      }}
+    >
+      <Container maxWidth="md">
+        {/* Wallet Connection Warning */}
+        {!connected && (
+          <Card sx={{ mt: 2, p: 3, borderRadius: 2, bgcolor: '#ffffff' }}>
+            <Typography
+              variant="h4"
+              sx={{
+                textAlign: 'center',
+                fontWeight: 'bold',
+                color: '#000000',
+              }}
             >
+              {t('Please connect your wallet in the header')}
+            </Typography>
+          </Card>
+        )}
+
+        {/* SOL Balance & Address */}
+        <Card sx={{ my: 4 }}>
+          <CardContent>
+            <Typography variant="h6" mb={2} textAlign="center">
+              {t('SOL Balance')}
+            </Typography>
+            {!connected ? (
               <Typography
                 variant="h4"
+                fontWeight="bold"
+                color="text.secondary"
+                textAlign="center"
+              >
+                0.00000000 SOL
+              </Typography>
+            ) : loadingSol ? (
+              <Box textAlign="center" p={2}>
+                <CircularProgress size={24} />
+              </Box>
+            ) : (
+              <Typography
+                variant="h4"
+                fontWeight="bold"
+                color="green"
+                textAlign="center"
+              >
+                {balance?.toFixed(8) ?? '0.00000000'} SOL
+              </Typography>
+            )}
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="h6" mb={1} textAlign="center">
+              {t('Wallet Address')}
+            </Typography>
+            <Box
+              sx={{
+                position: 'relative',
+                display: 'flex',
+                alignItems: 'center',
+                border: '1px solid #ccc',
+                borderRadius: 1,
+                p: 1,
+                height: 36,
+              }}
+            >
+              <Typography
+                variant="body2"
                 sx={{
+                  flex: 1,
                   textAlign: 'center',
-                  fontWeight: 'bold',
-                  color: '#000000',
+                  color: !connected ? 'text.secondary' : 'inherit',
                 }}
               >
-                {t('Please connect your wallet in the header')}
+                {connected
+                  ? formatAddress(publicKey?.toBase58() || '')
+                  : 'Please connect your wallet'}
               </Typography>
-            </Card>
-          )}
-
-          {/* SOL Balance & Address */}
-          <Card sx={{ my: 4 }}>
-            <CardContent>
-              <Typography variant="h6" mb={2} textAlign="center">
-                {t('SOL Balance')}
-              </Typography>
-              {!connected ? (
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="text.secondary"
-                  textAlign="center"
-                >
-                  0.00000000 SOL
-                </Typography>
-              ) : loadingSol ? (
-                <Box textAlign="center" p={2}>
-                  <CircularProgress size={24} />
-                </Box>
-              ) : (
-                <Typography
-                  variant="h4"
-                  fontWeight="bold"
-                  color="green"
-                  textAlign="center"
-                >
-                  {balance?.toFixed(8) ?? '0.00000000'} SOL
-                </Typography>
-              )}
-
-              <Divider sx={{ my: 2 }} />
-
-              <Typography variant="h6" mb={1} textAlign="center">
-                {t('Wallet Address')}
-              </Typography>
-              <Box
-                sx={{
-                  position: 'relative',
-                  display: 'flex',
-                  alignItems: 'center',
-                  border: '1px solid #ccc',
-                  borderRadius: 1,
-                  p: 1,
-                  height: 36,
-                }}
-              >
-                <Typography
-                  variant="body2"
-                  sx={{
-                    flex: 1,
-                    textAlign: 'center',
-                    color: !connected ? 'text.secondary' : 'inherit',
-                  }}
-                >
-                  {connected
-                    ? publicKey?.toBase58()
-                    : 'Please connect your wallet'}
-                </Typography>
-                {connected && (
-                  <Tooltip title="Copy" arrow placement="top">
-                    <IconButton
-                      onClick={() =>
-                        publicKey && copyAddress(publicKey.toBase58())
-                      }
+              {connected && (
+                <Tooltip title="Copy" arrow placement="top">
+                  <IconButton
+                    onClick={() =>
+                      publicKey && copyAddress(publicKey.toBase58())
+                    }
+                    sx={{
+                      position: 'absolute',
+                      right: 8,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  >
+                    <ContentCopy />
+                    <Typography
+                      variant="caption"
                       sx={{
                         position: 'absolute',
-                        right: 8,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
+                        bottom: -5.0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        fontSize: '0.6rem',
                       }}
                     >
-                      <ContentCopy />
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          position: 'absolute',
-                          bottom: -5.0,
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          fontSize: '0.6rem',
-                        }}
-                      >
-                        copy
-                      </Typography>
-                    </IconButton>
-                  </Tooltip>
-                )}
+                      copy
+                    </Typography>
+                  </IconButton>
+                </Tooltip>
+              )}
+            </Box>
+          </CardContent>
+        </Card>
+
+        {/* Token List - 改善版 */}
+        {connected ? (
+          <TokenList
+            publicKey={publicKey}
+            ref={tokenListRef}
+            onDataLoaded={handleTokenDataLoaded}
+          />
+        ) : (
+          <Card sx={{ mb: 4 }}>
+            <CardContent>
+              <Typography variant="h6" textAlign="center">
+                {t('SPL Tokens')}
+              </Typography>
+              <Box textAlign="center" p={2}>
+                {t('No SPL tokens found')}
               </Box>
             </CardContent>
           </Card>
+        )}
 
-          {/* Token List - 改善版 */}
-          {connected ? (
-            <TokenList
-              publicKey={publicKey}
-              ref={tokenListRef}
-              onDataLoaded={handleTokenDataLoaded}
-            />
-          ) : (
-            <Card sx={{ mb: 4 }}>
-              <CardContent>
-                <Typography variant="h6" textAlign="center">
-                  {t('SPL Tokens')}
-                </Typography>
-                <Box textAlign="center" p={2}>
-                  {t('No SPL tokens found')}
-                </Box>
-              </CardContent>
-            </Card>
-          )}
+        {/* Transfer Form */}
+        <Card sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h6" textAlign="center" mb={2}>
+              {t('Token Transfer')}
+            </Typography>
 
-          {/* Transfer Form */}
-          <Card sx={{ mb: 4 }}>
-            <CardContent>
-              <Typography variant="h6" textAlign="center" mb={2}>
-                {t('Token Transfer')}
-              </Typography>
-
-              {/* Token Selection - 改善版 */}
-              <FormControl fullWidth sx={{ mb: 3 }}>
-                <InputLabel>{t('Select Token')}</InputLabel>
-                <Select
-                  value={selectedToken}
-                  label={t('Select Token')}
-                  onChange={(e) => setSelectedToken(e.target.value)}
-                  renderValue={() => (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Avatar
-                        src={selectedTokenInfo.icon}
-                        alt={selectedTokenInfo.symbol}
-                        sx={{ width: 24, height: 24 }}
-                      />
-                      <Typography>
-                        {selectedTokenInfo.symbol} - {selectedTokenInfo.name}
-                      </Typography>
-                    </Box>
-                  )}
-                >
-                  <MenuItem value="SOL">
-                    <ListItemAvatar>
-                      <Avatar
-                        src="/solana-icon.png"
-                        alt="SOL"
-                        sx={{ width: 24, height: 24 }}
-                      />
-                    </ListItemAvatar>
-                    <ListItemText
-                      primary="SOL - Solana"
-                      secondary="Native Token"
+            {/* Token Selection - 改善版 */}
+            <FormControl fullWidth sx={{ mb: 3 }}>
+              <InputLabel>{t('Select Token')}</InputLabel>
+              <Select
+                value={selectedToken}
+                label={t('Select Token')}
+                onChange={(e) => setSelectedToken(e.target.value)}
+                renderValue={() => (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar
+                      src={selectedTokenInfo.icon}
+                      alt={selectedTokenInfo.symbol}
+                      sx={{ width: 24, height: 24 }}
                     />
-                  </MenuItem>
-
-                  {/* トークンのロード状態表示 */}
-                  {isTokenListLoading ? (
-                    <MenuItem disabled>
-                      <Box display="flex" alignItems="center" py={1}>
-                        <CircularProgress size={20} sx={{ mr: 2 }} />
-                        <Typography>Loading tokens...</Typography>
-                      </Box>
-                    </MenuItem>
-                  ) : tokensWithMetadata.length === 0 ? (
-                    <MenuItem disabled>
-                      <Typography color="text.secondary">
-                        No SPL tokens found
-                      </Typography>
-                    </MenuItem>
-                  ) : (
-                    tokensWithMetadata.map((token) => (
-                      <MenuItem
-                        key={token.account.mint}
-                        value={token.account.mint}
-                      >
-                        <ListItemAvatar>
-                          <Avatar
-                            src={
-                              token.metadata?.uri || '/token-placeholder.png'
-                            }
-                            alt={token.metadata?.symbol || 'Token'}
-                            sx={{ width: 24, height: 24 }}
-                          />
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={`${token.metadata?.symbol || 'Unknown'} - ${token.metadata?.name || 'Unknown Token'}`}
-                          secondary={`${token.account.mint.slice(0, 6)}...${token.account.mint.slice(-6)}`}
-                        />
-                      </MenuItem>
-                    ))
-                  )}
-
-                  {/* トークンデータ手動更新ボタン */}
-                  {connected && (
-                    <MenuItem
-                      onClick={(e) => {
-                        e.preventDefault();
-                        fetchTokensWithMetadata();
-                      }}
-                      sx={{
-                        color: 'primary.main',
-                        borderTop: '1px solid rgba(0,0,0,0.1)',
-                      }}
-                    >
-                      <Box
-                        display="flex"
-                        alignItems="center"
-                        width="100%"
-                        justifyContent="center"
-                      >
-                        <Typography fontWeight="bold">
-                          {isTokenListLoading
-                            ? 'Refreshing...'
-                            : 'Refresh token list'}
-                        </Typography>
-                        {isTokenListLoading && (
-                          <CircularProgress size={16} sx={{ ml: 1 }} />
-                        )}
-                      </Box>
-                    </MenuItem>
-                  )}
-                </Select>
-              </FormControl>
-
-              {/* Recipient Addresses with Amounts */}
-              <Box mb={3}>
-                <Typography variant="body2" fontWeight="bold" mb={1}>
-                  {t('Recipient Addresses and Amounts')}
-                  <br />
-                  {t(
-                    'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
-                  )}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  mb={1}
-                  display="block"
-                >
-                  Format: address,amount (one entry per line)
-                </Typography>
-                <Box position="relative">
-                  <TextField
-                    multiline
-                    rows={10}
-                    fullWidth
-                    value={recipientAddresses}
-                    onChange={(e) => setRecipientAddresses(e.target.value)}
-                    placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
-                    error={
-                      invalidEntries.length > 0 ||
-                      duplicateAddresses.length > 0 ||
-                      (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                    }
-                    helperText={
-                      invalidEntries.length > 0
-                        ? `Invalid entries: ${invalidEntries.length}`
-                        : duplicateAddresses.length > 0
-                          ? `Duplicate addresses: ${duplicateAddresses.length}`
-                          : selectedToken === 'SOL' &&
-                              belowMinSolEntries.length > 0
-                            ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
-                            : ''
-                    }
-                  />
-                  <Tooltip title="Paste" arrow placement="top">
-                    <IconButton
-                      onClick={pasteAddresses}
-                      sx={{ position: 'absolute', top: 8, right: 18 }}
-                    >
-                      <ContentPaste />
-                      <Typography
-                        variant="caption"
-                        sx={{
-                          position: 'absolute',
-                          bottom: -5.0,
-                          left: '50%',
-                          transform: 'translateX(-50%)',
-                          fontSize: '0.6rem',
-                        }}
-                      >
-                        Paste
-                      </Typography>
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <Box
-                  position="relative"
-                  display="flex"
-                  justifyContent="space-between"
-                  alignItems="center"
-                  mt={1}
-                >
-                  <Typography variant="caption" color="gray">
-                    {t('Valid entries')}: {parsedEntries.length}
-                  </Typography>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <Tooltip title="download" arrow placement="top">
-                      <Button
-                        onClick={downloadTemplate}
-                        size="small"
-                        startIcon={<Download fontSize="small" />}
-                        sx={{
-                          textTransform: 'none',
-                          color: 'inherit',
-                          minWidth: 'auto',
-                          padding: '4px 8px',
-                          fontSize: '0.75rem',
-                        }}
-                      >
-                        {t('template')}
-                      </Button>
-                    </Tooltip>
-                    <Tooltip title="upload" arrow placement="top">
-                      <Box>
-                        <UploadButton
-                          onRecipientsLoaded={handleRecipientsLoaded}
-                        />
-                      </Box>
-                    </Tooltip>
+                    <Typography>
+                      {selectedTokenInfo.symbol} - {selectedTokenInfo.name}
+                    </Typography>
                   </Box>
-                </Box>
-                <Typography
-                  variant="caption"
-                  color="primary"
-                  fontWeight="bold"
-                  display="block"
-                  textAlign="right"
-                >
-                  {t('Total amount')}: {totalAmount.toFixed(6)}{' '}
-                  {selectedTokenInfo.symbol}
-                </Typography>
-              </Box>
+                )}
+              >
+                <MenuItem value="SOL">
+                  <ListItemAvatar>
+                    <Avatar
+                      src="/solana-icon.png"
+                      alt="SOL"
+                      sx={{ width: 24, height: 24 }}
+                    />
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary="SOL - Solana"
+                    secondary="Native Token"
+                  />
+                </MenuItem>
 
-              {/* Token simulation */}
-              <Box mb={3}>
-                <Typography variant="body2" fontWeight="bold" mb={2}>
-                  {t('Transaction Simulation')}
-                </Typography>
-                <Box
-                  sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
-                    gap: 2,
-                  }}
-                >
-                  {/* 全てのBoxに共通のスタイルを適用 */}
-                  {[
-                    {
-                      title: 'Total Addresses',
-                      value: parsedEntries.length,
-                    },
-                    {
-                      title: 'Total Token Sent',
-                      value: totalAmount.toFixed(3),
-                      subText: `${t('Service Fee')}: 0.008SOL`,
-                    },
-                    {
-                      title: 'Total Transactions',
-                      value: Math.ceil(parsedEntries.length / 9),
-                    },
-                    {
-                      title: 'SOL Balance',
-                      value: balance?.toFixed(3) ?? '0.000',
-                    },
-                  ].map((item, index) => (
-                    <Box
-                      key={index}
-                      sx={{
-                        background: 'linear-gradient(135deg, rgba(120, 193, 253, 0.15) 0%, rgba(255, 255, 255, 0.9) 100%)',
-                        borderRadius: 2,
-                        p: 2,
-                        textAlign: 'center',
-                        border: '1px solid rgba(120, 193, 253, 0.3)',
-                        boxShadow: '0 2px 8px rgba(120, 193, 253, 0.1)',
-                        transition: 'all 0.2s ease',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        '&::before': {
-                          content: '""',
-                          position: 'absolute',
-                          top: 0,
-                          right: 0,
-                          width: '100%',
-                          height: '100%',
-                          background: 'linear-gradient(135deg, rgba(120, 193, 253, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
-                          opacity: 0,
-                          transition: 'opacity 0.2s ease',
-                        },
-                        '&:hover': {
-                          boxShadow: '0 4px 12px rgba(120, 193, 253, 0.15)',
-                          transform: 'translateY(-2px)',
-                          '&::before': {
-                            opacity: 1,
-                          },
-                        },
-                      }}
+                {/* トークンのロード状態表示 */}
+                {isTokenListLoading ? (
+                  <MenuItem disabled>
+                    <Box display="flex" alignItems="center" py={1}>
+                      <CircularProgress size={20} sx={{ mr: 2 }} />
+                      <Typography>Loading tokens...</Typography>
+                    </Box>
+                  </MenuItem>
+                ) : tokensWithMetadata.length === 0 ? (
+                  <MenuItem disabled>
+                    <Typography color="text.secondary">
+                      No SPL tokens found
+                    </Typography>
+                  </MenuItem>
+                ) : (
+                  tokensWithMetadata.map((token) => (
+                    <MenuItem
+                      key={token.account.mint}
+                      value={token.account.mint}
                     >
-                      <Typography variant="h4" fontWeight="bold" color="rgb(0, 0, 0)">
-                        {item.value}
+                      <ListItemAvatar>
+                        <Avatar
+                          src={token.metadata?.uri || '/token-placeholder.png'}
+                          alt={token.metadata?.symbol || 'Token'}
+                          sx={{ width: 24, height: 24 }}
+                        />
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={`${token.metadata?.symbol || 'Unknown'} - ${token.metadata?.name || 'Unknown Token'}`}
+                        secondary={`${token.account.mint.slice(0, 6)}...${token.account.mint.slice(-6)}`}
+                      />
+                    </MenuItem>
+                  ))
+                )}
+
+                {/* トークンデータ手動更新ボタン */}
+                {connected && (
+                  <MenuItem
+                    onClick={(e) => {
+                      e.preventDefault();
+                      fetchTokensWithMetadata();
+                    }}
+                    sx={{
+                      color: 'primary.main',
+                      borderTop: '1px solid rgba(0,0,0,0.1)',
+                    }}
+                  >
+                    <Box
+                      display="flex"
+                      alignItems="center"
+                      width="100%"
+                      justifyContent="center"
+                    >
+                      <Typography fontWeight="bold">
+                        {isTokenListLoading
+                          ? 'Refreshing...'
+                          : 'Refresh token list'}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {t(item.title)}
-                      </Typography>
-                      {item.subText && (
-                        <Typography variant="caption" color="text.secondary">
-                          {item.subText}
-                        </Typography>
+                      {isTokenListLoading && (
+                        <CircularProgress size={16} sx={{ ml: 1 }} />
                       )}
                     </Box>
-                  ))}
-                </Box>
-              </Box>
-
-              {/* Transfer Button */}
-              <Button
-                variant="contained"
-                color="primary"
-                fullWidth
-                onClick={handleTransfer}
-                disabled={
-                  !connected ||
-                  transferring ||
-                  parsedEntries.length === 0 ||
-                  invalidEntries.length > 0 ||
-                  duplicateAddresses.length > 0 ||
-                  (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                }
-              >
-                {transferring ? (
-                  <>
-                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
-                    {t('Processing')}...
-                  </>
-                ) : (
-                  t('Transfer')
+                  </MenuItem>
                 )}
-              </Button>
+              </Select>
+            </FormControl>
+
+            {/* Recipient Addresses with Amounts */}
+            <Box mb={3}>
+              <Typography variant="body2" fontWeight="bold" mb={1}>
+                {t('Recipient Addresses and Amounts')}
+                <br />
+                {t(
+                  'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
+                )}
+              </Typography>
               <Typography
                 variant="caption"
                 color="text.secondary"
-                mt={1}
-                textAlign="center"
+                mb={1}
                 display="block"
               >
-                {t(
-                  'The lowest across the network, each transaction only requires 0.0075 SOL.'
-                )}
+                Format: address,amount (one entry per line)
               </Typography>
-
-              {/* Transaction Results */}
-              {transactionResults.length > 0 && (
-                <Box mt={3}>
-                  <Typography variant="h6" gutterBottom>
-                    {t('Recent Transactions')}
-                  </Typography>
-                  <List>
-                    {transactionResults.map((result, index) => (
-                      <TransactionResultItem
-                        key={`${result.signature}-${index}`}
-                        result={result}
-                        connection={connection}
-                        copyAddress={copyAddress}
-                        recipientAddresses={parsedEntries}
+              <Box position="relative">
+                <TextField
+                  multiline
+                  rows={10}
+                  fullWidth
+                  value={recipientAddresses}
+                  onChange={(e) => setRecipientAddresses(e.target.value)}
+                  placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
+                  error={
+                    invalidEntries.length > 0 ||
+                    duplicateAddresses.length > 0 ||
+                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                  }
+                  helperText={
+                    invalidEntries.length > 0
+                      ? `Invalid entries: ${invalidEntries.length}`
+                      : duplicateAddresses.length > 0
+                        ? `Duplicate addresses: ${duplicateAddresses.length}`
+                        : selectedToken === 'SOL' &&
+                            belowMinSolEntries.length > 0
+                          ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
+                          : ''
+                  }
+                />
+                <Tooltip title="Paste" arrow placement="top">
+                  <IconButton
+                    onClick={pasteAddresses}
+                    sx={{ position: 'absolute', top: 8, right: 18 }}
+                  >
+                    <ContentPaste />
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        position: 'absolute',
+                        bottom: -5.0,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        fontSize: '0.6rem',
+                      }}
+                    >
+                      Paste
+                    </Typography>
+                  </IconButton>
+                </Tooltip>
+              </Box>
+              <Box
+                position="relative"
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+                mt={1}
+              >
+                <Typography variant="caption" color="gray">
+                  {t('Valid entries')}: {parsedEntries.length}
+                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Tooltip title="download" arrow placement="top">
+                    <Button
+                      onClick={downloadTemplate}
+                      size="small"
+                      startIcon={<Download fontSize="small" />}
+                      sx={{
+                        textTransform: 'none',
+                        color: 'inherit',
+                        minWidth: 'auto',
+                        padding: '4px 8px',
+                        fontSize: '0.75rem',
+                      }}
+                    >
+                      {t('template')}
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="upload" arrow placement="top">
+                    <Box>
+                      <UploadButton
+                        onRecipientsLoaded={handleRecipientsLoaded}
                       />
-                    ))}
-                  </List>
+                    </Box>
+                  </Tooltip>
                 </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Container>
+              </Box>
+              <Typography
+                variant="caption"
+                color="primary"
+                fontWeight="bold"
+                display="block"
+                textAlign="right"
+              >
+                {t('Total amount')}: {totalAmount.toFixed(6)}{' '}
+                {selectedTokenInfo.symbol}
+              </Typography>
+            </Box>
 
-        {/* Notifications */}
-        <Snackbar
-          open={snackbarOpen}
-          autoHideDuration={3000}
-          onClose={() => setSnackbarOpen(false)}
-          message={snackbarMessage}
-        />
-      </Box>
-    </>
+            {/* Token simulation */}
+            <Box mb={3}>
+              <Typography variant="body2" fontWeight="bold" mb={2}>
+                {t('Transaction Simulation')}
+              </Typography>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+                  gap: 2,
+                }}
+              >
+                {/* 全てのBoxに共通のスタイルを適用 */}
+                {[
+                  {
+                    title: 'Total Addresses',
+                    value: parsedEntries.length,
+                  },
+                  {
+                    title: 'Total Token Sent',
+                    value: totalAmount.toFixed(3),
+                    subText: `${t('Service Fee')}: 0.008SOL`,
+                  },
+                  {
+                    title: 'Total Transactions',
+                    value: Math.ceil(parsedEntries.length / 9),
+                  },
+                  {
+                    title: 'SOL Balance',
+                    value: balance?.toFixed(3) ?? '0.000',
+                  },
+                ].map((item, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      background:
+                        'linear-gradient(135deg, rgba(120, 193, 253, 0.15) 0%, rgba(255, 255, 255, 0.9) 100%)',
+                      borderRadius: 2,
+                      p: 2,
+                      textAlign: 'center',
+                      border: '1px solid rgba(120, 193, 253, 0.3)',
+                      boxShadow: '0 2px 8px rgba(120, 193, 253, 0.1)',
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        top: 0,
+                        right: 0,
+                        width: '100%',
+                        height: '100%',
+                        background:
+                          'linear-gradient(135deg, rgba(120, 193, 253, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)',
+                        opacity: 0,
+                        transition: 'opacity 0.2s ease',
+                      },
+                      '&:hover': {
+                        boxShadow: '0 4px 12px rgba(120, 193, 253, 0.15)',
+                        transform: 'translateY(-2px)',
+                        '&::before': {
+                          opacity: 1,
+                        },
+                      },
+                    }}
+                  >
+                    <Typography
+                      variant="h4"
+                      fontWeight="bold"
+                      color="rgb(0, 0, 0)"
+                    >
+                      {item.value}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {t(item.title)}
+                    </Typography>
+                    {item.subText && (
+                      <Typography variant="caption" color="text.secondary">
+                        {item.subText}
+                      </Typography>
+                    )}
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+
+            {/* Transfer Button */}
+            <Button
+              variant="contained"
+              color="primary"
+              fullWidth
+              onClick={handleTransfer}
+              disabled={
+                !connected ||
+                transferring ||
+                parsedEntries.length === 0 ||
+                invalidEntries.length > 0 ||
+                duplicateAddresses.length > 0 ||
+                (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+              }
+            >
+              {transferring ? (
+                <>
+                  <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                  {t('Processing')}...
+                </>
+              ) : (
+                t('Transfer')
+              )}
+            </Button>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              mt={1}
+              textAlign="center"
+              display="block"
+            >
+              {t(
+                'The lowest across the network, each transaction only requires 0.0075 SOL.'
+              )}
+            </Typography>
+
+            {/* Transaction Results */}
+            {transactionResults.length > 0 && (
+              <Box mt={3}>
+                <Typography variant="h6" gutterBottom>
+                  {t('Recent Transactions')}
+                </Typography>
+                <List>
+                  {transactionResults.map((result, index) => (
+                    <TransactionResultItem
+                      key={`${result.signature}-${index}`}
+                      result={result}
+                      connection={connection}
+                      recipientAddresses={parsedEntries}
+                    />
+                  ))}
+                </List>
+              </Box>
+            )}
+          </CardContent>
+        </Card>
+      </Container>
+
+      {/* Notifications */}
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        message={snackbarMessage}
+      />
+    </Box>
   );
 };
 
