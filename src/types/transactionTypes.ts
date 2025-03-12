@@ -4,6 +4,7 @@ export interface TransactionResult {
   status: 'success' | 'error' | 'warn';
   timestamp: number;
   error?: string;
+  errorMessage?: string;
   recipients: AddressEntry[];
   totalAmount: number;
   token: string;
