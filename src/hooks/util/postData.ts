@@ -226,7 +226,7 @@ export const postSignatureData = async (
   data: SignaturePayload,
   autoSetTokenSymbol: boolean = true,
   connection?: any
-): Promise<any> => {
+): Promise<void> => {
   try {
     let payloadToSend = { ...data };
 
