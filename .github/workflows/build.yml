@@ -23,6 +23,7 @@ jobs:
         run: |
           echo "Selected environment: ${{ github.event.inputs.environment }}"
   aaaa:
+    needs: checkout
     runs-on: ubuntu-latest
     steps:
       - name: Print selected environment
