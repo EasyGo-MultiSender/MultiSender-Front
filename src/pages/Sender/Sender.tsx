@@ -365,6 +365,7 @@ const Sender: React.FC = () => {
 
       // 改善: transferWithIndividualAmountsメソッドを使用
       // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
+      // トランザクション送信 & 検証 & サーバーに保存
       const results = await transferWithIndividualAmounts(
         parsedEntries.map((entry) => ({
           address: entry.address,
@@ -374,45 +375,47 @@ const Sender: React.FC = () => {
       );
 
       // 結果をフォーマット
-      const formattedResults: TransactionResult[] = results.map((result) => {
-        // バッチ処理された結果から適切な情報を抽出
-        const recipientAddresses = result.recipients || [];
+      const formattedResults: TransactionResult[] = results.result.map(
+        (result) => {
+          // バッチ処理された結果から適切な情報を抽出
+          const recipientAddresses = result.recipients || [];
 
-        // この結果に含まれるすべての受取人に対する送金額を収集
-        const recipientAmounts = recipientAddresses.map((addr) => {
-          const entry = parsedEntries.find((e) => e.address === addr);
-          return entry ? entry.amount : 0;
-        });
+          // この結果に含まれるすべての受取人に対する送金額を収集
+          const recipientAmounts = recipientAddresses.map((addr) => {
+            const entry = parsedEntries.find((e) => e.address === addr);
+            return entry ? entry.amount : 0;
+          });
 
-        // 合計金額を計算（複数受取人の場合）
-        const totalBatchAmount = recipientAmounts.reduce(
-          (sum, amount) => sum + amount,
-          0
-        );
+          // 合計金額を計算（複数受取人の場合）
+          const totalBatchAmount = recipientAmounts.reduce(
+            (sum, amount) => sum + amount,
+            0
+          );
 
-        return {
-          signature: result.signature,
-          status: result.status,
-          timestamp: result.timestamp || Date.now(),
-          error: result.error,
-          recipients: recipientAddresses.map((addr) => ({
-            address: addr,
-            amount: recipientAmounts[recipientAddresses.indexOf(addr)],
-          })),
-          // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
-          amount:
-            recipientAddresses.length === 1
-              ? recipientAmounts[0]
-              : totalBatchAmount / recipientAddresses.length,
-          token: tokenDisplayName,
-          totalAmount: totalBatchAmount,
-          // 追加フィールド: このバッチに含まれるすべての受取人と金額
-          recipientDetails: recipientAddresses.map((addr, idx) => ({
-            address: addr,
-            amount: recipientAmounts[idx],
-          })),
-        };
-      });
+          return {
+            signature: result.signature,
+            status: result.status,
+            timestamp: result.timestamp || Date.now(),
+            error: result.error,
+            recipients: recipientAddresses.map((addr) => ({
+              address: addr,
+              amount: recipientAmounts[recipientAddresses.indexOf(addr)],
+            })),
+            // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
+            amount:
+              recipientAddresses.length === 1
+                ? recipientAmounts[0]
+                : totalBatchAmount / recipientAddresses.length,
+            token: tokenDisplayName,
+            totalAmount: totalBatchAmount,
+            // 追加フィールド: このバッチに含まれるすべての受取人と金額
+            recipientDetails: recipientAddresses.map((addr, idx) => ({
+              address: addr,
+              amount: recipientAmounts[idx],
+            })),
+          };
+        }
+      );
 
       // 全トランザクション結果を更新
       setTransactionResults((prev) => [...formattedResults, ...prev]);

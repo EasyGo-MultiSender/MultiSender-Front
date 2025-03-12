@@ -8,6 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
     "i18next-extract": "NODE_ENV=development babel './src/**/*.{js,jsx,ts,tsx}' --config-file ./src/locales/babel.config.json",
     "prepare": "husky install"
@@ -33,11 +35,14 @@
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "i18next": "^24.2.2",
+    "jsdom": "^26.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-i18next": "^15.4.1",
     "react-router-dom": "^7.1.5",
-    "vite-tsconfig-paths": "^5.1.4"
+    "uuid": "^11.1.0",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^3.0.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.26.4",
