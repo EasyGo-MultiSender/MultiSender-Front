@@ -3,22 +3,35 @@ name: Build & Deploy
 on:
   workflow_dispatch:
     inputs:
-      logLevel:
+      environment:
         description: 'Select Environment'
         required: true
-        default: 'warning'
+        default: 'staging'
         type: choice
         options:
           - staging
           - production
 
 jobs:
-  checkout:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Print selected environment
         run: |
           echo "Selected environment: ${{ github.event.inputs.environment }}"
+      
+      # ビルドステップ
+      - name: Build application
+        uses: ./.github/actions/build
+      
+      # 環境に基づいたデプロイ
+      - name: Deploy to Production
+        if: github.event.inputs.environment == 'production'
+        uses: ./.github/actions/deploy/prod
+        
+      - name: Deploy to Staging
+        if: github.event.inputs.environment == 'staging'
+        uses: ./.github/actions/deploy/stg

@@ -1,0 +1,53 @@
+name: deploy
+description: deploy
+
+env:
+  ssh_key_path: ~/.ssh/bulksender-front-deploy.pem
+  app_path: /var/www/vhosts/bulksender-front/
+
+jobs:
+  deploy:
+    name: 🚀 deploy
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: rsync deployments
+        uses: burnett01/rsync-deployments@5.2
+        with:
+          switches: -avzr --delete --exclude ".git/" --include ".**"
+          path: ./
+          remote_path: ${{ env.app_path }}
+          remote_host: ${{ secrets.DEPLOY_HOST }}
+          remote_user: ${{ secrets.DEPLOY_USER }}
+          remote_key: "${{ secrets.SSH_PRIVATE_KEY_DEPLOY }}"
+
+      - name: Copy SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY_DEPLOY }}" > ${{ env.ssh_key_path }}
+          chmod 400 ${{ env.ssh_key_path }}
+          eval "$(ssh-agent -s)"
+          ssh-add ${{ env.ssh_key_path }}
+
+  restart:
+    needs: deploy
+    name: 🚀 restart
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Restart pm2
+        run: |
+          ssh -i ${{ needs.deploy.outputs.ssh_key_path }} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+          ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          'cd ${{ env.app_path }} && pm2 restart bulksender-front --log-date-format "YYYY-MM-DD HH:mm:ss"'
+
+      - name: Restart Nginx
+        run: |
+          ssh -i ${{ needs.deploy.outputs.ssh_key_path }} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no \
+          ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+          sudo /usr/bin/systemctl restart nginx.service
