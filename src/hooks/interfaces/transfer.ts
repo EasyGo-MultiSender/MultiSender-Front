@@ -7,7 +7,8 @@ export interface TransferParams {
 export interface TransferResult {
   signature: string;
   status: 'success' | 'error';
-  error?: string;
+  error: string;
+  errorMessage: string;
   timestamp: number;
   recipients: string[];
   amounts?: number[];
