@@ -320,7 +320,7 @@ export const TransactionResultItem = ({
               borderRadius: '6px',
               border: '1px solid rgba(0, 0, 0, 0.16)',
               overflow: 'hidden',
-              mx: 'auto ',
+              mx: 'auto',
             }}
           >
             <table
