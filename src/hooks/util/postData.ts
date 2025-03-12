@@ -248,7 +248,7 @@ export const postSignatureData = async (
     });
 
     if (!response.ok) {
-      throw new Error(`APIリクエストエラー: ${response.status}`);
+      throw new Error(`APIリクエストエラー : ${response.status}`);
     }
 
     return;
