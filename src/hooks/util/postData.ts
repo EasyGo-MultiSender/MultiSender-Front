@@ -251,9 +251,8 @@ export const postSignatureData = async (
       throw new Error(`APIリクエストエラー: ${response.status}`);
     }
 
-    return await response.json();
+    return;
   } catch (error) {
-    console.error('データ送信エラー:', error);
-    throw error;
+    throw new Error(`MultiSenderServerError : ${error}`);
   }
 };
