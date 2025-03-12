@@ -234,13 +234,12 @@ export function useTokenTransfer(
                 };
               }
 
-              results.push(transactionResult);
-
               signaturePayload.signature = transactionResult.signature;
               signaturePayload.senderWallet = publicKey.toString();
               signaturePayload.status = transactionResult.status;
-              signaturePayload.error = '調整中';
-              signaturePayload.errorMessage = transactionResult.error || '';
+              signaturePayload.error = transactionResult.error || '';
+              signaturePayload.errorMessage =
+                transactionResult.errorMessage || '';
               // tokenType -> 初期化時に設定済み
               // timeStamp -> 初期化時に設定済み
               signaturePayload.tokenSymbol = mint
@@ -253,17 +252,14 @@ export function useTokenTransfer(
                 amount: result.amounts ? result.amounts[0] : 0,
               }));
 
-              try {
-                await postSignatureData(signaturePayload);
-              } catch (error) {
-                console.error('Error posting signature data:', error);
-              }
+              await postSignatureData(signaturePayload);
             } catch (error) {
               if (error instanceof SendTransactionError) {
                 console.log(`Batch ${batchIndex + 1} transfer failed:`, error);
               }
 
-              let errorMessage = 'Transfer failed';
+              let errorMessage: string | undefined = undefined;
+              let status: 'error' | 'warn' = 'error';
 
               if (error instanceof Error) {
                 errorMessage = error.message;
@@ -276,18 +272,24 @@ export function useTokenTransfer(
                 } else if (error.message.includes('Transaction too large')) {
                   errorMessage =
                     'Transaction size exceeded limit. Try sending fewer recipients per batch.';
+                } else if (error.message.includes('MultiSenderServerError')) {
+                  status = 'warn';
+                  errorMessage =
+                    '<< 送金は成功しています >> データをサーバーに保存できませんでした。\nHistoryページは反映されません。ご使用のWalletアプリ等でご確認ください。';
                 }
               }
 
-              results.push({
+              transactionResult = {
                 signature: signature || '',
-                status: 'error',
-                errorMessage: errorMessage,
-                error: errorMessage,
+                status,
+                errorMessage: error + '',
+                error: errorMessage || 'Transfer failed',
                 timestamp: Date.now(),
                 recipients: batchRecipients,
-              });
+              };
             }
+
+            results.push(transactionResult);
           })();
 
           // RPC_RATE_LIMITミリ秒待機
