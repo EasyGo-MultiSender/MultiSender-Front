@@ -7,8 +7,15 @@ import {
   Link,
   Tooltip,
   Button,
+  Collapse,
 } from '@mui/material';
-import { ContentCopy, OpenInNew } from '@mui/icons-material';
+import {
+  ContentCopy,
+  OpenInNew,
+  Error as ErrorIcon,
+  ExpandMore,
+  ExpandLess,
+} from '@mui/icons-material';
 import { useState } from 'react';
 import { handleCopy } from '../hooks/util/copy';
 
@@ -40,6 +47,43 @@ export const TransactionResultItem = ({
 }: TransactionResultItemProps) => {
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
   const [isCopiedAll, setIsCopiedAll] = useState(false);
+  const [errorExpanded, setErrorExpanded] = useState(false);
+  const [isCopiedError, setIsCopiedError] = useState(false);
+
+  // トランザクション結果をJSONファイルとしてダウンロードする関数
+  const handleDownload = () => {
+    // ダウンロードするデータを作成
+    const downloadData = {
+      signature: result.signature,
+      status: result.status,
+      timestamp: result.timestamp,
+      recipients: result.recipients,
+      totalAmount: result.totalAmount,
+      token: result.token,
+      error: result.error,
+    };
+
+    // JSONデータをBlobに変換
+    const blob = new Blob([JSON.stringify(downloadData, null, 2)], {
+      type: 'application/json',
+    });
+
+    // ダウンロードリンクを作成
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `transaction-${result.signature.slice(0, 8)}-${
+      new Date(result.timestamp).toISOString().split('T')[0]
+    }.json`;
+
+    // リンクをクリックしてダウンロード開始
+    document.body.appendChild(link);
+    link.click();
+
+    // クリーンアップ
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <ListItem
@@ -82,6 +126,7 @@ export const TransactionResultItem = ({
             variant="outlined"
             color="inherit"
             size="small"
+            onClick={handleDownload}
             sx={{
               mr: 1,
               borderColor: 'rgba(27, 27, 27, 0.37)',
@@ -203,7 +248,7 @@ export const TransactionResultItem = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           borderRadius: 1,
-          px: 1,
+          px: 0,
           mx: 'auto',
         }}
       >
@@ -252,11 +297,12 @@ export const TransactionResultItem = ({
 
           <Box
             sx={{
-              width: '100%',
+              width: '%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               borderRadius: '6px',
               border: '1px solid rgba(0, 0, 0, 0.16)',
               overflow: 'hidden',
+              mx: 'auto ',
             }}
           >
             <table
@@ -442,20 +488,93 @@ export const TransactionResultItem = ({
           </Box>
         </Box>
       </Box>
+
       {/* Error Message */}
       {result.error && (
         <Box
           sx={{
-            mt: 1,
+            mt: 2,
             width: '100%',
-            backgroundColor: 'error.light',
+            backgroundColor: 'rgba(211, 47, 47, 0.08)',
+            color: 'error.dark',
             borderRadius: 1,
-            p: 1,
+            border: '1px solid rgba(211, 47, 47, 0.3)',
+            overflow: 'hidden',
           }}
         >
-          <Typography variant="caption" color="error.dark">
-            Error: {result.error}
-          </Typography>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              px: 2,
+              py: 1,
+              cursor: 'pointer',
+            }}
+            onClick={() => setErrorExpanded(!errorExpanded)}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ErrorIcon color="error" sx={{ mr: 1 }} />
+              <Typography
+                variant="body2"
+                fontWeight="medium"
+                color="error.dark"
+              >
+                トランザクションエラーが発生しました
+              </Typography>
+            </Box>
+            <IconButton
+              size="small"
+              sx={{ p: 0 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setErrorExpanded(!errorExpanded);
+              }}
+            >
+              {errorExpanded ? <ExpandLess /> : <ExpandMore />}
+            </IconButton>
+          </Box>
+
+          <Collapse in={errorExpanded}>
+            <Box
+              sx={{ px: 2, py: 1, backgroundColor: 'rgba(211, 47, 47, 0.03)' }}
+            >
+              <Typography
+                variant="body2"
+                sx={{
+                  fontFamily: 'monospace',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                }}
+              >
+                {result.error}
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
+                <Tooltip
+                  title={isCopiedError ? 'Copied !' : 'エラー内容をコピー'}
+                  arrow
+                  placement="top"
+                >
+                  <Button
+                    variant="text"
+                    size="small"
+                    color="error"
+                    startIcon={<ContentCopy fontSize="small" />}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleCopy(result.error || '', setIsCopiedError);
+                    }}
+                    sx={{
+                      fontSize: '0.75rem',
+                      textTransform: 'none',
+                    }}
+                  >
+                    コピー
+                  </Button>
+                </Tooltip>
+              </Box>
+            </Box>
+          </Collapse>
         </Box>
       )}
     </ListItem>
