@@ -32,6 +32,7 @@ const Logs = () => {
       }}
     >
       <Container maxWidth="md" sx={{ flex: 1 }}>
+        {/* wallet未接続時に表示するカード */}
         {!connected && (
           <Card sx={{ mt: 2, p: 3, borderRadius: 2, bgcolor: '#ffffff' }}>
             <Typography
@@ -55,6 +56,7 @@ const Logs = () => {
 
         {/* 履歴表示カード */}
         <Card sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+          {/* 履歴表示カードのヘッダー */}
           <Box
             sx={{
               bgcolor: '#4b5079',
@@ -75,6 +77,7 @@ const Logs = () => {
 
           <Divider />
 
+          {/* 履歴表示カードのコンテンツ */}
           <CardContent sx={{ py: 3 }}>
             {loading ? (
               <Box
