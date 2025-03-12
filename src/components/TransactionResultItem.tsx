@@ -458,7 +458,7 @@ export const TransactionResultItem = ({
             p: 1,
           }}
         >
-          <Typography variant="caption" color="error.dark">
+          <Typography variant="caption" color="white">
             Error: {result.error}
           </Typography>
         </Box>
