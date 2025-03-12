@@ -49,7 +49,7 @@ console.log('SOL_VALIDATION_AMOUNT:', SOL_VALIDATION_AMOUNT);
 // インターフェース定義
 interface TransactionResult {
   signature: string;
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'warn';
   timestamp: number;
   error?: string;
   recipients: AddressEntry[];
