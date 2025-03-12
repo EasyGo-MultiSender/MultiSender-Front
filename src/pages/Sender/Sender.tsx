@@ -375,6 +375,7 @@ const Sender: React.FC = () => {
 
       // 改善: transferWithIndividualAmountsメソッドを使用
       // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
+      // トランザクション送信 & 検証 & サーバーに保存
       const results = await transferWithIndividualAmounts(
         parsedEntries.map((entry) => ({
           address: entry.address,
@@ -384,7 +385,7 @@ const Sender: React.FC = () => {
       );
 
       // 結果をフォーマット
-      const formattedResults: TransactionResult[] = results.map((result) => {
+      const formattedResults: TransactionResult[] = results.result.map((result) => {
         // バッチ処理された結果から適切な情報を抽出
         const recipientAddresses = result.recipients || [];
 

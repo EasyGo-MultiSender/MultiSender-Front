@@ -44,7 +44,7 @@ export const WalletConnectionProvider: FC<Props> = ({ children }) => {
   // function to hide phantom and solflare wallets
   useEffect(() => {
     // モーダルが開かれたときにPhantom以外を非表示にする
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver((_) => {
       // モーダルリストを探す
       const walletList = document.querySelector('.wallet-adapter-modal-list');
       if (walletList) {
