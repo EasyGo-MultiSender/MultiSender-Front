@@ -17,7 +17,6 @@ import {
   FormControl,
   MenuItem,
   Select,
-  List,
   ListItemText,
   ListItemAvatar,
   Tooltip,
@@ -28,45 +27,27 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // ヘッダーコンポーネント
+import SerializerList from '../../components/SerializerList';
 import TokenList, {
   TokenListRef,
   TokenWithMetadata,
 } from '../../components/TokenList';
-import { TransactionResultItem } from '../../components/TransactionResultItem';
 import UploadButton from '../../components/UploadButton';
+import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import { useBalance } from '../../hooks/useBalance';
 import { useConnection } from '../../hooks/useConnection';
 import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
-import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import {
   TransactionResult,
   AddressEntry,
   Serializer,
 } from '../../types/transactionTypes';
-import SerializerList from '../../components/SerializerList';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
 console.log('SOL_VALIDATION_AMOUNT:', SOL_VALIDATION_AMOUNT);
-
-// インターフェース定義
-interface TransactionResult {
-  signature: string;
-  status: 'success' | 'error' | 'warn';
-  timestamp: number;
-  error?: string;
-  recipients: AddressEntry[];
-  totalAmount: number;
-  token: string;
-}
-
-// アドレスとその送金金額のインターフェース
-interface AddressEntry {
-  address: string;
-  amount: number;
-}
 
 // CSVからインポートされた受取人情報
 interface Recipient {

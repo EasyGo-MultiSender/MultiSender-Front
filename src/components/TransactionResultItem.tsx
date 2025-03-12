@@ -1,4 +1,10 @@
-import { ContentCopy, OpenInNew } from '@mui/icons-material';
+import {
+  CheckCircleOutline,
+  ContentCopy,
+  ErrorOutline,
+  OpenInNew,
+  WarningAmber,
+} from '@mui/icons-material';
 import {
   Box,
   Chip,

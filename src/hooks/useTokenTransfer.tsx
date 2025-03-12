@@ -275,7 +275,7 @@ export function useTokenTransfer(
                 } else if (error.message.includes('MultiSenderServerError')) {
                   status = 'warn';
                   errorMessage =
-                    '<< 送金は成功しています >> データをサーバーに保存できませんでした。\nHistoryページは反映されません。ご使用のWalletアプリ等でご確認ください。';
+                    'データをサーバーに保存できませんでした。\nHistoryページは反映されません。ご使用のWalletアプリ等でご確認ください。';
                 }
               }
 
