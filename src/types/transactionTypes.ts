@@ -16,11 +16,7 @@ export interface AddressEntry {
 }
 
 export interface Serializer {
-  // シリアライザー
+  // シリアライザ
   results: TransactionResult[];
   uuid: string;
-}
-
-export interface AllSerializer {
-  serializer: Serializer[];
 }

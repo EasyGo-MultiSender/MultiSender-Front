@@ -38,14 +38,13 @@ import { useConnection } from '../../hooks/useConnection';
 import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
-import { TransactionResultItem } from '../../components/TransactionResultItem';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import {
   TransactionResult,
   AddressEntry,
   Serializer,
-  AllSerializer,
 } from '../../types/transactionTypes';
+import SerializerList from '../../components/SerializerList';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -78,6 +77,7 @@ const Sender: React.FC = () => {
   const [transactionResults, setTransactionResults] = useState<
     TransactionResult[]
   >([]);
+  const [allSerializer, setAllSerializer] = useState<Serializer[]>([]); // 全送信履歴
   const [invalidEntries, setInvalidEntries] = useState<string[]>([]);
   const [duplicateAddresses, setDuplicateAddresses] = useState<string[]>([]);
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
@@ -386,9 +386,9 @@ const Sender: React.FC = () => {
             status: result.status,
             timestamp: result.timestamp || Date.now(),
             error: result.error,
-            recipients: recipientAddresses.map((addr) => ({
+            recipients: recipientAddresses.map((addr, idx) => ({
               address: addr,
-              amount: recipientAmounts[recipientAddresses.indexOf(addr)],
+              amount: recipientAmounts[idx],
             })),
             // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
             amount:
@@ -408,6 +408,16 @@ const Sender: React.FC = () => {
 
       // 全トランザクション結果を更新
       setTransactionResults((prev) => [...formattedResults, ...prev]);
+
+      setAllSerializer((prev) => [
+        // 前の状態の要素をすべて展開
+        ...prev,
+        // 新しいオブジェクトを追加
+        {
+          results: formattedResults, // 新しい結果
+          uuid: results.uuid, // 一意の識別子
+        },
+      ]);
 
       // 成功/失敗フィードバック
       const successCount = formattedResults.reduce(
@@ -902,21 +912,18 @@ const Sender: React.FC = () => {
             </Typography>
 
             {/* Transaction Results */}
-            {transactionResults.length > 0 && (
+            {allSerializer.length > 0 && (
               <Box mt={3}>
                 <Typography variant="h6" gutterBottom>
                   {t('Recent Transactions')}
                 </Typography>
-                <List>
-                  {transactionResults.map((result, index) => (
-                    <TransactionResultItem
-                      key={`${result.signature}-${index}`}
-                      result={result}
-                      connection={connection}
-                      recipientAddresses={parsedEntries}
-                    />
-                  ))}
-                </List>
+                {allSerializer.map((serializer, index) => (
+                  <SerializerList
+                    key={`${serializer.uuid}-${index}`}
+                    serializer={serializer}
+                    connection={connection}
+                  />
+                ))}
               </Box>
             )}
           </CardContent>

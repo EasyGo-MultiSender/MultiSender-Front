@@ -29,7 +29,6 @@ interface TransactionResult {
 
 interface TransactionResultItemProps {
   result: TransactionResult;
-  recipientAddresses: AddressEntry[];
   connection: {
     rpcEndpoint: string;
   };
@@ -37,7 +36,6 @@ interface TransactionResultItemProps {
 
 export const TransactionResultItem = ({
   result,
-  recipientAddresses,
   connection,
 }: TransactionResultItemProps) => {
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
@@ -226,8 +224,11 @@ export const TransactionResultItem = ({
                 size="small"
                 startIcon={<ContentCopy fontSize="small" />}
                 onClick={() => {
-                  const dataToCopy = recipientAddresses
-                    .map((entry) => `${entry.address}, ${entry.amount} `)
+                  const dataToCopy = result.recipients
+                    .map(
+                      (recipient) =>
+                        `${recipient.address}, ${recipient.amount} `
+                    )
                     .join('\n');
                   handleCopy(dataToCopy, setIsCopiedAll);
                 }}
