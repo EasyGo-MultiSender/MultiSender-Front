@@ -252,7 +252,12 @@ export function useTokenTransfer(
                 recipientWallet: result.recipients[0],
                 amount: result.amounts ? result.amounts[0] : 0,
               }));
-              await postSignatureData(signaturePayload);
+
+              try {
+                await postSignatureData(signaturePayload);
+              } catch (error) {
+                console.error('Error posting signature data:', error);
+              }
             } catch (error) {
               if (error instanceof SendTransactionError) {
                 console.log(`Batch ${batchIndex + 1} transfer failed:`, error);
