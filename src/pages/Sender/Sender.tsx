@@ -1,5 +1,5 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, ContentCopy, Download } from '@mui/icons-material';
+import { ContentPaste, Download } from '@mui/icons-material';
 import {
   Box,
   Container,
@@ -21,8 +21,6 @@ import {
   ListItemText,
   ListItemAvatar,
   Tooltip,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -40,28 +38,17 @@ import { useConnection } from '../../hooks/useConnection';
 import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
-import { TransactionResultItem } from '../../components/TransactionResultItem';
+import WalletAddressDisplay from '../../components/WalletAddressDisplay';
+import {
+  TransactionResult,
+  AddressEntry,
+  Serializer,
+} from '../../types/transactionTypes';
+import SerializerList from '../../components/SerializerList';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
 console.log('SOL_VALIDATION_AMOUNT:', SOL_VALIDATION_AMOUNT);
-
-// インターフェース定義
-interface TransactionResult {
-  signature: string;
-  status: 'success' | 'error';
-  timestamp: number;
-  error?: string;
-  recipients: AddressEntry[];
-  totalAmount: number;
-  token: string;
-}
-
-// アドレスとその送金金額のインターフェース
-interface AddressEntry {
-  address: string;
-  amount: number;
-}
 
 // CSVからインポートされた受取人情報
 interface Recipient {
@@ -78,8 +65,6 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -92,6 +77,7 @@ const Sender: React.FC = () => {
   const [transactionResults, setTransactionResults] = useState<
     TransactionResult[]
   >([]);
+  const [allSerializer, setAllSerializer] = useState<Serializer[]>([]); // 全送信履歴
   const [invalidEntries, setInvalidEntries] = useState<string[]>([]);
   const [duplicateAddresses, setDuplicateAddresses] = useState<string[]>([]);
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
@@ -254,13 +240,6 @@ const Sender: React.FC = () => {
     setRecipientAddresses(formattedAddresses);
   }, []);
 
-  // ユーティリティ関数
-  const copyAddress = async (addr: string) => {
-    await navigator.clipboard.writeText(addr);
-    setSnackbarMessage('Copied Address: ' + addr);
-    setSnackbarOpen(true);
-  };
-
   const pasteAddresses = async () => {
     try {
       const text = await navigator.clipboard.readText();
@@ -385,48 +364,60 @@ const Sender: React.FC = () => {
       );
 
       // 結果をフォーマット
-      const formattedResults: TransactionResult[] = results.result.map((result) => {
-        // バッチ処理された結果から適切な情報を抽出
-        const recipientAddresses = result.recipients || [];
+      const formattedResults: TransactionResult[] = results.result.map(
+        (result) => {
+          // バッチ処理された結果から適切な情報を抽出
+          const recipientAddresses = result.recipients || [];
 
-        // この結果に含まれるすべての受取人に対する送金額を収集
-        const recipientAmounts = recipientAddresses.map((addr) => {
-          const entry = parsedEntries.find((e) => e.address === addr);
-          return entry ? entry.amount : 0;
-        });
+          // この結果に含まれるすべての受取人に対する送金額を収集
+          const recipientAmounts = recipientAddresses.map((addr) => {
+            const entry = parsedEntries.find((e) => e.address === addr);
+            return entry ? entry.amount : 0;
+          });
 
-        // 合計金額を計算（複数受取人の場合）
-        const totalBatchAmount = recipientAmounts.reduce(
-          (sum, amount) => sum + amount,
-          0
-        );
+          // 合計金額を計算（複数受取人の場合）
+          const totalBatchAmount = recipientAmounts.reduce(
+            (sum, amount) => sum + amount,
+            0
+          );
 
-        return {
-          signature: result.signature,
-          status: result.status,
-          timestamp: result.timestamp || Date.now(),
-          error: result.error,
-          recipients: recipientAddresses.map((addr) => ({
-            address: addr,
-            amount: recipientAmounts[recipientAddresses.indexOf(addr)],
-          })),
-          // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
-          amount:
-            recipientAddresses.length === 1
-              ? recipientAmounts[0]
-              : totalBatchAmount / recipientAddresses.length,
-          token: tokenDisplayName,
-          totalAmount: totalBatchAmount,
-          // 追加フィールド: このバッチに含まれるすべての受取人と金額
-          recipientDetails: recipientAddresses.map((addr, idx) => ({
-            address: addr,
-            amount: recipientAmounts[idx],
-          })),
-        };
-      });
+          return {
+            signature: result.signature,
+            status: result.status,
+            timestamp: result.timestamp || Date.now(),
+            error: result.error,
+            recipients: recipientAddresses.map((addr, idx) => ({
+              address: addr,
+              amount: recipientAmounts[idx],
+            })),
+            // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
+            amount:
+              recipientAddresses.length === 1
+                ? recipientAmounts[0]
+                : totalBatchAmount / recipientAddresses.length,
+            token: tokenDisplayName,
+            totalAmount: totalBatchAmount,
+            // 追加フィールド: このバッチに含まれるすべての受取人と金額
+            recipientDetails: recipientAddresses.map((addr, idx) => ({
+              address: addr,
+              amount: recipientAmounts[idx],
+            })),
+          };
+        }
+      );
 
       // 全トランザクション結果を更新
       setTransactionResults((prev) => [...formattedResults, ...prev]);
+
+      setAllSerializer((prev) => [
+        // 前の状態の要素をすべて展開
+        ...prev,
+        // 新しいオブジェクトを追加
+        {
+          results: formattedResults, // 新しい結果
+          uuid: results.uuid, // 一意の識別子
+        },
+      ]);
 
       // 成功/失敗フィードバック
       const successCount = formattedResults.reduce(
@@ -496,13 +487,6 @@ const Sender: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const formatAddress = (address: string) => {
-    if (isMobile) {
-      return `${address.slice(0, 13)}...${address.slice(-13)}`;
-    }
-    return address;
-  };
-
   return (
     <Box
       sx={{
@@ -563,62 +547,7 @@ const Sender: React.FC = () => {
 
             <Divider sx={{ my: 2 }} />
 
-            <Typography variant="h6" mb={1} textAlign="center">
-              {t('Wallet Address')}
-            </Typography>
-            <Box
-              sx={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid #ccc',
-                borderRadius: 1,
-                p: 1,
-                height: 36,
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  flex: 1,
-                  textAlign: 'center',
-                  color: !connected ? 'text.secondary' : 'inherit',
-                }}
-              >
-                {connected
-                  ? formatAddress(publicKey?.toBase58() || '')
-                  : 'Please connect your wallet'}
-              </Typography>
-              {connected && (
-                <Tooltip title="Copy" arrow placement="top">
-                  <IconButton
-                    onClick={() =>
-                      publicKey && copyAddress(publicKey.toBase58())
-                    }
-                    sx={{
-                      position: 'absolute',
-                      right: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                    }}
-                  >
-                    <ContentCopy />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        position: 'absolute',
-                        bottom: -5.0,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: '0.6rem',
-                      }}
-                    >
-                      copy
-                    </Typography>
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
+            <WalletAddressDisplay />
           </CardContent>
         </Card>
 
@@ -983,21 +912,18 @@ const Sender: React.FC = () => {
             </Typography>
 
             {/* Transaction Results */}
-            {transactionResults.length > 0 && (
+            {allSerializer.length > 0 && (
               <Box mt={3}>
                 <Typography variant="h6" gutterBottom>
                   {t('Recent Transactions')}
                 </Typography>
-                <List>
-                  {transactionResults.map((result, index) => (
-                    <TransactionResultItem
-                      key={`${result.signature}-${index}`}
-                      result={result}
-                      connection={connection}
-                      recipientAddresses={parsedEntries}
-                    />
-                  ))}
-                </List>
+                {allSerializer.map((serializer, index) => (
+                  <SerializerList
+                    key={`${serializer.uuid}-${index}`}
+                    serializer={serializer}
+                    connection={connection}
+                  />
+                ))}
               </Box>
             )}
           </CardContent>
