@@ -282,7 +282,8 @@ export function useTokenTransfer(
               transactionResult = {
                 signature: signature || '',
                 status,
-                errorMessage: error + '',
+                errorMessage:
+                  error instanceof Error ? error.message : String(error),
                 error: errorMessage || 'Transfer failed',
                 timestamp: Date.now(),
                 recipients: batchRecipients,
