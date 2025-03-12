@@ -12,6 +12,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    outputs:
+      ssh_key_path: ${{ env.ssh_key_path }}
 
     steps:
       - name: rsync deployments
