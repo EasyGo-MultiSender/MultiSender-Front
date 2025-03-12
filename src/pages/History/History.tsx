@@ -11,14 +11,48 @@ import { History as HistoryIcon } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useWallet } from '../../hooks/useWallet';
 import { getHistoryFiles } from '../../hooks/getHistoryFiles';
+import { useConnection } from '../../hooks/useConnection';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
+import SerializerList from '../../components/SerializerList';
+import { Serializer } from '../../types/transactionTypes';
+import { useState, useEffect } from 'react';
 
-const Logs = () => {
+const History = () => {
   const { t } = useTranslation();
   const { connected, walletInfo } = useWallet();
+  const { connection } = useConnection();
   const { files, loading, error } = getHistoryFiles(
     walletInfo?.address ?? null
   );
+  const [serializers, setSerializers] = useState<Serializer[]>([]);
+
+  // ファイルリストからSerializerデータを生成
+  useEffect(() => {
+    if (files.length > 0) {
+      // ダミーデータを作成（実際のアプリケーションでは、APIからデータを取得するなど）
+      const dummySerializers: Serializer[] = files.map((file, index) => ({
+        uuid: `serializer-${index}`,
+        results: [
+          {
+            signature: `sig-${index}`,
+            status: 'success',
+            timestamp: Date.now() - index * 86400000, // 1日ずつ過去の日付
+            recipients: [
+              {
+                address: `recipient-${index}`,
+                amount: 0.1 + index * 0.05,
+              },
+            ],
+            totalAmount: 0.1 + index * 0.05,
+            token: 'SOL',
+          },
+        ],
+      }));
+      setSerializers(dummySerializers);
+    } else {
+      setSerializers([]);
+    }
+  }, [files]);
 
   return (
     <Box
@@ -100,7 +134,7 @@ const Logs = () => {
                   {error}
                 </Typography>
               </Box>
-            ) : files.length === 0 ? (
+            ) : serializers.length === 0 ? (
               <Box
                 display="flex"
                 alignItems="center"
@@ -115,18 +149,12 @@ const Logs = () => {
               </Box>
             ) : (
               <Box>
-                {files.map((file, index) => (
-                  <Box
-                    key={index}
-                    sx={{
-                      p: 2,
-                      '&:not(:last-child)': {
-                        borderBottom: '1px solid rgba(0, 0, 0, 0.12)',
-                      },
-                    }}
-                  >
-                    <Typography variant="body1">{file}</Typography>
-                  </Box>
+                {serializers.map((serializer) => (
+                  <SerializerList
+                    key={serializer.uuid}
+                    serializer={serializer}
+                    connection={connection}
+                  />
                 ))}
               </Box>
             )}
@@ -137,4 +165,4 @@ const Logs = () => {
   );
 };
 
-export default Logs;
+export default History;
