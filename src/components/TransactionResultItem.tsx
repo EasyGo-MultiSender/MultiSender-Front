@@ -16,22 +16,7 @@ import {
   Button,
 } from '@mui/material';
 import { useState } from 'react';
-
-interface AddressEntry {
-  address: string;
-  amount: number;
-}
-
-interface TransactionResult {
-  signature: string;
-  status: 'success' | 'error' | 'warn';
-  timestamp: number;
-  error?: string;
-  errorMessage?: string;
-  recipients: AddressEntry[];
-  totalAmount: number;
-  token: string;
-}
+import { TransactionResult } from '../types/transactionTypes';
 
 interface TransactionResultItemProps {
   result: TransactionResult;
