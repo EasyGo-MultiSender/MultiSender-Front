@@ -40,27 +40,16 @@ import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
 import { TransactionResultItem } from '../../components/TransactionResultItem';
 import WalletAddressDisplay from '../../components/WalletAddressDisplay';
+import {
+  TransactionResult,
+  AddressEntry,
+  Serializer,
+  AllSerializer,
+} from '../../types/transactionTypes';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
 console.log('SOL_VALIDATION_AMOUNT:', SOL_VALIDATION_AMOUNT);
-
-// インターフェース定義
-interface TransactionResult {
-  signature: string;
-  status: 'success' | 'error';
-  timestamp: number;
-  error?: string;
-  recipients: AddressEntry[];
-  totalAmount: number;
-  token: string;
-}
-
-// アドレスとその送金金額のインターフェース
-interface AddressEntry {
-  address: string;
-  amount: number;
-}
 
 // CSVからインポートされた受取人情報
 interface Recipient {
