@@ -46,7 +46,7 @@ const SerializerList: React.FC<SerializerListProps> = ({
           behavior: 'smooth',
           block: 'start',
         });
-      }, 100); // 少し遅延させてアニメーションが始まった後にスクロール
+      }, 10);
     }
   }, [isExpanded]);
 
@@ -58,8 +58,8 @@ const SerializerList: React.FC<SerializerListProps> = ({
     (sum, result) => sum + result.totalAmount,
     0
   );
-  const timestamp = serializer.results[0]?.timestamp || Date.now();
-  const token = serializer.results[0]?.token || 'Unknown';
+  const timestamp = serializer.results[0]?.timestamp;
+  const token = serializer.results[0]?.token;
 
   return (
     <Card
@@ -185,6 +185,7 @@ const SerializerList: React.FC<SerializerListProps> = ({
                 backgroundColor: 'transparent',
                 borderTop: '2px solid rgba(0, 0, 0, 0.2)',
                 boxShadow: 'inset 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+                pt: 1.5,
               }}
             >
               {serializer.results.map(

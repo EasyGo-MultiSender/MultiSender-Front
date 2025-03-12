@@ -47,13 +47,15 @@ export const TransactionResultItem = ({
         position: 'relative',
         bgcolor: '#f5f5f5',
         borderRadius: 2,
-        mb: 2,
+        my: 1,
         flexDirection: 'column',
         alignItems: 'flex-start',
         p: 2,
         backgroundColor: 'rgba(0, 0, 0, 0.05)',
         border: '0.3px solid rgba(0, 0, 0, 0.2)',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+        width: '97%',
+        mx: 'auto',
       }}
     >
       {/* Status , Timestamp  and download button*/}
