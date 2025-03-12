@@ -407,6 +407,7 @@ const Sender: React.FC = () => {
             status: result.status,
             timestamp: result.timestamp || Date.now(),
             error: result.error,
+            errorMessage: result.errorMessage,
             recipients: recipientAddresses.map((addr) => ({
               address: addr,
               amount: recipientAmounts[recipientAddresses.indexOf(addr)],
