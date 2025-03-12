@@ -6,7 +6,7 @@ export interface TransferParams {
 
 export interface TransferResult {
   signature: string;
-  status: 'success' | 'error';
+  status: 'success' | 'error' | 'warn';
   error: string;
   errorMessage: string;
   timestamp: number;
