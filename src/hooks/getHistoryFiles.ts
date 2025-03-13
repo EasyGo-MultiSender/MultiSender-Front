@@ -53,9 +53,12 @@ export const getHistoryFiles = (
         const firstChar = walletAddress.charAt(0);
         const directoryPath = `/csv/${firstChar}/${walletAddress}`;
 
+        const hostURL =
+          import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
         // Fetch the list of files directly from the public directory
         const response = await axios.get<HistoryFilesResponse>(
-          `http://localhost:3000/api/csv/${walletAddress}`,
+          `${hostURL}/api/csv/${walletAddress}`,
           {
             headers: { 'Content-Type': 'application/json' },
           }
@@ -69,7 +72,9 @@ export const getHistoryFiles = (
         for (const fileName of fileNames) {
           try {
             // Get CSV file content
-            const csvResponse = await axios.get(`${directoryPath}/${fileName}`);
+            const csvResponse = await axios.get(
+              `${hostURL}${directoryPath}/${fileName}`
+            );
             const csvContent = csvResponse.data;
 
             // Parse CSV
