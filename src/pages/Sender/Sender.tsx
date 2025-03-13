@@ -76,7 +76,7 @@ const Sender: React.FC = () => {
     TransactionResult[]
   >([]);
   const [allSerializer, setAllSerializer] = useState<Serializer[]>([]); // 全送信履歴
-  const [invalidEntries, setInvalidEntries] = useState<string[]>([]);
+  const [invalidEntries, setInvalidEntries] = useState<number[]>([]);
   const [duplicateAddresses, setDuplicateAddresses] = useState<string[]>([]);
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -91,6 +91,9 @@ const Sender: React.FC = () => {
 
   // 最後にパースした内容を保持して不要な再パースを防止
   const lastParsedAddressesRef = useRef<string>('');
+
+  // 色付けする行番号の配列（例：[1, 3, 5]は1行目、3行目、5行目を赤くする）
+  const [highlightedLines, setHighlightedLines] = useState<number[]>([2, 4]); // 例として2行目と4行目
 
   // トークンメタデータを含むトークンアカウントを取得する関数 (明示的に実行)
   const fetchTokensWithMetadata = useCallback(async () => {
@@ -148,11 +151,12 @@ const Sender: React.FC = () => {
 
     lastParsedAddressesRef.current = recipientAddresses;
 
-    const entries: AddressEntry[] = [];
-    const invalidLines: string[] = [];
+    let entries: AddressEntry[] = [];
+    const invalidLineNumbers: number[] = []; // 無効な行の行番号を追跡
     const addressMap = new Map<string, number>();
     // SOL最小額チェック用の配列
     const belowMinimumSolLines: string[] = [];
+    const belowMinimumSolLineNumbers: number[] = []; // SOL最小額未満の行番号
 
     // 最小SOL額の取得（設定されていない場合は0を使用）
     const minSolAmount = parseFloat(SOL_VALIDATION_AMOUNT) || 0;
@@ -163,7 +167,8 @@ const Sender: React.FC = () => {
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const parts = line.split(',').map((part) => part.trim());
       const address = parts[0];
       const amountStr = parts[1];
@@ -175,7 +180,13 @@ const Sender: React.FC = () => {
         !amountStr ||
         isNaN(parseFloat(amountStr))
       ) {
-        invalidLines.push(line);
+        // 実際の行番号は0ベースのインデックス + 1
+        const lineNumber =
+          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
+          1;
+        if (lineNumber > 0) {
+          invalidLineNumbers.push(lineNumber);
+        }
         continue;
       }
 
@@ -188,6 +199,13 @@ const Sender: React.FC = () => {
         minSolAmount > 0
       ) {
         belowMinimumSolLines.push(line);
+        // 行番号を追跡
+        const lineNumber =
+          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
+          1;
+        if (lineNumber > 0) {
+          belowMinimumSolLineNumbers.push(lineNumber);
+        }
         // 最小額未満でもエントリには追加して、後で警告を表示できるようにする
       }
 
@@ -203,14 +221,44 @@ const Sender: React.FC = () => {
       .filter(([_, count]) => count > 1)
       .map(([address]) => address);
 
+    // 重複アドレスの行番号を特定
+    const duplicateLineNumbers: number[] = [];
+    if (duplicates.length > 0) {
+      recipientAddresses.split('\n').forEach((line, index) => {
+        const parts = line.split(',');
+        const address = parts[0]?.trim();
+        if (address && duplicates.includes(address)) {
+          duplicateLineNumbers.push(index + 1); // 1-indexed
+        }
+      });
+
+      entries = entries.filter((e) => !duplicates.includes(e.address));
+    }
+
+    invalidLineNumbers.push(...duplicateLineNumbers);
+
     // 状態を更新
+    setInvalidEntries(invalidLineNumbers);
     setParsedEntries(entries);
-    setInvalidEntries(invalidLines);
     setDuplicateAddresses(duplicates);
 
     // SOL最小額チェックの結果を状態に追加
-    // 新しい状態を追加: belowMinSolEntries
     setBelowMinSolEntries(belowMinimumSolLines);
+
+    // エラー状態に基づいてハイライト行を更新
+    const newHighlightedLines: number[] = [];
+    if (invalidLineNumbers.length > 0) {
+      newHighlightedLines.push(...invalidLineNumbers);
+    }
+    if (duplicateLineNumbers.length > 0) {
+      newHighlightedLines.push(...duplicateLineNumbers);
+    }
+    if (selectedToken === 'SOL' && belowMinimumSolLineNumbers.length > 0) {
+      newHighlightedLines.push(...belowMinimumSolLineNumbers);
+    }
+
+    // ハイライト行を更新
+    setHighlightedLines(newHighlightedLines);
 
     // 合計金額を計算
     const sum = entries.reduce((total, entry) => total + entry.amount, 0);
@@ -486,6 +534,23 @@ const Sender: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  // textareaでの編集をハンドリングする関数
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRecipientAddresses(e.target.value);
+  };
+
+  // 特定の行のクリックイベントを処理（必要な場合）
+  const handleLineClick = (lineNumber: number) => {
+    // 行番号をハイライト配列に追加または削除
+    if (highlightedLines.includes(lineNumber)) {
+      setHighlightedLines(
+        highlightedLines.filter((line) => line !== lineNumber)
+      );
+    } else {
+      setHighlightedLines([...highlightedLines, lineNumber]);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -744,7 +809,7 @@ const Sender: React.FC = () => {
                     <Box
                       sx={{
                         width: '40px',
-                        minWidth: '40px', // 幅を固定
+                        minWidth: '40px',
                         bgcolor: (theme) => theme.palette.grey[100],
                         color: (theme) => theme.palette.grey[600],
                         borderRight: '1px solid rgba(0, 0, 0, 0.1)',
@@ -760,7 +825,18 @@ const Sender: React.FC = () => {
                     >
                       {/* 行番号を生成 - 実際の行数に合わせて動的に表示 */}
                       {recipientAddresses.split('\n').map((_, i) => (
-                        <Box key={i} sx={{ pr: 1, height: '20px' }}>
+                        <Box
+                          key={i}
+                          sx={{
+                            pr: 1,
+                            height: '20px',
+                            color: highlightedLines.includes(i + 1)
+                              ? 'red'
+                              : 'inherit', // ハイライト行の番号も赤くする
+                            cursor: 'pointer', // クリック可能であることを示す
+                          }}
+                          onClick={() => handleLineClick(i + 1)}
+                        >
                           {i + 1}
                         </Box>
                       ))}
@@ -773,7 +849,16 @@ const Sender: React.FC = () => {
                           (_, i) => (
                             <Box
                               key={i + recipientAddresses.split('\n').length}
-                              sx={{ pr: 1, height: '20px' }}
+                              sx={{
+                                pr: 1,
+                                height: '20px',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() =>
+                                handleLineClick(
+                                  i + recipientAddresses.split('\n').length + 1
+                                )
+                              }
                             >
                               {i + recipientAddresses.split('\n').length + 1}
                             </Box>
@@ -781,7 +866,7 @@ const Sender: React.FC = () => {
                         )}
                     </Box>
 
-                    {/* カスタムテキストエリア */}
+                    {/* テキストエリア - 隠しtextareaと表示用の行コンテナに分ける */}
                     <Box
                       sx={{
                         flexGrow: 1,
@@ -791,13 +876,18 @@ const Sender: React.FC = () => {
                         height: '100%',
                         paddingTop: '5px',
                         paddingBottom: '0px',
+                        position: 'relative',
                       }}
                     >
+                      {/* 実際に編集するためのtextarea（透明） */}
                       <textarea
                         value={recipientAddresses}
-                        onChange={(e) => setRecipientAddresses(e.target.value)}
+                        onChange={handleTextAreaChange}
                         placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
                         style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
                           width: 'calc(100% - 16px)',
                           height: '100%',
                           border: 'none',
@@ -807,8 +897,11 @@ const Sender: React.FC = () => {
                           fontFamily: 'monospace',
                           fontSize: '0.875rem',
                           lineHeight: '20px',
-                          padding: '0 8px',
-                          color: 'black',
+                          padding: '8px',
+                          paddingTop: '5px',
+                          color: 'transparent',
+                          caretColor: 'black', // カーソルだけ見えるように
+                          zIndex: 2,
                         }}
                         rows={
                           recipientAddresses.split('\n').length > 10
@@ -816,6 +909,49 @@ const Sender: React.FC = () => {
                             : 10
                         }
                       />
+
+                      {/* 色付き表示用のテキスト */}
+                      <Box
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          lineHeight: '20px',
+                          padding: '8px',
+                          whiteSpace: 'pre-wrap',
+                          pointerEvents: 'none', // クリックをtextareaに通過させる
+                          paddingTop: '0px',
+                        }}
+                      >
+                        {recipientAddresses.split('\n').map((line, i) => (
+                          <Box
+                            key={i}
+                            sx={{
+                              height: '20px',
+                              color: highlightedLines.includes(i + 1)
+                                ? 'red'
+                                : 'inherit', // 指定行を赤色に
+                            }}
+                          >
+                            {line || ' '} {/* 空行の場合でも高さを確保 */}
+                          </Box>
+                        ))}
+                        {/* 最小10行の高さを確保 */}
+                        {recipientAddresses.split('\n').length < 10 &&
+                          Array.from(
+                            {
+                              length:
+                                10 - recipientAddresses.split('\n').length,
+                            },
+                            (_, i) => (
+                              <Box
+                                key={i + recipientAddresses.split('\n').length}
+                                sx={{ height: '20px' }}
+                              >
+                                &nbsp;
+                              </Box>
+                            )
+                          )}
+                      </Box>
                     </Box>
                   </Box>
 
