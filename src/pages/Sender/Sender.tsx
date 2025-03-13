@@ -333,15 +333,16 @@ const Sender: React.FC = () => {
           selectedToken.slice(0, 4) + '...' + selectedToken.slice(-4);
       }
 
-      // 改善: transferWithIndividualAmountsメソッドを使用
-      // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
+      const now: number = Date.now();
+
       // トランザクション送信 & 検証 & サーバーに保存
       const results = await transferWithIndividualAmounts(
         parsedEntries.map((entry) => ({
           address: entry.address,
           amount: entry.amount,
         })),
-        selectedToken === 'SOL' ? undefined : selectedToken
+        selectedToken === 'SOL' ? undefined : selectedToken,
+        now
       );
 
       // 結果をフォーマット
@@ -398,6 +399,11 @@ const Sender: React.FC = () => {
         {
           results: formattedResults, // 新しい結果
           uuid: results.uuid, // 一意の識別子,
+          timestamp: new Date(now).toISOString(), // ISO形式の日付文字列
+          senderWallet: publicKey?.toString() || '', // 送信者のウォレットアドレス
+          tokenType: selectedToken === 'SOL' ? 'SOL' : 'spl', // トークンタイプ
+          tokenSymbol: selectedTokenInfo.symbol, // トークンシンボル
+          tokenMintAddress: selectedToken === 'SOL' ? 'SOL' : selectedToken, // トークンのミントアドレス
         },
       ]);
 
