@@ -118,7 +118,7 @@ export const getHistoryFiles = (
                     tokenMintAddress: firstEntry.token_mint_address,
                     results: [
                       {
-                        signature: signature,
+                        signature: firstEntry.signature,
                         status:
                           firstEntry.status === 'success' ? 'success' : 'error',
                         timestamp: date.getTime(),
