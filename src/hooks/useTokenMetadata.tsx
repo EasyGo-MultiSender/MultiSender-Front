@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { Metaplex } from '@metaplex-foundation/js';
 import { Connection, PublicKey } from '@solana/web3.js';
 import {
   unpackMint,
@@ -7,7 +7,7 @@ import {
   ExtensionType,
 } from '@solana/spl-token';
 import { unpack as unpackToken2022Metadata } from '@solana/spl-token-metadata';
-import { Metaplex } from '@metaplex-foundation/js';
+import { useCallback, useRef } from 'react';
 
 // const METAPLEX_PROGRAM_ID = new PublicKey(import.meta.env.VITE_METAPLEX_PROGRAM_ID);
 const TOKEN_PROGRAM_ID = new PublicKey(import.meta.env.VITE_TOKEN_PROGRAM_ID);
@@ -15,9 +15,27 @@ const TOKEN_2022_PROGRAM_ID = new PublicKey(
   import.meta.env.VITE_TOKEN_2022_PROGRAM_ID
 );
 
-// SPL-Tokenの判別に使用するデシマル値の基準
-// NFTは通常デシマルが0
-const SPL_TOKEN_MIN_DECIMALS = 1;
+// TokenStandardの値の意味
+enum TokenStandard {
+  NonFungible = 0, // NFT
+  // Fungible = 1,            // SPL
+  // FungibleAsset = 2,       // SPL
+  NonFungibleEdition = 3, // NFT
+  ProgrammableNonFungible = 4, // NFT
+}
+
+// NFTかどうかを判断する関数
+function isNFTbyTokenStandard(
+  tokenStandard: number | null | undefined
+): boolean {
+  if (tokenStandard === null || tokenStandard === undefined) return false;
+
+  return (
+    tokenStandard === TokenStandard.NonFungible ||
+    tokenStandard === TokenStandard.NonFungibleEdition ||
+    tokenStandard === TokenStandard.ProgrammableNonFungible
+  );
+}
 
 export interface TokenMetadata {
   mint: PublicKey;
@@ -80,9 +98,10 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
 
             if (mintInfo) {
               // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
-              if (mintInfo.decimals < SPL_TOKEN_MIN_DECIMALS) {
-                return null;
-              }
+              // tokenStandardを使用するためコメントアウト
+              // if (mintInfo.decimals < SPL_TOKEN_MIN_DECIMALS) {
+              //   return null;
+              // }
 
               // Solana Token Listから情報を取得
               const tokenInfo = await fetchFromTokenList(mintAddress);
@@ -159,10 +178,12 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
         );
 
         // デシマルを確認し、SPL_TOKEN_MIN_DECIMALS未満のトークン（NFT）を除外
-        if (
-          token &&
-          (!token.decimals || token.decimals >= SPL_TOKEN_MIN_DECIMALS)
-        ) {
+        // tokenStandardを使用するためコメントアウト
+        // if (
+        //   token &&
+        //   (!token.decimals || token.decimals >= SPL_TOKEN_MIN_DECIMALS)
+        // ) {
+        if (token) {
           return token;
         }
       }
@@ -217,9 +238,10 @@ export const useTokenMetadata = (connection: Connection) => {
             decimals = mintInfo.decimals;
 
             // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
-            if (decimals < SPL_TOKEN_MIN_DECIMALS) {
-              return null;
-            }
+            // tokenStandardを使用するためコメントアウト
+            // if (decimals < SPL_TOKEN_MIN_DECIMALS) {
+            //   return null;
+            // }
           } else {
             return null; // ミント情報が取得できない場合はスキップ
           }
@@ -245,6 +267,17 @@ export const useTokenMetadata = (connection: Connection) => {
               const nftOrSft = await metaplex
                 .nfts()
                 .findByMint({ mintAddress: mintPubkey });
+
+              // tokenStandardでNFTかどうかを判断
+              // 0: NonFungible, 3: NonFungibleEdition, 4: ProgrammableNonFungible はNFT
+              const isNFT = isNFTbyTokenStandard(nftOrSft.tokenStandard);
+
+              if (isNFT) {
+                console.log(
+                  `Token ${mintAddress} is an NFT with tokenStandard ${nftOrSft.tokenStandard}`
+                );
+                return null; // NFTの場合はnullを返してSPLリストに表示しない
+              }
 
               if (nftOrSft.uri) {
                 try {
@@ -406,9 +439,10 @@ async function findToken2022Metadata(
 ): Promise<TokenMetadata | null> {
   try {
     // デシマルチェック - SPL_TOKEN_MIN_DECIMALS未満はNFTとみなしてスキップ
-    if (decimals < SPL_TOKEN_MIN_DECIMALS) {
-      return null;
-    }
+    // tokenStandardを使用するためコメントアウト
+    // if (decimals < SPL_TOKEN_MIN_DECIMALS) {
+    //   return null;
+    // }
 
     const accountInfo = await connection.getAccountInfo(mintPubkey);
     if (!accountInfo) return null;
