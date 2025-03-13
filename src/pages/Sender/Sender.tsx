@@ -332,34 +332,17 @@ const Sender: React.FC = () => {
           tokenInfo?.metadata?.symbol ||
           selectedToken.slice(0, 4) + '...' + selectedToken.slice(-4);
       }
-      //
-      // // 手数料を追加
-      // const commissionAddress: string | undefined = import.meta.env
-      //   .VITE_DEPOSIT_WALLET_ADDRESS;
-      // const commissionAmount: number = Number(
-      //   import.meta.env.VITE_DEPOSIT_SOL_AMOUNT
-      // );
-      //
-      // if (commissionAmount <= 0 || commissionAddress == null) {
-      //   throw new Error(
-      //     `Invalid commission address or amount! : ${commissionAddress} : ${commissionAmount}`
-      //   );
-      // }
-      //
-      // parsedEntries.push({
-      //   address: commissionAddress,
-      //   amount: commissionAmount,
-      // });
 
-      // 改善: transferWithIndividualAmountsメソッドを使用
-      // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
+      const now: number = Date.now();
+
       // トランザクション送信 & 検証 & サーバーに保存
       const results = await transferWithIndividualAmounts(
         parsedEntries.map((entry) => ({
           address: entry.address,
           amount: entry.amount,
         })),
-        selectedToken === 'SOL' ? undefined : selectedToken
+        selectedToken === 'SOL' ? undefined : selectedToken,
+        now
       );
 
       // 結果をフォーマット
@@ -415,7 +398,12 @@ const Sender: React.FC = () => {
         // 新しいオブジェクトを追加
         {
           results: formattedResults, // 新しい結果
-          uuid: results.uuid, // 一意の識別子
+          uuid: results.uuid, // 一意の識別子,
+          timestamp: new Date(now).toISOString(), // ISO形式の日付文字列
+          senderWallet: publicKey?.toString() || '', // 送信者のウォレットアドレス
+          tokenType: selectedToken === 'SOL' ? 'SOL' : 'spl', // トークンタイプ
+          tokenSymbol: selectedTokenInfo.symbol, // トークンシンボル
+          tokenMintAddress: selectedToken === 'SOL' ? 'SOL' : selectedToken, // トークンのミントアドレス
         },
       ]);
 

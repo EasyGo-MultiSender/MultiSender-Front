@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { ExpandMore, Download } from '@mui/icons-material';
 import {
   List,
   ListItem,
@@ -10,7 +10,8 @@ import {
   Card,
   CardContent,
 } from '@mui/material';
-import { ExpandMore, Download } from '@mui/icons-material';
+import { useState, useRef, useEffect } from 'react';
+import { downloadTransactionsCSV } from '../hooks/util/csv';
 import {
   TransactionResult,
   Serializer as SerializerType,
@@ -35,8 +36,8 @@ const SerializerList: React.FC<SerializerListProps> = ({
 
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
-    // ダウンロード処理をここに実装
-    console.log('Download clicked for:', serializer);
+    // 共通のダウンロード関数を使用
+    downloadTransactionsCSV(serializer);
   };
 
   useEffect(() => {
@@ -200,6 +201,7 @@ const SerializerList: React.FC<SerializerListProps> = ({
                     <TransactionResultItem
                       result={result}
                       connection={connection}
+                      serializer={serializer}
                     />
                   </ListItem>
                 )

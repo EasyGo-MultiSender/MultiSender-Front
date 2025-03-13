@@ -1,3 +1,4 @@
+import { History as HistoryIcon } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -8,14 +9,13 @@ import {
   CircularProgress,
   Alert,
 } from '@mui/material';
-import { History as HistoryIcon } from '@mui/icons-material';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useWallet } from '../../hooks/useWallet';
+import SerializerList from '../../components/SerializerList';
+import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import { getHistoryFiles } from '../../hooks/getHistoryFiles';
 import { useConnection } from '../../hooks/useConnection';
-import WalletAddressDisplay from '../../components/WalletAddressDisplay';
-import SerializerList from '../../components/SerializerList';
-import { useEffect, useState } from 'react';
+import { useWallet } from '../../hooks/useWallet';
 
 const History = () => {
   const { t } = useTranslation();

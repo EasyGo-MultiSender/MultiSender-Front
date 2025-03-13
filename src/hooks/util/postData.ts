@@ -239,7 +239,9 @@ export const postSignatureData = async (
       payloadToSend = await setTokenSymbolFromMint(data, connection);
     }
 
-    const response = await fetch('http://localhost:3000/api/signature', {
+    const hostURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
+    const response = await fetch(`${hostURL}/api/signature`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

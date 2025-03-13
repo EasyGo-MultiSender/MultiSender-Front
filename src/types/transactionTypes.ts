@@ -3,7 +3,8 @@ export interface TransactionResult {
   signature: string;
   status: 'success' | 'error' | 'warn';
   timestamp: number;
-  error?: string;
+  error: string;
+  errorMessage: string;
   recipients: AddressEntry[];
   totalAmount: number;
   token: string;
@@ -19,4 +20,9 @@ export interface Serializer {
   // シリアライザ
   results: TransactionResult[];
   uuid: string;
+  timestamp: string; //（ISO形式をYYYYMMDDTHHMMSSZ形式に変換）
+  senderWallet: string;
+  tokenType: string;
+  tokenSymbol: string;
+  tokenMintAddress: string;
 }

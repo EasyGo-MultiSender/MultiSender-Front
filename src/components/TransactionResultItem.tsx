@@ -16,33 +16,21 @@ import {
   Button,
 } from '@mui/material';
 import { useState } from 'react';
-
-interface AddressEntry {
-  address: string;
-  amount: number;
-}
-
-interface TransactionResult {
-  signature: string;
-  status: 'success' | 'error' | 'warn';
-  timestamp: number;
-  error?: string;
-  errorMessage?: string;
-  recipients: AddressEntry[];
-  totalAmount: number;
-  token: string;
-}
+import { downloadTransactionsCSV } from '../hooks/util/csv';
+import { Serializer, TransactionResult } from '../types/transactionTypes';
 
 interface TransactionResultItemProps {
   result: TransactionResult;
   connection: {
     rpcEndpoint: string;
   };
+  serializer: Serializer;
 }
 
 export const TransactionResultItem = ({
   result,
   connection,
+  serializer,
 }: TransactionResultItemProps) => {
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
   const [isCopiedAll, setIsCopiedAll] = useState(false);
@@ -99,6 +87,11 @@ export const TransactionResultItem = ({
     setTimeout(() => setCopied(false), 1000);
   };
 
+  // 個別トランザクションのCSVダウンロード処理
+  const handleDownloadCSV = () => {
+    downloadTransactionsCSV(serializer, result);
+  };
+
   return (
     <ListItem
       sx={{
@@ -140,7 +133,7 @@ export const TransactionResultItem = ({
             variant="outlined"
             color="inherit"
             size="small"
-            onClick={handleDownload}
+            onClick={handleDownloadCSV}
             sx={{
               mr: 1,
               borderColor: 'rgba(27, 27, 27, 0.37)',
@@ -171,7 +164,7 @@ export const TransactionResultItem = ({
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
         }}
       >
-        {getStatusColor(result.status) === 'success' ? (
+        {result.signature != '' ? (
           <Link
             href={`https://solscan.io/tx/${result.signature}${
               connection.rpcEndpoint.includes('devnet') ? '?cluster=devnet' : ''
@@ -525,8 +518,8 @@ export const TransactionResultItem = ({
           }}
         >
           {/* 送金成功部分があるか確認 */}
-          {result.error.includes('送金は成功') ||
-          result.error.includes('MultiSenderServerError') ? (
+          {result.errorMessage.includes('送金は成功') ||
+          result.errorMessage.includes('MultiSenderServerError') ? (
             <>
               {/* 送金成功メッセージ */}
               <Box
@@ -560,7 +553,7 @@ export const TransactionResultItem = ({
                     color="white"
                     sx={{ opacity: 0.9, mt: 0.5 }}
                   >
-                    {result.error.includes('MultiSenderServerError')
+                    {result.errorMessage.includes('MultiSenderServerError')
                       ? 'サーバーと通信できませんでした。履歴ページには反映されません。'
                       : 'データをサーバーに保存できませんでした。履歴ページには反映されません。'}
                   </Typography>

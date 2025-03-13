@@ -64,7 +64,8 @@ export function useTokenTransfer(
   const transferWithIndividualAmounts = useCallback(
     async (
       recipientsWithAmounts: Array<{ address: string; amount: number }>,
-      mint?: string
+      mint?: string,
+      now: number = Date.now()
     ): Promise<{ result: TransferResult[]; uuid: string }> => {
       console.warn('transferWithIndividualAmounts');
       if (!publicKey) throw new Error('Wallet not connected');
@@ -215,10 +216,10 @@ export function useTokenTransfer(
                   errorMessage: '',
                   signature: signature || '',
                   status: 'success',
-                  timestamp: Date.now(),
+                  timestamp: now,
                   recipients: batchRecipients,
                   amounts: recipientAmounts,
-                };
+                } as TransferResult;
 
                 console.log(
                   `Batch ${batchIndex + 1} confirmed successfully with ${batchRecipients.length} recipients`
@@ -229,9 +230,10 @@ export function useTokenTransfer(
                   status: 'error',
                   error: 'Transaction failed confirmation',
                   errorMessage: 'Failed to retrieve error details.',
-                  timestamp: Date.now(),
+                  timestamp: now,
                   recipients: batchRecipients,
-                };
+                  signaturePayload,
+                } as TransferResult;
               }
 
               signaturePayload.signature = transactionResult.signature;
@@ -285,9 +287,10 @@ export function useTokenTransfer(
                 errorMessage:
                   error instanceof Error ? error.message : String(error),
                 error: errorMessage || 'Transfer failed',
-                timestamp: Date.now(),
+                timestamp: now,
                 recipients: batchRecipients,
-              };
+                signaturePayload,
+              } as TransferResult;
             }
 
             results.push(transactionResult);
@@ -321,8 +324,8 @@ export function useTokenTransfer(
               status: 'error',
               error: 'Transaction cancelled by user',
               errorMessage: error.message,
-              timestamp: Date.now(),
-              recipients: ['recipientsrecipientsrecipientsrecipients', '?'],
+              timestamp: now,
+              recipients: [],
             });
           } else {
             throw error;

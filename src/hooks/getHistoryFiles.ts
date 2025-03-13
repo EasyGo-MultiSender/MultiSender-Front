@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useState, useEffect } from 'react';
 import { Serializer, AddressEntry } from '../types/transactionTypes';
 
 interface HistoryFilesResponse {
@@ -53,9 +53,12 @@ export const getHistoryFiles = (
         const firstChar = walletAddress.charAt(0);
         const directoryPath = `/csv/${firstChar}/${walletAddress}`;
 
+        const hostURL =
+          import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
         // Fetch the list of files directly from the public directory
         const response = await axios.get<HistoryFilesResponse>(
-          `http://localhost:3000/api/csv/${walletAddress}`,
+          `${hostURL}/api/csv/${walletAddress}`,
           {
             headers: { 'Content-Type': 'application/json' },
           }
@@ -69,7 +72,9 @@ export const getHistoryFiles = (
         for (const fileName of fileNames) {
           try {
             // Get CSV file content
-            const csvResponse = await axios.get(`${directoryPath}/${fileName}`);
+            const csvResponse = await axios.get(
+              `${hostURL}${directoryPath}/${fileName}`
+            );
             const csvContent = csvResponse.data;
 
             // Parse CSV
@@ -106,15 +111,19 @@ export const getHistoryFiles = (
                   // Create Serializer object
                   const serializer: Serializer = {
                     uuid: firstEntry.uuid,
+                    timestamp: firstEntry.time_stamp,
+                    senderWallet: firstEntry.sender_wallet,
+                    tokenType: firstEntry.token_type,
+                    tokenSymbol: firstEntry.token_symbol,
+                    tokenMintAddress: firstEntry.token_mint_address,
                     results: [
                       {
                         signature: firstEntry.signature,
                         status:
-                          firstEntry.status === 'succsess'
-                            ? 'success'
-                            : 'error',
+                          firstEntry.status === 'success' ? 'success' : 'error',
                         timestamp: date.getTime(),
-                        error: firstEntry.error_message || undefined,
+                        error: firstEntry.error,
+                        errorMessage: firstEntry.error_message,
                         recipients,
                         totalAmount,
                         token: firstEntry.token_symbol || firstEntry.token_type,
