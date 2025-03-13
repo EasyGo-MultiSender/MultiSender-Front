@@ -325,7 +325,7 @@ export function useTokenTransfer(
               error: 'Transaction cancelled by user',
               errorMessage: error.message,
               timestamp: now,
-              recipients: ['recipientsrecipientsrecipientsrecipients', '?'],
+              recipients: [],
             });
           } else {
             throw error;
