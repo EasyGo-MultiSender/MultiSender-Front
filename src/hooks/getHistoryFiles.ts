@@ -106,15 +106,21 @@ export const getHistoryFiles = (
                   // Create Serializer object
                   const serializer: Serializer = {
                     uuid: firstEntry.uuid,
+                    timestamp: firstEntry.time_stamp,
+                    senderWallet: firstEntry.sender_wallet,
+                    tokenType: firstEntry.token_type,
+                    tokenSymbol: firstEntry.token_symbol,
+                    tokenMintAddress: firstEntry.token_mint_address,
                     results: [
                       {
-                        signature: firstEntry.signature,
+                        signature: signature,
                         status:
                           firstEntry.status === 'succsess'
                             ? 'success'
                             : 'error',
                         timestamp: date.getTime(),
-                        error: firstEntry.error_message || undefined,
+                        error: firstEntry.error,
+                        errorMessage: firstEntry.error_message,
                         recipients,
                         totalAmount,
                         token: firstEntry.token_symbol || firstEntry.token_type,
