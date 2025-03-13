@@ -332,24 +332,6 @@ const Sender: React.FC = () => {
           tokenInfo?.metadata?.symbol ||
           selectedToken.slice(0, 4) + '...' + selectedToken.slice(-4);
       }
-      //
-      // // 手数料を追加
-      // const commissionAddress: string | undefined = import.meta.env
-      //   .VITE_DEPOSIT_WALLET_ADDRESS;
-      // const commissionAmount: number = Number(
-      //   import.meta.env.VITE_DEPOSIT_SOL_AMOUNT
-      // );
-      //
-      // if (commissionAmount <= 0 || commissionAddress == null) {
-      //   throw new Error(
-      //     `Invalid commission address or amount! : ${commissionAddress} : ${commissionAmount}`
-      //   );
-      // }
-      //
-      // parsedEntries.push({
-      //   address: commissionAddress,
-      //   amount: commissionAmount,
-      // });
 
       // 改善: transferWithIndividualAmountsメソッドを使用
       // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
