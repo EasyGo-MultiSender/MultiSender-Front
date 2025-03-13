@@ -438,12 +438,6 @@ async function findToken2022Metadata(
   decimals: number
 ): Promise<TokenMetadata | null> {
   try {
-    // デシマルチェック - SPL_TOKEN_MIN_DECIMALS未満はNFTとみなしてスキップ
-    // tokenStandardを使用するためコメントアウト
-    // if (decimals < SPL_TOKEN_MIN_DECIMALS) {
-    //   return null;
-    // }
-
     const accountInfo = await connection.getAccountInfo(mintPubkey);
     if (!accountInfo) return null;
 
