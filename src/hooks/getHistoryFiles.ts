@@ -120,9 +120,7 @@ export const getHistoryFiles = (
                       {
                         signature: signature,
                         status:
-                          firstEntry.status === 'succsess'
-                            ? 'success'
-                            : 'error',
+                          firstEntry.status === 'success' ? 'success' : 'error',
                         timestamp: date.getTime(),
                         error: firstEntry.error,
                         errorMessage: firstEntry.error_message,
