@@ -697,29 +697,151 @@ const Sender: React.FC = () => {
                 Format: address,amount (one entry per line)
               </Typography>
               <Box position="relative">
-                <TextField
-                  multiline
-                  rows={10}
-                  fullWidth
-                  value={recipientAddresses}
-                  onChange={(e) => setRecipientAddresses(e.target.value)}
-                  placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
-                  error={
-                    invalidEntries.length > 0 ||
+                {/* 行番号付きテキストフィールド */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    border: '1px solid',
+                    borderColor: (theme) =>
+                      invalidEntries.length > 0 ||
+                      duplicateAddresses.length > 0 ||
+                      (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                        ? theme.palette.error.main
+                        : 'rgba(0, 0, 0, 0.23)',
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                    },
+                    '&:focus-within': {
+                      borderColor: (theme) => theme.palette.primary.main,
+                      borderWidth: '2px',
+                    },
+                  }}
+                >
+                  {/* スクロール同期のためのコンテナ */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      maxHeight: '220px', // 約10行分の高さに制限
+                      overflow: 'auto', // スクロール可能に
+                      '&::-webkit-scrollbar': {
+                        width: '8px',
+                        height: '8px',
+                      },
+                      '&::-webkit-scrollbar-track': {
+                        background: '#f1f1f1',
+                      },
+                      '&::-webkit-scrollbar-thumb': {
+                        background: '#c1c1c1',
+                        borderRadius: '4px',
+                      },
+                      '&::-webkit-scrollbar-thumb:hover': {
+                        background: '#a8a8a8',
+                      },
+                    }}
+                  >
+                    {/* 行番号表示 */}
+                    <Box
+                      sx={{
+                        width: '40px',
+                        minWidth: '40px', // 幅を固定
+                        bgcolor: (theme) => theme.palette.grey[100],
+                        color: (theme) => theme.palette.grey[600],
+                        borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                        py: 1,
+                        textAlign: 'right',
+                        userSelect: 'none',
+                        fontFamily: 'monospace',
+                        fontSize: '0.8rem',
+                        height: '100%',
+                        paddingTop: '5px',
+                        paddingBottom: '5px',
+                      }}
+                    >
+                      {/* 行番号を生成 - 実際の行数に合わせて動的に表示 */}
+                      {recipientAddresses.split('\n').map((_, i) => (
+                        <Box key={i} sx={{ pr: 1, height: '20px' }}>
+                          {i + 1}
+                        </Box>
+                      ))}
+                      {/* 最小10行の行番号を表示 */}
+                      {recipientAddresses.split('\n').length < 10 &&
+                        Array.from(
+                          {
+                            length: 10 - recipientAddresses.split('\n').length,
+                          },
+                          (_, i) => (
+                            <Box
+                              key={i + recipientAddresses.split('\n').length}
+                              sx={{ pr: 1, height: '20px' }}
+                            >
+                              {i + recipientAddresses.split('\n').length + 1}
+                            </Box>
+                          )
+                        )}
+                    </Box>
+
+                    {/* カスタムテキストエリア */}
+                    <Box
+                      sx={{
+                        flexGrow: 1,
+                        py: 1,
+                        fontFamily: 'monospace',
+                        fontSize: '0.875rem',
+                        height: '100%',
+                        paddingTop: '5px',
+                        paddingBottom: '0px',
+                      }}
+                    >
+                      <textarea
+                        value={recipientAddresses}
+                        onChange={(e) => setRecipientAddresses(e.target.value)}
+                        placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
+                        style={{
+                          width: 'calc(100% - 16px)',
+                          height: '100%',
+                          border: 'none',
+                          outline: 'none',
+                          resize: 'none',
+                          background: 'transparent',
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          lineHeight: '20px',
+                          padding: '0 8px',
+                          color: 'black',
+                        }}
+                        rows={
+                          recipientAddresses.split('\n').length > 10
+                            ? recipientAddresses.split('\n').length
+                            : 10
+                        }
+                      />
+                    </Box>
+                  </Box>
+
+                  {/* エラーメッセージ表示 */}
+                  {(invalidEntries.length > 0 ||
                     duplicateAddresses.length > 0 ||
-                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                  }
-                  helperText={
-                    invalidEntries.length > 0
-                      ? `Invalid entries: ${invalidEntries.length}`
-                      : duplicateAddresses.length > 0
-                        ? `Duplicate addresses: ${duplicateAddresses.length}`
-                        : selectedToken === 'SOL' &&
-                            belowMinSolEntries.length > 0
-                          ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
-                          : ''
-                  }
-                />
+                    (selectedToken === 'SOL' &&
+                      belowMinSolEntries.length > 0)) && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ px: 2, py: 0.5 }}
+                    >
+                      {invalidEntries.length > 0
+                        ? `Invalid entries: ${invalidEntries.length}`
+                        : duplicateAddresses.length > 0
+                          ? `Duplicate addresses: ${duplicateAddresses.length}`
+                          : selectedToken === 'SOL' &&
+                              belowMinSolEntries.length > 0
+                            ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
+                            : ''}
+                    </Typography>
+                  )}
+                </Box>
+
                 <Tooltip title="Paste" arrow placement="top">
                   <IconButton
                     onClick={pasteAddresses}
