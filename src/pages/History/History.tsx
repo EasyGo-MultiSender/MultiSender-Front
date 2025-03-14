@@ -39,6 +39,9 @@ const History = () => {
     <Box
       sx={{
         height: 'calc(100vh - 8vh - 8vh)', // Subtract header (6vh) and footer (64px) heights
+        backgroundImage: `url("/image.webp")`,
+        backgroundSize: '120%',
+        backgroundPosition: '0% 80%',
         bgcolor: '#2b2e45',
         position: 'relative',
         overflowY: 'auto',
