@@ -51,7 +51,7 @@ export const getHistoryFiles = (
       try {
         // Get the first character of the wallet address to determine the directory
         const firstChar = walletAddress.charAt(0);
-        const directoryPath = `public/csv/${firstChar}/${walletAddress}`;
+        const directoryPath = `csv/${firstChar}/${walletAddress}`;
 
         const hostURL =
           import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
