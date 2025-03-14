@@ -1,4 +1,11 @@
 import {
+  CheckCircleOutline,
+  ContentCopy,
+  ErrorOutline,
+  OpenInNew,
+  WarningAmber,
+} from '@mui/icons-material';
+import {
   Box,
   Chip,
   Typography,
@@ -8,39 +15,68 @@ import {
   Tooltip,
   Button,
 } from '@mui/material';
-import { ContentCopy, OpenInNew } from '@mui/icons-material';
 import { useState } from 'react';
-
-interface AddressEntry {
-  address: string;
-  amount: number;
-}
-
-interface TransactionResult {
-  signature: string;
-  status: 'success' | 'error';
-  timestamp: number;
-  error?: string;
-  recipients: AddressEntry[];
-  totalAmount: number;
-  token: string;
-}
+import { downloadTransactionsCSV } from '../hooks/util/csv';
+import { Serializer, TransactionResult } from '../types/transactionTypes';
 
 interface TransactionResultItemProps {
   result: TransactionResult;
-  recipientAddresses: AddressEntry[];
   connection: {
     rpcEndpoint: string;
   };
+  serializer: Serializer;
 }
 
 export const TransactionResultItem = ({
   result,
-  recipientAddresses,
   connection,
+  serializer,
 }: TransactionResultItemProps) => {
   const [isCopiedSignature, setIsCopiedSignature] = useState(false);
   const [isCopiedAll, setIsCopiedAll] = useState(false);
+
+  // トランザクション結果をJSONファイルとしてダウンロードする関数
+  const handleDownload = () => {
+    // ダウンロードするデータを作成
+    const downloadData = {
+      signature: result.signature,
+      status: result.status,
+      timestamp: result.timestamp,
+      recipients: result.recipients,
+      totalAmount: result.totalAmount,
+      token: result.token,
+      error: result.error,
+    };
+
+    // JSONデータをBlobに変換
+    const blob = new Blob([JSON.stringify(downloadData, null, 2)], {
+      type: 'application/json',
+    });
+
+    // ダウンロードリンクを作成
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `transaction-${result.signature.slice(0, 8)}-${
+      new Date(result.timestamp).toISOString().split('T')[0]
+    }.json`;
+
+    // リンクをクリックしてダウンロード開始
+    document.body.appendChild(link);
+    link.click();
+
+    // クリーンアップ
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // 'warn'を'warning'に変換
+  const getStatusColor = (
+    status: 'success' | 'error' | 'warn'
+  ): 'success' | 'error' | 'warning' => {
+    if (status === 'warn') return 'warning';
+    return status;
+  };
 
   const handleCopy = async (
     text: string,
@@ -51,19 +87,26 @@ export const TransactionResultItem = ({
     setTimeout(() => setCopied(false), 1000);
   };
 
+  // 個別トランザクションのCSVダウンロード処理
+  const handleDownloadCSV = () => {
+    downloadTransactionsCSV(serializer, result);
+  };
+
   return (
     <ListItem
       sx={{
         position: 'relative',
         bgcolor: '#f5f5f5',
         borderRadius: 2,
-        mb: 2,
+        my: 1,
         flexDirection: 'column',
         alignItems: 'flex-start',
         p: 2,
         backgroundColor: 'rgba(0, 0, 0, 0.05)',
         border: '0.3px solid rgba(0, 0, 0, 0.2)',
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+        width: '97%',
+        mx: 'auto',
       }}
     >
       {/* Status , Timestamp  and download button*/}
@@ -76,8 +119,8 @@ export const TransactionResultItem = ({
       >
         <Box>
           <Chip
-            label={result.status}
-            color={result.status === 'success' ? 'success' : 'error'}
+            label={getStatusColor(result.status)}
+            color={getStatusColor(result.status)}
             size="small"
             sx={{ mr: 1 }}
           />
@@ -90,6 +133,7 @@ export const TransactionResultItem = ({
             variant="outlined"
             color="inherit"
             size="small"
+            onClick={handleDownloadCSV}
             sx={{
               mr: 1,
               borderColor: 'rgba(27, 27, 27, 0.37)',
@@ -120,50 +164,54 @@ export const TransactionResultItem = ({
           boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
         }}
       >
-        <Link
-          href={`https://solscan.io/tx/${result.signature}${
-            connection.rpcEndpoint.includes('devnet') ? '?cluster=devnet' : ''
-          }`}
-          target="_blank"
-          rel="noopener noreferrer"
-          sx={{
-            color: 'primary.main',
-            display: 'flex',
-            alignItems: 'center',
-            flex: 1,
-            textDecoration: 'none',
-            '&:hover': {
-              textDecoration: 'underline',
-            },
-          }}
-        >
-          <Typography
+        {result.signature != '' ? (
+          <Link
+            href={`https://solscan.io/tx/${result.signature}${
+              connection.rpcEndpoint.includes('devnet') ? '?cluster=devnet' : ''
+            }`}
+            target="_blank"
+            rel="noopener noreferrer"
             sx={{
-              fontFamily: 'monospace',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              color: 'primary.main',
+              display: 'flex',
+              alignItems: 'center',
+              flex: 1,
+              textDecoration: 'none',
+              '&:hover': {
+                textDecoration: 'underline',
+              },
             }}
           >
-            {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
-          </Typography>
-          <Tooltip title="Open in Solscan" arrow placement="top">
-            <Box
+            <Typography
               sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                ml: 1,
-                mt: 1,
+                fontFamily: 'monospace',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
-              <OpenInNew sx={{ fontSize: 18 }} />
-              <Typography variant="caption" sx={{ mt: -0.4 }}>
-                link
-              </Typography>
-            </Box>
-          </Tooltip>
-        </Link>
+              {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
+            </Typography>
+            <Tooltip title="Open in Solscan" arrow placement="top">
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  ml: 1,
+                  mt: 1,
+                }}
+              >
+                <OpenInNew sx={{ fontSize: 18 }} />
+                <Typography variant="caption" sx={{ mt: -0.4 }}>
+                  link
+                </Typography>
+              </Box>
+            </Tooltip>
+          </Link>
+        ) : (
+          result.errorMessage
+        )}
 
         <Tooltip
           title={isCopiedSignature ? 'Copied !' : 'Copy Signature'}
@@ -211,7 +259,7 @@ export const TransactionResultItem = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           borderRadius: 1,
-          px: 1,
+          px: 0,
           mx: 'auto',
         }}
       >
@@ -234,8 +282,11 @@ export const TransactionResultItem = ({
                 size="small"
                 startIcon={<ContentCopy fontSize="small" />}
                 onClick={() => {
-                  const dataToCopy = recipientAddresses
-                    .map((entry) => `${entry.address}, ${entry.amount} `)
+                  const dataToCopy = result.recipients
+                    .map(
+                      (recipient) =>
+                        `${recipient.address}, ${recipient.amount} `
+                    )
                     .join('\n');
                   handleCopy(dataToCopy, setIsCopiedAll);
                 }}
@@ -257,11 +308,12 @@ export const TransactionResultItem = ({
 
           <Box
             sx={{
-              width: '100%',
+              width: '%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               borderRadius: '6px',
               border: '1px solid rgba(0, 0, 0, 0.16)',
               overflow: 'hidden',
+              mx: 'auto',
             }}
           >
             <table
@@ -447,20 +499,92 @@ export const TransactionResultItem = ({
           </Box>
         </Box>
       </Box>
+
       {/* Error Message */}
       {result.error && (
         <Box
           sx={{
-            mt: 1,
+            mt: 2,
             width: '100%',
-            backgroundColor: 'error.light',
-            borderRadius: 1,
-            p: 1,
+            backgroundColor:
+              result.status === 'warn'
+                ? 'warning.light'
+                : result.error.includes('MultiSenderServerError')
+                  ? 'warning.light'
+                  : 'error.light',
+            borderRadius: 2,
+            overflow: 'hidden',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           }}
         >
-          <Typography variant="caption" color="error.dark">
-            Error: {result.error}
-          </Typography>
+          {/* 送金成功部分があるか確認 */}
+          {result.errorMessage.includes('送金は成功') ||
+          result.errorMessage.includes('MultiSenderServerError') ? (
+            <>
+              {/* 送金成功メッセージ */}
+              <Box
+                sx={{
+                  p: 1.5,
+                  display: 'flex',
+                  alignItems: 'center',
+                  backgroundColor: 'success.light',
+                  borderBottom: '1px solid rgba(255,255,255,0.2)',
+                }}
+              >
+                <CheckCircleOutline sx={{ color: 'white', mr: 1.5 }} />
+                <Typography variant="subtitle2" fontWeight="bold" color="white">
+                  送金処理は正常に完了しています
+                </Typography>
+              </Box>
+
+              {/* エラー詳細 */}
+              <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start' }}>
+                <WarningAmber sx={{ color: 'white', mr: 1.5, mt: 0.2 }} />
+                <Box>
+                  <Typography
+                    variant="subtitle2"
+                    color="white"
+                    fontWeight="medium"
+                  >
+                    データの保存に失敗しました
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="white"
+                    sx={{ opacity: 0.9, mt: 0.5 }}
+                  >
+                    {result.errorMessage.includes('MultiSenderServerError')
+                      ? 'サーバーと通信できませんでした。履歴ページには反映されません。'
+                      : 'データをサーバーに保存できませんでした。履歴ページには反映されません。'}
+                  </Typography>
+                  <Typography
+                    variant="caption"
+                    color="white"
+                    sx={{ opacity: 0.8, display: 'block', mt: 0.5 }}
+                  >
+                    ※ ウォレットアプリで送金状況をご確認ください
+                  </Typography>
+                </Box>
+              </Box>
+            </>
+          ) : (
+            // 通常のエラーメッセージ
+            <Box sx={{ p: 1.5, display: 'flex', alignItems: 'flex-start' }}>
+              <ErrorOutline sx={{ color: 'white', mr: 1.5, mt: 0.2 }} />
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  color="white"
+                  fontWeight="medium"
+                >
+                  エラーが発生しました
+                </Typography>
+                <Typography variant="body2" color="white" sx={{ mt: 0.5 }}>
+                  {result.error}
+                </Typography>
+              </Box>
+            </Box>
+          )}
         </Box>
       )}
     </ListItem>

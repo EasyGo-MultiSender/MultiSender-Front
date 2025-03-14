@@ -1,12 +1,11 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, ContentCopy, Download } from '@mui/icons-material';
+import { ContentPaste, Download } from '@mui/icons-material';
 import {
   Box,
   Container,
   Card,
   CardContent,
   Typography,
-  TextField,
   Button,
   IconButton,
   CircularProgress,
@@ -17,12 +16,9 @@ import {
   FormControl,
   MenuItem,
   Select,
-  List,
   ListItemText,
   ListItemAvatar,
   Tooltip,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -30,38 +26,27 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 // ヘッダーコンポーネント
+import SerializerList from '../../components/SerializerList';
 import TokenList, {
   TokenListRef,
   TokenWithMetadata,
 } from '../../components/TokenList';
 import UploadButton from '../../components/UploadButton';
+import WalletAddressDisplay from '../../components/WalletAddressDisplay';
 import { useBalance } from '../../hooks/useBalance';
 import { useConnection } from '../../hooks/useConnection';
 import { useTokenTransfer } from '../../hooks/useTokenTransfer';
 import { useWallet } from '../../hooks/useWallet';
 import { useWalletAddressValidation } from '../../hooks/useWalletAddressValidation';
-import { TransactionResultItem } from '../../components/TransactionResultItem';
+import {
+  TransactionResult,
+  AddressEntry,
+  Serializer,
+} from '../../types/transactionTypes';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
 console.log('SOL_VALIDATION_AMOUNT:', SOL_VALIDATION_AMOUNT);
-
-// インターフェース定義
-interface TransactionResult {
-  signature: string;
-  status: 'success' | 'error';
-  timestamp: number;
-  error?: string;
-  recipients: AddressEntry[];
-  totalAmount: number;
-  token: string;
-}
-
-// アドレスとその送金金額のインターフェース
-interface AddressEntry {
-  address: string;
-  amount: number;
-}
 
 // CSVからインポートされた受取人情報
 interface Recipient {
@@ -78,8 +63,6 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // 600px未満だとtrue
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -92,7 +75,8 @@ const Sender: React.FC = () => {
   const [transactionResults, setTransactionResults] = useState<
     TransactionResult[]
   >([]);
-  const [invalidEntries, setInvalidEntries] = useState<string[]>([]);
+  const [allSerializer, setAllSerializer] = useState<Serializer[]>([]); // 全送信履歴
+  const [invalidEntries, setInvalidEntries] = useState<number[]>([]);
   const [duplicateAddresses, setDuplicateAddresses] = useState<string[]>([]);
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
@@ -107,6 +91,9 @@ const Sender: React.FC = () => {
 
   // 最後にパースした内容を保持して不要な再パースを防止
   const lastParsedAddressesRef = useRef<string>('');
+
+  // 色付けする行番号の配列（例：[1, 3, 5]は1行目、3行目、5行目を赤くする）
+  const [highlightedLines, setHighlightedLines] = useState<number[]>([2, 4]); // 例として2行目と4行目
 
   // トークンメタデータを含むトークンアカウントを取得する関数 (明示的に実行)
   const fetchTokensWithMetadata = useCallback(async () => {
@@ -164,11 +151,12 @@ const Sender: React.FC = () => {
 
     lastParsedAddressesRef.current = recipientAddresses;
 
-    const entries: AddressEntry[] = [];
-    const invalidLines: string[] = [];
+    let entries: AddressEntry[] = [];
+    const invalidLineNumbers: number[] = []; // 無効な行の行番号を追跡
     const addressMap = new Map<string, number>();
     // SOL最小額チェック用の配列
     const belowMinimumSolLines: string[] = [];
+    const belowMinimumSolLineNumbers: number[] = []; // SOL最小額未満の行番号
 
     // 最小SOL額の取得（設定されていない場合は0を使用）
     const minSolAmount = parseFloat(SOL_VALIDATION_AMOUNT) || 0;
@@ -179,7 +167,8 @@ const Sender: React.FC = () => {
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
 
-    for (const line of lines) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
       const parts = line.split(',').map((part) => part.trim());
       const address = parts[0];
       const amountStr = parts[1];
@@ -191,7 +180,13 @@ const Sender: React.FC = () => {
         !amountStr ||
         isNaN(parseFloat(amountStr))
       ) {
-        invalidLines.push(line);
+        // 実際の行番号は0ベースのインデックス + 1
+        const lineNumber =
+          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
+          1;
+        if (lineNumber > 0) {
+          invalidLineNumbers.push(lineNumber);
+        }
         continue;
       }
 
@@ -204,6 +199,13 @@ const Sender: React.FC = () => {
         minSolAmount > 0
       ) {
         belowMinimumSolLines.push(line);
+        // 行番号を追跡
+        const lineNumber =
+          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
+          1;
+        if (lineNumber > 0) {
+          belowMinimumSolLineNumbers.push(lineNumber);
+        }
         // 最小額未満でもエントリには追加して、後で警告を表示できるようにする
       }
 
@@ -219,14 +221,44 @@ const Sender: React.FC = () => {
       .filter(([_, count]) => count > 1)
       .map(([address]) => address);
 
+    // 重複アドレスの行番号を特定
+    const duplicateLineNumbers: number[] = [];
+    if (duplicates.length > 0) {
+      recipientAddresses.split('\n').forEach((line, index) => {
+        const parts = line.split(',');
+        const address = parts[0]?.trim();
+        if (address && duplicates.includes(address)) {
+          duplicateLineNumbers.push(index + 1); // 1-indexed
+        }
+      });
+
+      entries = entries.filter((e) => !duplicates.includes(e.address));
+    }
+
+    invalidLineNumbers.push(...duplicateLineNumbers);
+
     // 状態を更新
+    setInvalidEntries(invalidLineNumbers);
     setParsedEntries(entries);
-    setInvalidEntries(invalidLines);
     setDuplicateAddresses(duplicates);
 
     // SOL最小額チェックの結果を状態に追加
-    // 新しい状態を追加: belowMinSolEntries
     setBelowMinSolEntries(belowMinimumSolLines);
+
+    // エラー状態に基づいてハイライト行を更新
+    const newHighlightedLines: number[] = [];
+    if (invalidLineNumbers.length > 0) {
+      newHighlightedLines.push(...invalidLineNumbers);
+    }
+    if (duplicateLineNumbers.length > 0) {
+      newHighlightedLines.push(...duplicateLineNumbers);
+    }
+    if (selectedToken === 'SOL' && belowMinimumSolLineNumbers.length > 0) {
+      newHighlightedLines.push(...belowMinimumSolLineNumbers);
+    }
+
+    // ハイライト行を更新
+    setHighlightedLines(newHighlightedLines);
 
     // 合計金額を計算
     const sum = entries.reduce((total, entry) => total + entry.amount, 0);
@@ -253,13 +285,6 @@ const Sender: React.FC = () => {
     // テキストフィールドを更新
     setRecipientAddresses(formattedAddresses);
   }, []);
-
-  // ユーティリティ関数
-  const copyAddress = async (addr: string) => {
-    await navigator.clipboard.writeText(addr);
-    setSnackbarMessage('Copied Address: ' + addr);
-    setSnackbarOpen(true);
-  };
 
   const pasteAddresses = async () => {
     try {
@@ -354,79 +379,80 @@ const Sender: React.FC = () => {
           tokenInfo?.metadata?.symbol ||
           selectedToken.slice(0, 4) + '...' + selectedToken.slice(-4);
       }
-      //
-      // // 手数料を追加
-      // const commissionAddress: string | undefined = import.meta.env
-      //   .VITE_DEPOSIT_WALLET_ADDRESS;
-      // const commissionAmount: number = Number(
-      //   import.meta.env.VITE_DEPOSIT_SOL_AMOUNT
-      // );
-      //
-      // if (commissionAmount <= 0 || commissionAddress == null) {
-      //   throw new Error(
-      //     `Invalid commission address or amount! : ${commissionAddress} : ${commissionAmount}`
-      //   );
-      // }
-      //
-      // parsedEntries.push({
-      //   address: commissionAddress,
-      //   amount: commissionAmount,
-      // });
 
-      // 改善: transferWithIndividualAmountsメソッドを使用
-      // これにより内部でバッチ処理され、1度のアプルーブで最大9アドレスまで送金できる
+      const now: number = Date.now();
+
       // トランザクション送信 & 検証 & サーバーに保存
       const results = await transferWithIndividualAmounts(
         parsedEntries.map((entry) => ({
           address: entry.address,
           amount: entry.amount,
         })),
-        selectedToken === 'SOL' ? undefined : selectedToken
+        selectedToken === 'SOL' ? undefined : selectedToken,
+        now
       );
 
       // 結果をフォーマット
-      const formattedResults: TransactionResult[] = results.result.map((result) => {
-        // バッチ処理された結果から適切な情報を抽出
-        const recipientAddresses = result.recipients || [];
+      const formattedResults: TransactionResult[] = results.result.map(
+        (result) => {
+          // バッチ処理された結果から適切な情報を抽出
+          const recipientAddresses = result.recipients || [];
 
-        // この結果に含まれるすべての受取人に対する送金額を収集
-        const recipientAmounts = recipientAddresses.map((addr) => {
-          const entry = parsedEntries.find((e) => e.address === addr);
-          return entry ? entry.amount : 0;
-        });
+          // この結果に含まれるすべての受取人に対する送金額を収集
+          const recipientAmounts = recipientAddresses.map((addr) => {
+            const entry = parsedEntries.find((e) => e.address === addr);
+            return entry ? entry.amount : 0;
+          });
 
-        // 合計金額を計算（複数受取人の場合）
-        const totalBatchAmount = recipientAmounts.reduce(
-          (sum, amount) => sum + amount,
-          0
-        );
+          // 合計金額を計算（複数受取人の場合）
+          const totalBatchAmount = recipientAmounts.reduce(
+            (sum, amount) => sum + amount,
+            0
+          );
 
-        return {
-          signature: result.signature,
-          status: result.status,
-          timestamp: result.timestamp || Date.now(),
-          error: result.error,
-          recipients: recipientAddresses.map((addr) => ({
-            address: addr,
-            amount: recipientAmounts[recipientAddresses.indexOf(addr)],
-          })),
-          // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
-          amount:
-            recipientAddresses.length === 1
-              ? recipientAmounts[0]
-              : totalBatchAmount / recipientAddresses.length,
-          token: tokenDisplayName,
-          totalAmount: totalBatchAmount,
-          // 追加フィールド: このバッチに含まれるすべての受取人と金額
-          recipientDetails: recipientAddresses.map((addr, idx) => ({
-            address: addr,
-            amount: recipientAmounts[idx],
-          })),
-        };
-      });
+          return {
+            signature: result.signature,
+            status: result.status,
+            timestamp: result.timestamp || Date.now(),
+            error: result.error,
+            errorMessage: result.errorMessage,
+            recipients: recipientAddresses.map((addr, idx) => ({
+              address: addr,
+              amount: recipientAmounts[idx],
+            })),
+            // 受取人が1人の場合はその金額、複数の場合は配列に含まれる値
+            amount:
+              recipientAddresses.length === 1
+                ? recipientAmounts[0]
+                : totalBatchAmount / recipientAddresses.length,
+            token: tokenDisplayName,
+            totalAmount: totalBatchAmount,
+            // 追加フィールド: このバッチに含まれるすべての受取人と金額
+            recipientDetails: recipientAddresses.map((addr, idx) => ({
+              address: addr,
+              amount: recipientAmounts[idx],
+            })),
+          };
+        }
+      );
 
       // 全トランザクション結果を更新
       setTransactionResults((prev) => [...formattedResults, ...prev]);
+
+      setAllSerializer((prev) => [
+        // 前の状態の要素をすべて展開
+        ...prev,
+        // 新しいオブジェクトを追加
+        {
+          results: formattedResults, // 新しい結果
+          uuid: results.uuid, // 一意の識別子,
+          timestamp: new Date(now).toISOString(), // ISO形式の日付文字列
+          senderWallet: publicKey?.toString() || '', // 送信者のウォレットアドレス
+          tokenType: selectedToken === 'SOL' ? 'SOL' : 'spl', // トークンタイプ
+          tokenSymbol: selectedTokenInfo.symbol, // トークンシンボル
+          tokenMintAddress: selectedToken === 'SOL' ? 'SOL' : selectedToken, // トークンのミントアドレス
+        },
+      ]);
 
       // 成功/失敗フィードバック
       const successCount = formattedResults.reduce(
@@ -496,18 +522,28 @@ const Sender: React.FC = () => {
     window.URL.revokeObjectURL(url);
   };
 
-  const formatAddress = (address: string) => {
-    if (isMobile) {
-      return `${address.slice(0, 13)}...${address.slice(-13)}`;
+  // textareaでの編集をハンドリングする関数
+  const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setRecipientAddresses(e.target.value);
+  };
+
+  // 特定の行のクリックイベントを処理（必要な場合）
+  const handleLineClick = (lineNumber: number) => {
+    // 行番号をハイライト配列に追加または削除
+    if (highlightedLines.includes(lineNumber)) {
+      setHighlightedLines(
+        highlightedLines.filter((line) => line !== lineNumber)
+      );
+    } else {
+      setHighlightedLines([...highlightedLines, lineNumber]);
     }
-    return address;
   };
 
   return (
     <Box
       sx={{
         height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(8vh)引く
-        backgroundImage: `url("../../../public/image.webp")`,
+        backgroundImage: `url("/image.webp")`,
         backgroundSize: '120%',
         backgroundPosition: '0% 80%',
         position: 'relative',
@@ -563,62 +599,7 @@ const Sender: React.FC = () => {
 
             <Divider sx={{ my: 2 }} />
 
-            <Typography variant="h6" mb={1} textAlign="center">
-              {t('Wallet Address')}
-            </Typography>
-            <Box
-              sx={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                border: '1px solid #ccc',
-                borderRadius: 1,
-                p: 1,
-                height: 36,
-              }}
-            >
-              <Typography
-                variant="body2"
-                sx={{
-                  flex: 1,
-                  textAlign: 'center',
-                  color: !connected ? 'text.secondary' : 'inherit',
-                }}
-              >
-                {connected
-                  ? formatAddress(publicKey?.toBase58() || '')
-                  : 'Please connect your wallet'}
-              </Typography>
-              {connected && (
-                <Tooltip title="Copy" arrow placement="top">
-                  <IconButton
-                    onClick={() =>
-                      publicKey && copyAddress(publicKey.toBase58())
-                    }
-                    sx={{
-                      position: 'absolute',
-                      right: 8,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                    }}
-                  >
-                    <ContentCopy />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        position: 'absolute',
-                        bottom: -5.0,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: '0.6rem',
-                      }}
-                    >
-                      copy
-                    </Typography>
-                  </IconButton>
-                </Tooltip>
-              )}
-            </Box>
+            <WalletAddressDisplay />
           </CardContent>
         </Card>
 
@@ -765,32 +746,225 @@ const Sender: React.FC = () => {
                 mb={1}
                 display="block"
               >
-                Format: address,amount (one entry per line)
+                {t('Format: address,amount (one entry per line)')}
               </Typography>
               <Box position="relative">
-                <TextField
-                  multiline
-                  rows={10}
-                  fullWidth
-                  value={recipientAddresses}
-                  onChange={(e) => setRecipientAddresses(e.target.value)}
-                  placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
-                  error={
-                    invalidEntries.length > 0 ||
+                {/* 行番号付きテキストフィールド */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    border: '1px solid',
+                    borderColor: (theme) =>
+                      invalidEntries.length > 0 ||
+                      duplicateAddresses.length > 0 ||
+                      (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                        ? theme.palette.error.main
+                        : 'rgba(0, 0, 0, 0.23)',
+                    borderRadius: 1,
+                    '&:hover': {
+                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                    },
+                    '&:focus-within': {
+                      borderColor: (theme) => theme.palette.primary.main,
+                      borderWidth: '2px',
+                    },
+                  }}
+                >
+                  {/* スクロール同期のためのコンテナ */}
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      maxHeight: '220px', // 約10行分の高さに制限
+                      overflow: 'auto', // スクロール可能に
+                      '&::-webkit-scrollbar': {
+                        width: '8px',
+                        height: '8px',
+                      },
+                      '&::-webkit-scrollbar-track': {
+                        background: '#f1f1f1',
+                      },
+                      '&::-webkit-scrollbar-thumb': {
+                        background: '#c1c1c1',
+                        borderRadius: '4px',
+                      },
+                      '&::-webkit-scrollbar-thumb:hover': {
+                        background: '#a8a8a8',
+                      },
+                    }}
+                  >
+                    {/* 行番号表示 */}
+                    <Box
+                      sx={{
+                        width: '40px',
+                        minWidth: '40px',
+                        bgcolor: (theme) => theme.palette.grey[100],
+                        color: (theme) => theme.palette.grey[600],
+                        borderRight: '1px solid rgba(0, 0, 0, 0.1)',
+                        py: 1,
+                        textAlign: 'right',
+                        userSelect: 'none',
+                        fontFamily: 'monospace',
+                        fontSize: '0.8rem',
+                        height: '100%',
+                        paddingTop: '5px',
+                        paddingBottom: '5px',
+                      }}
+                    >
+                      {/* 行番号を生成 - 実際の行数に合わせて動的に表示 */}
+                      {recipientAddresses.split('\n').map((_, i) => (
+                        <Box
+                          key={i}
+                          sx={{
+                            pr: 1,
+                            height: '20px',
+                            color: highlightedLines.includes(i + 1)
+                              ? 'red'
+                              : 'inherit', // ハイライト行の番号も赤くする
+                            cursor: 'pointer', // クリック可能であることを示す
+                          }}
+                          onClick={() => handleLineClick(i + 1)}
+                        >
+                          {i + 1}
+                        </Box>
+                      ))}
+                      {/* 最小10行の行番号を表示 */}
+                      {recipientAddresses.split('\n').length < 10 &&
+                        Array.from(
+                          {
+                            length: 10 - recipientAddresses.split('\n').length,
+                          },
+                          (_, i) => (
+                            <Box
+                              key={i + recipientAddresses.split('\n').length}
+                              sx={{
+                                pr: 1,
+                                height: '20px',
+                                cursor: 'pointer',
+                              }}
+                              onClick={() =>
+                                handleLineClick(
+                                  i + recipientAddresses.split('\n').length + 1
+                                )
+                              }
+                            >
+                              {i + recipientAddresses.split('\n').length + 1}
+                            </Box>
+                          )
+                        )}
+                    </Box>
+
+                    {/* テキストエリア - 隠しtextareaと表示用の行コンテナに分ける */}
+                    <Box
+                      sx={{
+                        flexGrow: 1,
+                        py: 1,
+                        fontFamily: 'monospace',
+                        fontSize: '0.875rem',
+                        height: '100%',
+                        paddingTop: '5px',
+                        paddingBottom: '0px',
+                        position: 'relative',
+                      }}
+                    >
+                      {/* 実際に編集するためのtextarea（透明） */}
+                      <textarea
+                        value={recipientAddresses}
+                        onChange={handleTextAreaChange}
+                        placeholder="BZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817"
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: 'calc(100% - 16px)',
+                          height: '100%',
+                          border: 'none',
+                          outline: 'none',
+                          resize: 'none',
+                          background: 'transparent',
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          lineHeight: '20px',
+                          padding: '8px',
+                          paddingTop: '5px',
+                          color: 'transparent',
+                          caretColor: 'black', // カーソルだけ見えるように
+                          zIndex: 2,
+                        }}
+                        rows={
+                          recipientAddresses.split('\n').length > 10
+                            ? recipientAddresses.split('\n').length
+                            : 10
+                        }
+                      />
+
+                      {/* 色付き表示用のテキスト */}
+                      <Box
+                        sx={{
+                          fontFamily: 'monospace',
+                          fontSize: '0.875rem',
+                          lineHeight: '20px',
+                          padding: '8px',
+                          whiteSpace: 'pre-wrap',
+                          pointerEvents: 'none', // クリックをtextareaに通過させる
+                          paddingTop: '0px',
+                        }}
+                      >
+                        {recipientAddresses.split('\n').map((line, i) => (
+                          <Box
+                            key={i}
+                            sx={{
+                              height: '20px',
+                              color: highlightedLines.includes(i + 1)
+                                ? 'red'
+                                : 'inherit', // 指定行を赤色に
+                            }}
+                          >
+                            {line || ' '} {/* 空行の場合でも高さを確保 */}
+                          </Box>
+                        ))}
+                        {/* 最小10行の高さを確保 */}
+                        {recipientAddresses.split('\n').length < 10 &&
+                          Array.from(
+                            {
+                              length:
+                                10 - recipientAddresses.split('\n').length,
+                            },
+                            (_, i) => (
+                              <Box
+                                key={i + recipientAddresses.split('\n').length}
+                                sx={{ height: '20px' }}
+                              >
+                                &nbsp;
+                              </Box>
+                            )
+                          )}
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  {/* エラーメッセージ表示 */}
+                  {(invalidEntries.length > 0 ||
                     duplicateAddresses.length > 0 ||
-                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                  }
-                  helperText={
-                    invalidEntries.length > 0
-                      ? `Invalid entries: ${invalidEntries.length}`
-                      : duplicateAddresses.length > 0
-                        ? `Duplicate addresses: ${duplicateAddresses.length}`
-                        : selectedToken === 'SOL' &&
-                            belowMinSolEntries.length > 0
-                          ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
-                          : ''
-                  }
-                />
+                    (selectedToken === 'SOL' &&
+                      belowMinSolEntries.length > 0)) && (
+                    <Typography
+                      variant="caption"
+                      color="error"
+                      sx={{ px: 2, py: 0.5 }}
+                    >
+                      {invalidEntries.length > 0
+                        ? `Invalid entries: ${invalidEntries.length}`
+                        : duplicateAddresses.length > 0
+                          ? `Duplicate addresses: ${duplicateAddresses.length}`
+                          : selectedToken === 'SOL' &&
+                              belowMinSolEntries.length > 0
+                            ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
+                            : ''}
+                    </Typography>
+                  )}
+                </Box>
+
                 <Tooltip title="Paste" arrow placement="top">
                   <IconButton
                     onClick={pasteAddresses}
@@ -875,20 +1049,20 @@ const Sender: React.FC = () => {
                 {/* 全てのBoxに共通のスタイルを適用 */}
                 {[
                   {
-                    title: 'Total Addresses',
+                    title: t('Total Addresses'),
                     value: parsedEntries.length,
                   },
                   {
-                    title: 'Total Token Sent',
+                    title: t('Total Token Sent'),
                     value: totalAmount.toFixed(3),
                     subText: `${t('Service Fee')}: 0.008SOL`,
                   },
                   {
-                    title: 'Total Transactions',
+                    title: t('Total Transactions'),
                     value: Math.ceil(parsedEntries.length / 9),
                   },
                   {
-                    title: 'SOL Balance',
+                    title: t('SOL Balance'),
                     value: balance?.toFixed(3) ?? '0.000',
                   },
                 ].map((item, index) => (
@@ -983,21 +1157,18 @@ const Sender: React.FC = () => {
             </Typography>
 
             {/* Transaction Results */}
-            {transactionResults.length > 0 && (
+            {allSerializer.length > 0 && (
               <Box mt={3}>
                 <Typography variant="h6" gutterBottom>
                   {t('Recent Transactions')}
                 </Typography>
-                <List>
-                  {transactionResults.map((result, index) => (
-                    <TransactionResultItem
-                      key={`${result.signature}-${index}`}
-                      result={result}
-                      connection={connection}
-                      recipientAddresses={parsedEntries}
-                    />
-                  ))}
-                </List>
+                {allSerializer.map((serializer, index) => (
+                  <SerializerList
+                    key={`${serializer.uuid}-${index}`}
+                    serializer={serializer}
+                    connection={connection}
+                  />
+                ))}
               </Box>
             )}
           </CardContent>

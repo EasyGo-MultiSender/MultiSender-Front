@@ -10,7 +10,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { TransferResult } from './interfaces/transfer';
 import { createBatchTransferTransaction } from './transfer/createTransaction';
 import { waitForTransactionConfirmation } from './transfer/waitForTransaction';
+import { useTokenMetadata } from './useTokenMetadata';
 import { getNetworkName } from './util/network';
+import {
+  generateTimeStamp,
+  postSignatureData,
+  SignaturePayload,
+} from './util/postData';
 import { getWalletAdapter } from './util/wallet';
 
 const BATCH_SIZE = Number(import.meta.env.VITE_TRANSFER_BATCH_SIZE) || 9;
@@ -21,6 +27,21 @@ export function useTokenTransfer(
   publicKey: PublicKey | null
 ) {
   const [loading, setLoading] = useState(false);
+  const { fetchMetadata } = useTokenMetadata(connection);
+
+  // ミントアドレスからトークンシンボルを取得する関数
+  const getTokenSymbol = useCallback(
+    async (mintAddress: string): Promise<string> => {
+      try {
+        const metadata = await fetchMetadata(mintAddress);
+        return metadata?.symbol || 'UNKNOWN';
+      } catch (error) {
+        console.error('Error fetching token symbol:', error);
+        return 'UNKNOWN';
+      }
+    },
+    [fetchMetadata]
+  );
 
   // バッチトランザクションの作成 - 各受取人の個別金額を扱えるように修正
   useCallback(
@@ -43,7 +64,8 @@ export function useTokenTransfer(
   const transferWithIndividualAmounts = useCallback(
     async (
       recipientsWithAmounts: Array<{ address: string; amount: number }>,
-      mint?: string
+      mint?: string,
+      now: number = Date.now()
     ): Promise<{ result: TransferResult[]; uuid: string }> => {
       console.warn('transferWithIndividualAmounts');
       if (!publicKey) throw new Error('Wallet not connected');
@@ -53,7 +75,22 @@ export function useTokenTransfer(
       }
 
       setLoading(true);
+      const uuid = uuidv4();
       const results: TransferResult[] = [];
+
+      const signaturePayload: SignaturePayload = {
+        signature: '',
+        senderWallet: publicKey.toString(),
+        status: 'error',
+        error: 'Not initialized',
+        errorMessage: '',
+        tokenType: mint ? 'SOL' : 'SPL',
+        timeStamp: generateTimeStamp(),
+        tokenSymbol: mint || 'SOL',
+        tokenMintAddress: mint || 'SOL',
+        uuid: uuid,
+        transactions: [],
+      };
 
       try {
         console.log(
@@ -144,6 +181,8 @@ export function useTokenTransfer(
             let signature: string | undefined =
               signedTransaction.signatures[0].signature?.toString('base64');
 
+            let transactionResult: TransferResult;
+
             try {
               console.log(
                 `[${batchIndex + 1}/${batches.length}] Processing batch with ${batch.length} recipients`
@@ -172,32 +211,57 @@ export function useTokenTransfer(
               if (success) {
                 const recipientAmounts = batch.map((item) => item.amount);
 
-                results.push({
+                transactionResult = {
+                  error: '',
+                  errorMessage: '',
                   signature: signature || '',
                   status: 'success',
-                  timestamp: Date.now(),
+                  timestamp: now,
                   recipients: batchRecipients,
                   amounts: recipientAmounts,
-                });
+                } as TransferResult;
 
                 console.log(
                   `Batch ${batchIndex + 1} confirmed successfully with ${batchRecipients.length} recipients`
                 );
               } else {
-                results.push({
+                transactionResult = {
                   signature: signature || '',
                   status: 'error',
                   error: 'Transaction failed confirmation',
-                  timestamp: Date.now(),
+                  errorMessage: 'Failed to retrieve error details.',
+                  timestamp: now,
                   recipients: batchRecipients,
-                });
+                } as TransferResult;
               }
+
+              signaturePayload.signature = transactionResult.signature;
+              signaturePayload.senderWallet = publicKey.toString();
+              signaturePayload.status = transactionResult.status;
+              signaturePayload.error = transactionResult.error || '';
+              signaturePayload.errorMessage =
+                transactionResult.errorMessage || '';
+              // tokenType -> 初期化時に設定済み
+              // timeStamp -> 初期化時に設定済み
+              signaturePayload.tokenSymbol = mint
+                ? await getTokenSymbol(mint)
+                : 'SOL';
+              // tokenMintAddress -> 初期化時に設定済み
+              // uuid -> 初期化時に設定済み
+
+              signaturePayload.transactions = batch.map((item, index) => ({
+                recipientWallet: item.recipient,
+                amount: item.amount,
+              }));
+
+              await postSignatureData(signaturePayload);
             } catch (error) {
               if (error instanceof SendTransactionError) {
                 console.log(`Batch ${batchIndex + 1} transfer failed:`, error);
               }
 
-              let errorMessage = 'Transfer failed';
+              let errorMessage: string | undefined = undefined;
+              let status: 'error' | 'warn' = 'error';
 
               if (error instanceof Error) {
                 errorMessage = error.message;
@@ -210,17 +274,26 @@ export function useTokenTransfer(
                 } else if (error.message.includes('Transaction too large')) {
                   errorMessage =
                     'Transaction size exceeded limit. Try sending fewer recipients per batch.';
+                } else if (error.message.includes('MultiSenderServerError')) {
+                  status = 'warn';
+                  errorMessage =
+                    'データをサーバーに保存できませんでした。\nHistoryページは反映されません。ご使用のWalletアプリ等でご確認ください。';
                 }
               }
 
-              results.push({
+              transactionResult = {
                 signature: signature || '',
-                status: 'error',
-                error: errorMessage,
-                timestamp: Date.now(),
+                status,
+                errorMessage:
+                  error instanceof Error ? error.message : String(error),
+                error: errorMessage || 'Transfer failed',
+                timestamp: now,
                 recipients: batchRecipients,
-              });
+                signaturePayload,
+              } as TransferResult;
             }
+
+            results.push(transactionResult);
           })();
 
           // RPC_RATE_LIMITミリ秒待機
@@ -232,7 +305,7 @@ export function useTokenTransfer(
         console.log(`Transfer operation completed. Results:`, results);
         return {
           result: results,
-          uuid: uuidv4(),
+          uuid: uuid,
         };
       } catch (error) {
         if (error instanceof Error) {
@@ -250,8 +323,9 @@ export function useTokenTransfer(
               signature: '',
               status: 'error',
               error: 'Transaction cancelled by user',
-              timestamp: Date.now(),
-              recipients: ['recipientsrecipientsrecipientsrecipients', '?'],
+              errorMessage: error.message,
+              timestamp: now,
+              recipients: [],
             });
           } else {
             throw error;
@@ -268,7 +342,7 @@ export function useTokenTransfer(
         uuid: uuidv4(),
       };
     },
-    [connection, publicKey]
+    [connection, publicKey, getTokenSymbol]
   );
 
   return {

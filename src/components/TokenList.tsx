@@ -168,9 +168,12 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
             .catch(() => ({ account, metadata: null }))
         );
 
-        const results = await Promise.all(metadataPromises);
+        let results = await Promise.all(metadataPromises);
         // 降順にソート
         results.sort((a, b) => b.account.uiAmount - a.account.uiAmount);
+
+        // Null排除
+        results = results.filter((r) => r.metadata !== null);
 
         // 結果をキャッシュと状態に保存
         CACHED_TOKEN_DATA.set(cacheKey, results);

@@ -1,3 +1,5 @@
+import { SignaturePayload } from '../util/postData';
+
 export interface TransferParams {
   recipients: string[];
   amount: number;
@@ -6,8 +8,9 @@ export interface TransferParams {
 
 export interface TransferResult {
   signature: string;
-  status: 'success' | 'error';
-  error?: string;
+  status: 'success' | 'error' | 'warn';
+  error: string;
+  errorMessage: string;
   timestamp: number;
   recipients: string[];
   amounts?: number[];
