@@ -2,8 +2,8 @@ import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { ContentCopy } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { memo, useState } from 'react';
-import { handleCopy } from '../hooks/util/copy';
-import { useWallet } from '../hooks/useWallet';
+import { handleCopy } from '@/hooks/util/copy';
+import { useWallet } from '@/hooks/useWallet';
 import { useMediaQuery } from '@mui/material';
 
 const WalletAddressDisplay = memo(() => {

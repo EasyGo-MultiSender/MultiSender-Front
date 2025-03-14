@@ -19,8 +19,8 @@ import SendIcon from '@mui/icons-material/Send';
 import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import TranslateSelector from './TranslateSelector';
-import { NetworkSelector } from './NetworkSelector';
+import TranslateSelector from '@/components/TranslateSelector';
+import { NetworkSelector } from '@/components/NetworkSelector';
 
 interface HeaderDrawerProps {
   open: boolean;

@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Layout from '../components/Layout';
-import NotFound from '../pages/NotFound/NotFound';
-import Sender from '../pages/Sender/Sender';
-import History from '../pages/History/History';
+import Layout from '@/components/Layout';
+import NotFound from '@/pages/NotFound/NotFound';
+import Sender from '@/pages/Sender/Sender';
+import History from '@/pages/History/History';
 
 export const router = createBrowserRouter([
   {
