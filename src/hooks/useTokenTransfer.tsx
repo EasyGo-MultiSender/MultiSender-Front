@@ -232,7 +232,6 @@ export function useTokenTransfer(
                   errorMessage: 'Failed to retrieve error details.',
                   timestamp: now,
                   recipients: batchRecipients,
-                  signaturePayload,
                 } as TransferResult;
               }
 
@@ -249,9 +248,10 @@ export function useTokenTransfer(
                 : 'SOL';
               // tokenMintAddress -> 初期化時に設定済み
               // uuid -> 初期化時に設定済み
-              signaturePayload.transactions = results.map((result) => ({
-                recipientWallet: result.recipients[0],
-                amount: result.amounts ? result.amounts[0] : 0,
+
+              signaturePayload.transactions = batch.map((item, index) => ({
+                recipientWallet: item.recipient,
+                amount: item.amount,
               }));
 
               await postSignatureData(signaturePayload);
