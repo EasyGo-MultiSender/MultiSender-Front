@@ -1,5 +1,4 @@
-// CSVデータをダウンロードするユーティリティ関数
-import { Serializer, TransactionResult } from '../../types/transactionTypes';
+import { Serializer, TransactionResult } from '@/types/transactionTypes';
 
 export const downloadTransactionsCSV = (
   serializer: Serializer,

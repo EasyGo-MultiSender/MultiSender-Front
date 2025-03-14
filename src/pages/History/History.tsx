@@ -11,11 +11,11 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import SerializerList from '../../components/SerializerList';
-import WalletAddressDisplay from '../../components/WalletAddressDisplay';
-import { getHistoryFiles } from '../../hooks/getHistoryFiles';
-import { useConnection } from '../../hooks/useConnection';
-import { useWallet } from '../../hooks/useWallet';
+import SerializerList from '@/components/SerializerList';
+import WalletAddressDisplay from '@/components/WalletAddressDisplay';
+import { getHistoryFiles } from '@/hooks/getHistoryFiles';
+import { useConnection } from '@/hooks/useConnection';
+import { useWallet } from '@/hooks/useWallet';
 
 const History = () => {
   const { t } = useTranslation();
@@ -52,7 +52,7 @@ const History = () => {
       <Container maxWidth="md" sx={{ flex: 1 }}>
         {/* Card shown when wallet is not connected */}
         {!connected && (
-          <Card sx={{ mt: 2, p: 3, borderRadius: 2, bgcolor: '#ffffff' }}>
+          <Card sx={{ mt: 2, p: 3, bgcolor: '#ffffff' }}>
             <Typography
               variant="h4"
               sx={{
@@ -68,7 +68,7 @@ const History = () => {
 
         {/* Wallet address display card */}
         {connected && (
-          <Card sx={{ my: 4, borderRadius: 2 }}>
+          <Card sx={{ my: 4 }}>
             <CardContent>
               <WalletAddressDisplay />
             </CardContent>
@@ -77,7 +77,7 @@ const History = () => {
 
         {/* History display card */}
         {connected && (
-          <Card sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+          <Card sx={{ mb: 3, overflow: 'hidden' }}>
             {/* History card header */}
             <Box
               sx={{

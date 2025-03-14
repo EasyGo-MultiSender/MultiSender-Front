@@ -1,4 +1,3 @@
-// src/hooks/useBalance.ts
 import { Connection, PublicKey } from '@solana/web3.js';
 import { useState, useEffect, useCallback } from 'react';
 

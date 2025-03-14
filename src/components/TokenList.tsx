@@ -20,8 +20,8 @@ import { ExpandMore } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { TokenMetadata, useTokenMetadata } from '../hooks/useTokenMetadata';
-import { useTokenAccounts } from '../hooks/useTokenAccounts';
+import { TokenMetadata, useTokenMetadata } from '@/hooks/useTokenMetadata';
+import { useTokenAccounts } from '@/hooks/useTokenAccounts';
 
 // グローバルキャッシュ - コンポーネントのマウント間で保持される
 const CACHED_TOKEN_DATA = new Map<string, any>();

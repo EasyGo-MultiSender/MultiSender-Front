@@ -10,6 +10,7 @@ import {
   Stack,
   Avatar,
   Drawer,
+  useMediaQuery,
 } from '@mui/material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import CloseIcon from '@mui/icons-material/Close';
@@ -18,8 +19,8 @@ import SendIcon from '@mui/icons-material/Send';
 import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
-import TranslateSelector from './TranslateSelector';
-import { NetworkSelector } from './NetworkSelector';
+import TranslateSelector from '@/components/TranslateSelector';
+import { NetworkSelector } from '@/components/NetworkSelector';
 
 interface HeaderDrawerProps {
   open: boolean;
@@ -49,6 +50,7 @@ const HeaderDrawer = memo(
     navValue,
   }: HeaderDrawerProps) => {
     const { t } = useTranslation();
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     // Helper function to show a medium length wallet address (longer than shortAddress)
     const getMediumAddress = () => {
@@ -79,11 +81,18 @@ const HeaderDrawer = memo(
             borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           }}
         >
-          <RocketLaunchIcon
-            sx={{ color: '#47dded', fontSize: '1.5rem', mr: 1.5 }}
-          />
-          <Typography variant="h6" sx={{ color: 'white', fontWeight: 600 }}>
-            {t('easy go')}
+          <Typography
+            variant="h6"
+            sx={{
+              flexGrow: 1,
+              marginLeft: 2,
+              fontSize: isMobile ? '1.5rem' : '1.2rem',
+              display: 'flex',
+              ml: 1,
+              mt: 0.5,
+            }}
+          >
+            <img src="/title.png" alt="logo" style={{ width: '100px' }} />
           </Typography>
 
           {/* 閉じるボタン */}
