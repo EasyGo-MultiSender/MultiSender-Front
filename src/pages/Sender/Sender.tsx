@@ -553,7 +553,7 @@ const Sender: React.FC = () => {
       <Container maxWidth="md">
         {/* Wallet Connection Warning */}
         {!connected && (
-          <Card sx={{ mt: 2, p: 3, borderRadius: 2, bgcolor: '#ffffff' }}>
+          <Card sx={{ mt: 2, p: 3, bgcolor: '#ffffff' }}>
             <Typography
               variant="h4"
               sx={{

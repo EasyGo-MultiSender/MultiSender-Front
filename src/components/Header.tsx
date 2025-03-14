@@ -56,8 +56,15 @@ const Header = memo(() => {
     if (!connected && !connecting) {
       return (
         <>
-          {!isMobile && <AccountBalanceWalletIcon sx={{ mr: 1 }} />}
-          {!isMobile ? 'Connect Wallet' : 'Connect'}
+          <AccountBalanceWalletIcon
+            sx={{
+              mr: isMobile ? 0 : 1,
+              fontSize: isMobile ? '1.2rem' : '1.4rem',
+            }}
+          />
+          {!isMobile && (
+            <span style={{ whiteSpace: 'nowrap' }}>Connect Wallet</span>
+          )}
         </>
       );
     }
@@ -68,14 +75,23 @@ const Header = memo(() => {
             size={isMobile ? 16 : 20}
             sx={{ mr: isMobile ? 0 : 1 }}
           />
-          {!isMobile ? 'Connecting...' : ''}
+          {!isMobile && (
+            <span style={{ whiteSpace: 'nowrap' }}>Connecting...</span>
+          )}
         </>
       );
     }
 
     if (connected) {
-      // On mobile, just show a very short version of the address or nothing
-      return <>{isMobile ? '' : walletInfo?.shortAddress}</>;
+      return (
+        <>
+          {!isMobile && (
+            <span style={{ whiteSpace: 'nowrap' }}>
+              {walletInfo?.shortAddress}
+            </span>
+          )}
+        </>
+      );
     }
   };
 
@@ -180,6 +196,11 @@ const Header = memo(() => {
               transition: 'all 0.2s ease',
               fontSize: '16px',
               // 共通のスタイル
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: connected ? 'center' : 'flex-start',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
 
               // 条件に基づいてスタイルをまとめて適用
               ...(isMobile
@@ -187,19 +208,18 @@ const Header = memo(() => {
                     // モバイル用スタイル
                     width: '40px',
                     height: '40px',
+                    minWidth: '40px',
                     padding: 0,
-                    display: 'grid',
-                    placeItems: 'center',
+                    borderRadius: '8px',
                     marginRight: '10px',
                   }
                 : {
                     // デスクトップ用スタイル
-                    height: '32px',
-                    padding: '0px 10px',
-                    display: 'flex',
-                    fontSize: '16px',
-                    alignItems: 'center',
-                    gap: connected ? '0px' : '8px',
+                    minWidth: connected ? '140px' : '180px',
+                    width: connected ? '140px' : '180px',
+                    height: '36px',
+                    padding: connected ? '0px' : '0px 10px',
+                    borderRadius: '6px',
                   }),
             }}
           >
