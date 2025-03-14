@@ -543,7 +543,7 @@ const Sender: React.FC = () => {
     <Box
       sx={{
         height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(8vh)引く
-        backgroundImage: `url("../../../public/image.webp")`,
+        backgroundImage: `url("/image.webp")`,
         backgroundSize: '120%',
         backgroundPosition: '0% 80%',
         position: 'relative',
