@@ -86,7 +86,7 @@ const Header = memo(() => {
         sx={{ backgroundColor: '#17062e', height: '8vh' }}
       >
         <Toolbar sx={{ minHeight: '8vh !important' }}>
-          <IconButton
+          {/* <IconButton
             edge="start"
             color="inherit"
             aria-label="logo"
@@ -97,7 +97,7 @@ const Header = memo(() => {
             <RocketLaunchIcon
               sx={{ color: '#47dded', fontSize: '1.2rem', ml: 1 }}
             />
-          </IconButton>
+          </IconButton> */}
 
           <Typography
             variant="h6"
