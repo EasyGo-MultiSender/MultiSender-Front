@@ -1,6 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import Top from '../pages/Top/Top';
 import NotFound from '../pages/NotFound/NotFound';
 import Sender from '../pages/Sender/Sender';
 import History from '../pages/History/History';
@@ -9,14 +8,6 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <Navigate to="/sender" replace />,
-  },
-  {
-    path: '/top',
-    element: (
-      <Layout>
-        <Top />
-      </Layout>
-    ),
   },
   {
     path: '/sender',
