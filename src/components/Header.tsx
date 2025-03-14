@@ -105,6 +105,8 @@ const Header = memo(() => {
               flexGrow: 1,
               marginLeft: 2,
               fontSize: isMobile ? '1.5rem' : '1.2rem',
+              display: 'flex',
+              mt: 0.5,
             }}
           >
             <img src="/title.png" alt="logo" style={{ width: '100px' }} />
