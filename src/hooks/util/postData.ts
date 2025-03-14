@@ -229,6 +229,7 @@ export const postSignatureData = async (
 ): Promise<void> => {
   try {
     let payloadToSend = { ...data };
+    console.log('data:', data);
 
     // トークンシンボルの自動設定
     if (
@@ -239,6 +240,7 @@ export const postSignatureData = async (
       payloadToSend = await setTokenSymbolFromMint(data, connection);
     }
 
+    console.log('payloadToSend:', payloadToSend);
     const hostURL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
 
     const response = await fetch(`${hostURL}/api/signature`, {
