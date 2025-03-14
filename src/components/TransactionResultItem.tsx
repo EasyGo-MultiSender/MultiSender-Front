@@ -16,8 +16,8 @@ import {
   Button,
 } from '@mui/material';
 import { useState } from 'react';
-import { downloadTransactionsCSV } from '../hooks/util/csv';
-import { Serializer, TransactionResult } from '../types/transactionTypes';
+import { downloadTransactionsCSV } from '@/hooks/util/csv';
+import { Serializer, TransactionResult } from '@/types/transactionTypes';
 
 interface TransactionResultItemProps {
   result: TransactionResult;
