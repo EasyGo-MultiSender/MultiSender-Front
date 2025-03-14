@@ -746,7 +746,7 @@ const Sender: React.FC = () => {
                 mb={1}
                 display="block"
               >
-                Format: address,amount (one entry per line)
+                {t('Format: address,amount (one entry per line)')}
               </Typography>
               <Box position="relative">
                 {/* 行番号付きテキストフィールド */}
@@ -1049,20 +1049,20 @@ const Sender: React.FC = () => {
                 {/* 全てのBoxに共通のスタイルを適用 */}
                 {[
                   {
-                    title: 'Total Addresses',
+                    title: t('Total Addresses'),
                     value: parsedEntries.length,
                   },
                   {
-                    title: 'Total Token Sent',
+                    title: t('Total Token Sent'),
                     value: totalAmount.toFixed(3),
                     subText: `${t('Service Fee')}: 0.008SOL`,
                   },
                   {
-                    title: 'Total Transactions',
+                    title: t('Total Transactions'),
                     value: Math.ceil(parsedEntries.length / 9),
                   },
                   {
-                    title: 'SOL Balance',
+                    title: t('SOL Balance'),
                     value: balance?.toFixed(3) ?? '0.000',
                   },
                 ].map((item, index) => (

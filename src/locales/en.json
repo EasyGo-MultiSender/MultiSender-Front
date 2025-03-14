@@ -1,4 +1,5 @@
 {
+  " address,amount (one entry per line)": "",
   "Addresses": "Addresses",
   "Amount": "Amount",
   "AppName": "AppName",
@@ -35,6 +36,9 @@
   "The lowest across the network, each transaction only requires 0.0075 SOL.": "",
   "Token Transfer": "Token Transfer",
   "Token Transfer History": "",
+  "Total Addresses": "",
+  "Total Token Sent": "",
+  "Total Transactions": "",
   "Total amount": "Total amount",
   "Transaction Simulation": "",
   "Transfer": "Transfer",
