@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getNetworkName } from '../../../src/hooks/util/network';
+import { getNetworkName } from '@/hooks/util/network';
 
 describe('getNetworkName', () => {
   it('returns Devnet for devnet endpoint', () => {

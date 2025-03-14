@@ -1,5 +1,3 @@
-import { SignaturePayload } from '../util/postData';
-
 export interface TransferParams {
   recipients: string[];
   amount: number;

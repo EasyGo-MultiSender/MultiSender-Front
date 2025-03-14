@@ -20,11 +20,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
 import { memo, useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useWallet } from '../hooks/useWallet';
-import { NetworkSelector } from './NetworkSelector';
+import { useWallet } from '@/hooks/useWallet';
+import { NetworkSelector } from '@/components/NetworkSelector';
 import { useTranslation } from 'react-i18next';
-import TranslateSelector from './TranslateSelector';
-import HeaderDrawer from './HeaderDrawer';
+import TranslateSelector from '@/components/TranslateSelector';
+import HeaderDrawer from '@/components/HeaderDrawer';
 
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック

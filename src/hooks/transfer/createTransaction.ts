@@ -12,8 +12,8 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import { validateMintAddress } from '../util/address';
-import { logConnectionInfo } from '../util/network';
+import { validateMintAddress } from '@/hooks/util/address';
+import { logConnectionInfo } from '@/hooks/util/network';
 
 // バッチトランザクションの作成
 export const createBatchTransferTransaction = async (

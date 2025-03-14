@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { useState, useEffect } from 'react';
-import { Serializer, AddressEntry } from '../types/transactionTypes';
+import { Serializer, AddressEntry } from '@/types/transactionTypes';
 
 interface HistoryFilesResponse {
   files: string[];

@@ -11,12 +11,12 @@ import {
   CardContent,
 } from '@mui/material';
 import { useState, useRef, useEffect } from 'react';
-import { downloadTransactionsCSV } from '../hooks/util/csv';
+import { downloadTransactionsCSV } from '@/hooks/util/csv';
 import {
   TransactionResult,
   Serializer as SerializerType,
-} from '../types/transactionTypes';
-import { TransactionResultItem } from './TransactionResultItem';
+} from '@/types/transactionTypes';
+import { TransactionResultItem } from '@/components/TransactionResultItem';
 
 interface SerializerListProps {
   serializer: SerializerType;
