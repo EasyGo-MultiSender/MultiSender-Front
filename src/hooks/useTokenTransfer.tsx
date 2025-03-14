@@ -253,7 +253,6 @@ export function useTokenTransfer(
                 recipientWallet: item.recipient,
                 amount: item.amount,
               }));
-              console.log('signaturePayload:', signaturePayload);
 
               await postSignatureData(signaturePayload);
             } catch (error) {
