@@ -51,10 +51,13 @@ export const getHistoryFiles = (
       try {
         // Get the first character of the wallet address to determine the directory
         const firstChar = walletAddress.charAt(0);
-        const directoryPath = `/csv/${firstChar}/${walletAddress}`;
+        const directoryPath = `public/csv/${firstChar}/${walletAddress}`;
 
         const hostURL =
           import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+
+        const frontendURL =
+          import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
 
         // Fetch the list of files directly from the public directory
         const response = await axios.get<HistoryFilesResponse>(
@@ -73,7 +76,7 @@ export const getHistoryFiles = (
           try {
             // Get CSV file content
             const csvResponse = await axios.get(
-              `${hostURL}${directoryPath}/${fileName}`
+              `${frontendURL}/${directoryPath}/${fileName}`
             );
             const csvContent = csvResponse.data;
 
@@ -84,13 +87,25 @@ export const getHistoryFiles = (
               // Group rows by signature
               const groupedBySignature = groupBySignature(rows);
 
-              // Create a Serializer object for each signature group
+              // 各ファイルに対して1つのシリアライザーを作成
+              const firstEntry = rows[0];
+              const serializer: Serializer = {
+                uuid: firstEntry.uuid,
+                timestamp: firstEntry.time_stamp,
+                senderWallet: firstEntry.sender_wallet,
+                tokenType: firstEntry.token_type,
+                tokenSymbol: firstEntry.token_symbol,
+                tokenMintAddress: firstEntry.token_mint_address,
+                results: [],
+              };
+
+              // 各署名グループをresults配列に追加
               for (const [signature, entries] of Object.entries(
                 groupedBySignature
               )) {
                 if (entries.length > 0) {
                   // Get transaction info from the first entry
-                  const firstEntry = entries[0];
+                  const firstEntryInGroup = entries[0];
 
                   // Create recipients array
                   const recipients: AddressEntry[] = entries.map((row) => ({
@@ -105,35 +120,29 @@ export const getHistoryFiles = (
                   );
 
                   // Parse timestamp
-                  const date = parseTimestamp(firstEntry.time_stamp);
-                  console.log('date:', firstEntry);
+                  const date = parseTimestamp(firstEntryInGroup.time_stamp);
 
-                  // Create Serializer object
-                  const serializer: Serializer = {
-                    uuid: firstEntry.uuid,
-                    timestamp: firstEntry.time_stamp,
-                    senderWallet: firstEntry.sender_wallet,
-                    tokenType: firstEntry.token_type,
-                    tokenSymbol: firstEntry.token_symbol,
-                    tokenMintAddress: firstEntry.token_mint_address,
-                    results: [
-                      {
-                        signature: firstEntry.signature,
-                        status:
-                          firstEntry.status === 'success' ? 'success' : 'error',
-                        timestamp: date.getTime(),
-                        error: firstEntry.error,
-                        errorMessage: firstEntry.error_message,
-                        recipients,
-                        totalAmount,
-                        token: firstEntry.token_symbol || firstEntry.token_type,
-                      },
-                    ],
-                  };
-
-                  serializersData.push(serializer);
+                  // 結果オブジェクトを作成してシリアライザーのresultsに追加
+                  serializer.results.push({
+                    signature: firstEntryInGroup.signature,
+                    status:
+                      firstEntryInGroup.status === 'success'
+                        ? 'success'
+                        : 'error',
+                    timestamp: date.getTime(),
+                    error: firstEntryInGroup.error,
+                    errorMessage: firstEntryInGroup.error_message,
+                    recipients,
+                    totalAmount,
+                    token:
+                      firstEntryInGroup.token_symbol ||
+                      firstEntryInGroup.token_type,
+                  });
                 }
               }
+
+              // ファイル全体のシリアライザーをリストに追加
+              serializersData.push(serializer);
             }
           } catch (err) {
             console.error(`Error processing file ${fileName}:`, err);
