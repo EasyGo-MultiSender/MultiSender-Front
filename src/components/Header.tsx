@@ -107,7 +107,7 @@ const Header = memo(() => {
               fontSize: isMobile ? '1.5rem' : '1.2rem',
             }}
           >
-            {t('easy go')}
+            <img src="/title.png" alt="logo" style={{ width: '100px' }} />
           </Typography>
 
           {!isMobile && (
