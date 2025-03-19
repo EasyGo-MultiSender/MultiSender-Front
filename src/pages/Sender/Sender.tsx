@@ -1487,22 +1487,6 @@ const Sender: React.FC = () => {
       }}
     >
       <Container maxWidth="md">
-        {/* Wallet Connection Warning */}
-        {!connected && (
-          <Card sx={{ mt: 2, p: 3, bgcolor: '#ffffff' }}>
-            <Typography
-              variant="h4"
-              sx={{
-                textAlign: 'center',
-                fontWeight: 'bold',
-                color: '#000000',
-              }}
-            >
-              {t('Please connect your wallet in the header')}
-            </Typography>
-          </Card>
-        )}
-
         {/* SOL Balance & Address */}
         <Card sx={{ my: 4 }}>
           <CardContent>

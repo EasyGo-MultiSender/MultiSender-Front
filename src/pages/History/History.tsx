@@ -51,22 +51,6 @@ const History = () => {
       }}
     >
       <Container maxWidth="md" sx={{ flex: 1 }}>
-        {/* Card shown when wallet is not connected */}
-        {!connected && (
-          <Card sx={{ mt: 2, p: 3, bgcolor: '#ffffff' }}>
-            <Typography
-              variant="h4"
-              sx={{
-                textAlign: 'center',
-                fontWeight: 'bold',
-                color: '#000000',
-              }}
-            >
-              {t('Please connect your wallet in the header')}
-            </Typography>
-          </Card>
-        )}
-
         {/* Wallet address display card */}
         {connected && (
           <Card sx={{ my: 4 }}>
