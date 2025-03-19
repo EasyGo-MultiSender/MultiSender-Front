@@ -20,6 +20,17 @@ import {
   ListItemAvatar,
   Tooltip,
 } from '@mui/material';
+import {
+  createTransferInstruction,
+  getAssociatedTokenAddress,
+  createAssociatedTokenAccountInstruction,
+} from '@solana/spl-token';
+import {
+  PublicKey,
+  Transaction,
+  SystemProgram,
+  LAMPORTS_PER_SOL,
+} from '@solana/web3.js';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // カスタムフックのインポート
@@ -48,6 +59,8 @@ import {
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
 console.log('SOL_VALIDATION_AMOUNT:', SOL_VALIDATION_AMOUNT);
 
+const DEPOSIT_SOL_AMOUNT = import.meta.env.VITE_DEPOSIT_SOL_AMOUNT;
+
 // CSVからインポートされた受取人情報
 interface Recipient {
   walletAddress: string;
@@ -59,8 +72,12 @@ const Sender: React.FC = () => {
   const { connection } = useConnection();
   const { publicKey, connected } = useWallet();
   const { balance, loading: loadingSol } = useBalance(connection, publicKey);
+  // 処理メッセージを更新する関数
+  const updateProcessingMessage = useCallback((message: string) => {
+    setProcessingMessage(message);
+  }, []);
   const { transferWithIndividualAmounts, loading: transferring } =
-    useTokenTransfer(connection, publicKey);
+    useTokenTransfer(connection, publicKey, updateProcessingMessage);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
 
@@ -81,6 +98,36 @@ const Sender: React.FC = () => {
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [belowMinSolEntries, setBelowMinSolEntries] = useState<string[]>([]);
+  const [processingMessage, setProcessingMessage] = useState<string>(
+    t('Processing')
+  ); // 処理中メッセージ
+
+  // TokenAccountの存在確認結果を保持するstate
+  const [accountsNeedingCreation, setAccountsNeedingCreation] = useState<
+    string[]
+  >([]);
+  // 手数料情報を保持するstate
+  const [feeEstimation, setFeeEstimation] = useState({
+    totalFee: 0, // 合計手数料（SOL）
+    accountCreationFees: 0, // アカウント作成にかかる手数料
+    transactionFees: 0, // 通常トランザクション手数料
+    operationFees: 0, // 運営手数料
+    isLoading: false, // 計算中フラグ
+    simulatedSuccess: false, // シミュレーション成功フラグ
+    transactionFeeFallback: false, // トランザクション手数料がフォールバック値かどうか
+    accountCreationFeeFallback: false, // アカウント作成手数料がフォールバック値かどうか
+    totalFeeFallback: false, // 合計手数料がフォールバック値かどうか
+    progress: {
+      current: 0, // 現在処理中の項目番号
+      total: 0, // 合計処理項目数
+      step: '', // 現在の処理ステップ名
+    },
+  });
+
+  let BATCH_SIZE =
+    selectedToken === 'SOL'
+      ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
+      : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
 
   // メタデータ付きトークンを保持する状態
   const [tokensWithMetadata, setTokensWithMetadata] = useState<
@@ -206,7 +253,7 @@ const Sender: React.FC = () => {
         if (lineNumber > 0) {
           belowMinimumSolLineNumbers.push(lineNumber);
         }
-        // 最小額未満でもエントリには追加して、後で警告を表示できるようにする
+        continue;
       }
 
       // 有効なエントリを追加
@@ -263,6 +310,18 @@ const Sender: React.FC = () => {
     // 合計金額を計算
     const sum = entries.reduce((total, entry) => total + entry.amount, 0);
     setTotalAmount(sum);
+
+    // 有効な行がなければ
+    if (entries.length === 0) {
+      setFeeEstimation((prev) => ({
+        ...prev,
+        isLoading: false,
+        transactionFees: 0,
+        operationFees: 0,
+        accountCreationFees: 0,
+        totalFee: 0,
+      }));
+    }
   }, [
     recipientAddresses,
     isValidSolanaAddress,
@@ -324,6 +383,7 @@ const Sender: React.FC = () => {
     }
 
     // TokenListから最新のトークンアカウント情報を取得
+    updateProcessingMessage(t('Loading token information...'));
     // まずトークンが読み込まれていることを確認
     let tokens = tokensWithMetadata;
     if (tokens.length === 0 && selectedToken !== 'SOL') {
@@ -335,6 +395,7 @@ const Sender: React.FC = () => {
     }
 
     // 残高チェック
+    updateProcessingMessage(t('Checking balances...'));
     if (selectedToken === 'SOL') {
       // SOLの残高チェック
       if (balance && totalAmount > balance) {
@@ -372,6 +433,7 @@ const Sender: React.FC = () => {
       setSnackbarOpen(true);
 
       // 選択されたトークンの表示名を取得
+      updateProcessingMessage(t('Preparing transactions...'));
       let tokenDisplayName = 'SOL';
       if (selectedToken !== 'SOL') {
         const tokenInfo = tokens.find((t) => t.account.mint === selectedToken);
@@ -382,6 +444,9 @@ const Sender: React.FC = () => {
 
       const now: number = Date.now();
 
+      // トランザクション送信前の更新
+      updateProcessingMessage(t('Waiting for wallet approval...'));
+
       // トランザクション送信 & 検証 & サーバーに保存
       const results = await transferWithIndividualAmounts(
         parsedEntries.map((entry) => ({
@@ -391,6 +456,9 @@ const Sender: React.FC = () => {
         selectedToken === 'SOL' ? undefined : selectedToken,
         now
       );
+
+      // 結果処理中
+      updateProcessingMessage(t('Processing results...'));
 
       // 結果をフォーマット
       const formattedResults: TransactionResult[] = results.result.map(
@@ -491,6 +559,12 @@ const Sender: React.FC = () => {
       };
     }
 
+    BATCH_SIZE =
+      selectedToken === 'SOL'
+        ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
+        : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
+    console.log('🔍 BATCH_SIZE:', BATCH_SIZE);
+
     const tokenInfo = tokensWithMetadata.find(
       (t) => t.account.mint === selectedToken
     );
@@ -538,6 +612,824 @@ const Sender: React.FC = () => {
       setHighlightedLines([...highlightedLines, lineNumber]);
     }
   };
+
+  // トランザクションシミュレーションによる手数料計算
+  const simulateTransactionFees = useCallback(async () => {
+    if (!connection || !publicKey || parsedEntries.length === 0) {
+      // エントリがない場合は手数料なし
+      setFeeEstimation({
+        totalFee: 0,
+        accountCreationFees: 0,
+        transactionFees: 0,
+        operationFees: 0,
+        isLoading: false,
+        simulatedSuccess: false,
+        transactionFeeFallback: false,
+        accountCreationFeeFallback: false,
+        totalFeeFallback: false,
+        progress: { current: 0, total: 0, step: '' },
+      });
+      setAccountsNeedingCreation([]);
+      return;
+    }
+
+    console.log(
+      '🔍 手数料シミュレーション開始: エントリ数=',
+      parsedEntries.length,
+      '選択トークン=',
+      selectedToken
+    );
+
+    // 計算中フラグをON
+    setFeeEstimation((prev) => ({
+      ...prev,
+      isLoading: true,
+      // 進捗状態を初期化
+      progress: {
+        current: 0,
+        total:
+          selectedToken === 'SOL'
+            ? Math.min(parsedEntries.length, 12)
+            : Math.min(parsedEntries.length, 12) * 2, // SPLの場合は各エントリに対してアカウント作成＋転送の2操作
+        step: '初期化中',
+      },
+    }));
+
+    try {
+      // 手数料シミュレーション結果
+      let totalEstimatedFee = 0;
+      let accountCreationFee = 0;
+      let transactionFee = 0;
+      let transactionFeeFallback = false;
+      let accountCreationFeeFallback = false;
+      let totalFeeFallback = false;
+      const accountsToCreate: string[] = [];
+
+      // バッチサイズ（Solanaのトランザクションサイズ制限により決定）
+      let simulatedCount = 0; // 実際にシミュレーションを実行した回数
+      const maxSimulations = 12; // 最大シミュレーション回数（RPCコール数を抑制）
+
+      // 運営手数料の計算 (1トランザクションあたりのDEPOSIT_SOL_AMOUNT)
+      const operationFeePerTx = parseFloat(DEPOSIT_SOL_AMOUNT) || 0;
+      // トランザクション数の推定（バッチサイズで割って切り上げ）
+      const estimatedTxCount = Math.ceil(parsedEntries.length / BATCH_SIZE);
+      // 運営手数料の合計
+      const operationFees = operationFeePerTx * estimatedTxCount;
+      console.log(
+        `💼 運営手数料: ${operationFees.toFixed(8)} SOL (${operationFeePerTx} SOL × ${estimatedTxCount}トランザクション)`
+      );
+
+      // 運営手数料を合計に加算
+      totalEstimatedFee += operationFees;
+
+      // 運営手数料を計算したら状態を更新
+      setFeeEstimation((prev) => ({
+        ...prev,
+        operationFees,
+        totalFee: totalEstimatedFee,
+        progress: {
+          ...prev.progress,
+          current: 1,
+          step: '運営手数料計算完了',
+        },
+      }));
+
+      // 少し待機して状態の更新が反映されるようにする
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      if (selectedToken === 'SOL') {
+        // SOL送金シミュレーション - 簡易版
+        const maxEntries = Math.min(parsedEntries.length, maxSimulations);
+
+        // 進捗状態を更新
+        setFeeEstimation((prev) => ({
+          ...prev,
+          progress: {
+            ...prev.progress,
+            step: 'SOL送金シミュレーション開始',
+          },
+        }));
+
+        try {
+          // バッチでエントリを処理
+          for (let i = 0; i < maxEntries; i += BATCH_SIZE) {
+            const batch = parsedEntries.slice(
+              i,
+              Math.min(i + BATCH_SIZE, maxEntries)
+            );
+            console.log(
+              `🔄 SOLバッチ処理: ${i}-${i + batch.length - 1}番目の処理開始`
+            );
+
+            // 進捗状態を更新
+            setFeeEstimation((prev) => ({
+              ...prev,
+              progress: {
+                ...prev.progress,
+                current: prev.progress.current + 1,
+                step: `SOL送金シミュレーション: ${i + 1}-${i + batch.length}/${maxEntries}`,
+              },
+            }));
+
+            const transaction = new Transaction();
+
+            // SOL送金命令を追加
+            batch.forEach((entry) => {
+              const instruction = SystemProgram.transfer({
+                fromPubkey: publicKey,
+                toPubkey: new PublicKey(entry.address),
+                lamports: Math.floor(entry.amount * LAMPORTS_PER_SOL),
+              });
+              transaction.add(instruction);
+            });
+
+            // 最新のブロックハッシュを取得
+            const { blockhash } =
+              await connection.getLatestBlockhash('confirmed');
+            transaction.recentBlockhash = blockhash;
+            transaction.feePayer = publicKey;
+
+            // シミュレーション実行
+            const simulation =
+              await connection.simulateTransaction(transaction);
+
+            if (simulation.value.err) {
+              console.error(
+                '❌ SOLシミュレーションエラー:',
+                simulation.value.err
+              );
+              transactionFeeFallback = true;
+            } else {
+              simulatedCount++;
+              // 計算単位（CU）から手数料を計算
+              const unitsConsumed = simulation.value.unitsConsumed || 0;
+              console.log(
+                '✅ SOLシミュレーション成功 - 消費CU:',
+                unitsConsumed
+              );
+
+              // Solanaの標準手数料率: 1000 CUあたり0.000005 SOL
+              const fee = Math.max((unitsConsumed / 1000) * 0.000005, 0.000005);
+
+              if (!isNaN(fee) && fee > 0) {
+                totalEstimatedFee += fee;
+                transactionFee += fee;
+                console.log(
+                  `💰 SOL手数料計算: ${fee.toFixed(8)} SOL (${unitsConsumed} CU使用)`
+                );
+
+                // トランザクション手数料を更新
+                setFeeEstimation((prev) => ({
+                  ...prev,
+                  transactionFees: transactionFee,
+                  totalFee: totalEstimatedFee,
+                  progress: {
+                    ...prev.progress,
+                    step: `SOL手数料計算: +${fee.toFixed(6)} SOL`,
+                  },
+                }));
+              } else {
+                const fallbackFee = 0.000005 * batch.length;
+                totalEstimatedFee += fallbackFee;
+                transactionFee += fallbackFee;
+                transactionFeeFallback = true;
+                console.warn(
+                  '⚠️ 手数料計算失敗 - フォールバック:',
+                  fallbackFee
+                );
+
+                // フォールバック手数料を更新
+                setFeeEstimation((prev) => ({
+                  ...prev,
+                  transactionFees: transactionFee,
+                  totalFee: totalEstimatedFee,
+                  transactionFeeFallback: true,
+                  progress: {
+                    ...prev.progress,
+                    step: `SOL手数料計算(概算): +${fallbackFee.toFixed(6)} SOL`,
+                  },
+                }));
+              }
+            }
+
+            // 少し待機して状態の更新が反映されるようにする
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          }
+        } catch (err) {
+          console.error('❌ SOLシミュレーション例外:', err);
+          transactionFeeFallback = true;
+
+          // フォールバック計算
+          const fallbackFee =
+            0.000005 * Math.min(parsedEntries.length, maxSimulations);
+          totalEstimatedFee += fallbackFee;
+          transactionFee += fallbackFee;
+
+          // エラー時の状態更新
+          setFeeEstimation((prev) => ({
+            ...prev,
+            transactionFees: transactionFee,
+            totalFee: totalEstimatedFee,
+            transactionFeeFallback: true,
+            progress: {
+              ...prev.progress,
+              step: `SOLシミュレーションエラー: フォールバック値使用`,
+            },
+          }));
+        }
+
+        // 残りのエントリの手数料を平均値から推定
+        if (parsedEntries.length > maxSimulations) {
+          const remainingEntries = parsedEntries.length - maxSimulations;
+          let avgFee =
+            simulatedCount > 0 ? transactionFee / simulatedCount : 0.000005;
+          if (isNaN(avgFee) || avgFee <= 0) avgFee = 0.000005;
+
+          const extrapolatedFee = avgFee * remainingEntries;
+          totalEstimatedFee += extrapolatedFee;
+          transactionFee += extrapolatedFee;
+          totalFeeFallback = true;
+          console.log(
+            `📊 残り${remainingEntries}エントリの概算手数料: ${extrapolatedFee.toFixed(8)} SOL (平均${avgFee.toFixed(8)} SOL/トランザクション)`
+          );
+
+          // 残りエントリの概算を更新
+          setFeeEstimation((prev) => ({
+            ...prev,
+            transactionFees: transactionFee,
+            totalFee: totalEstimatedFee,
+            totalFeeFallback: true,
+            progress: {
+              ...prev.progress,
+              current: prev.progress.total,
+              step: `残り${remainingEntries}エントリの概算完了: +${extrapolatedFee.toFixed(6)} SOL`,
+            },
+          }));
+        }
+      } else {
+        // SPLトークン送金シミュレーション - 完全リニューアル版
+        try {
+          // 選択されたトークンの詳細情報を取得
+          const tokenMint = new PublicKey(selectedToken);
+
+          // トークンのメタデータを探す（デシマル値の取得のため）
+          const selectedTokenInfo = tokensWithMetadata.find(
+            (t) => t.account.mint === selectedToken
+          );
+          const tokenDecimals = selectedTokenInfo?.account.decimals || 9; // デフォルトは9
+          console.log(
+            `🪙 トークン情報: ${selectedTokenInfo?.metadata?.symbol || 'Unknown'}, デシマル=${tokenDecimals}`
+          );
+
+          // 進捗状態を更新
+          setFeeEstimation((prev) => ({
+            ...prev,
+            progress: {
+              ...prev.progress,
+              step: 'SPLトークン送金シミュレーション開始',
+            },
+          }));
+
+          // 送金元のトークンアカウント
+          const senderTokenAccount = await getAssociatedTokenAddress(
+            tokenMint,
+            publicKey
+          );
+
+          // 最大シミュレーション件数まで処理
+          const maxEntries = Math.min(parsedEntries.length, maxSimulations);
+
+          // 各受信者アドレスに対して処理
+          for (let i = 0; i < maxEntries; i++) {
+            const entry = parsedEntries[i];
+            try {
+              console.log(
+                `💸 送信先(${i + 1}/${maxEntries}): ${entry.address}, 金額: ${entry.amount}`
+              );
+
+              // 進捗状態を更新
+              setFeeEstimation((prev) => ({
+                ...prev,
+                progress: {
+                  ...prev.progress,
+                  current: prev.progress.current + 1,
+                  step: `SPLトークン転送(${i + 1}/${maxEntries}): アドレス確認中`,
+                },
+              }));
+
+              const receiverPubkey = new PublicKey(entry.address);
+
+              // 受信者のトークンアカウント
+              const receiverTokenAccount = await getAssociatedTokenAddress(
+                tokenMint,
+                receiverPubkey
+              );
+
+              // トークンアカウントの存在確認（本番環境でのRPCコール）
+              const accountInfo =
+                await connection.getAccountInfo(receiverTokenAccount);
+
+              // アカウント作成が必要かどうか
+              let needsAccountCreation = false;
+              if (!accountInfo) {
+                accountsToCreate.push(entry.address);
+                needsAccountCreation = true;
+                console.log(
+                  `🔄 トークンアカウント作成必要: ${entry.address} → ${receiverTokenAccount.toString()}`
+                );
+
+                // 進捗状態を更新
+                setFeeEstimation((prev) => ({
+                  ...prev,
+                  progress: {
+                    ...prev.progress,
+                    step: `トークンアカウント作成必要: ${entry.address.slice(0, 4)}...${entry.address.slice(-4)}`,
+                  },
+                }));
+              }
+
+              // アカウント作成シミュレーション（必要な場合のみ）
+              if (needsAccountCreation) {
+                const createTx = new Transaction();
+
+                // ATA作成命令を追加
+                const createATAInstruction =
+                  createAssociatedTokenAccountInstruction(
+                    publicKey,
+                    receiverTokenAccount,
+                    receiverPubkey,
+                    tokenMint
+                  );
+                createTx.add(createATAInstruction);
+
+                // シミュレーション用ブロックハッシュ
+                const { blockhash } =
+                  await connection.getLatestBlockhash('confirmed');
+                createTx.recentBlockhash = blockhash;
+                createTx.feePayer = publicKey;
+
+                try {
+                  // アカウント作成シミュレーション実行
+                  const createSimulation =
+                    await connection.simulateTransaction(createTx);
+                  simulatedCount++;
+
+                  if (createSimulation.value.err) {
+                    console.error(
+                      '❌ アカウント作成シミュレーションエラー:',
+                      createSimulation.value.err
+                    );
+                    accountCreationFeeFallback = true;
+
+                    // フォールバック値を使用
+                    const fallbackFee = 0.00203928; // アカウント作成の標準的なコスト
+                    accountCreationFee += fallbackFee;
+                    totalEstimatedFee += fallbackFee;
+
+                    // フォールバック手数料を更新
+                    setFeeEstimation((prev) => ({
+                      ...prev,
+                      accountCreationFees: accountCreationFee,
+                      totalFee: totalEstimatedFee,
+                      accountCreationFeeFallback: true,
+                      progress: {
+                        ...prev.progress,
+                        step: `アカウント作成手数料(概算): +${fallbackFee.toFixed(6)} SOL`,
+                      },
+                    }));
+                  } else {
+                    // 成功したシミュレーションから手数料を計算
+                    const unitsConsumed =
+                      createSimulation.value.unitsConsumed || 0;
+                    console.log(
+                      '✅ アカウント作成シミュレーション成功 - 消費CU:',
+                      unitsConsumed
+                    );
+
+                    // 計算単位から手数料計算 + レント免除コスト加算
+                    const computeFee = Math.max(
+                      (unitsConsumed / 1000) * 0.000005,
+                      0.000005
+                    );
+                    const rentExemptCost = 0.00203928; // レント免除コスト（固定）
+                    const totalFee = computeFee + rentExemptCost;
+
+                    if (!isNaN(totalFee) && totalFee > 0) {
+                      accountCreationFee += totalFee;
+                      totalEstimatedFee += totalFee;
+                      console.log(
+                        `💰 アカウント作成手数料: ${totalFee.toFixed(8)} SOL (CU手数料=${computeFee.toFixed(8)}, レント免除=${rentExemptCost})`
+                      );
+
+                      // アカウント作成手数料を更新
+                      setFeeEstimation((prev) => ({
+                        ...prev,
+                        accountCreationFees: accountCreationFee,
+                        totalFee: totalEstimatedFee,
+                        progress: {
+                          ...prev.progress,
+                          step: `アカウント作成手数料: +${totalFee.toFixed(6)} SOL`,
+                        },
+                      }));
+                    } else {
+                      const fallbackFee = 0.00203928;
+                      accountCreationFee += fallbackFee;
+                      totalEstimatedFee += fallbackFee;
+                      accountCreationFeeFallback = true;
+                      console.warn(
+                        '⚠️ アカウント作成手数料計算失敗 - フォールバック:',
+                        fallbackFee
+                      );
+
+                      // フォールバック手数料を更新
+                      setFeeEstimation((prev) => ({
+                        ...prev,
+                        accountCreationFees: accountCreationFee,
+                        totalFee: totalEstimatedFee,
+                        accountCreationFeeFallback: true,
+                        progress: {
+                          ...prev.progress,
+                          step: `アカウント作成手数料(概算): +${fallbackFee.toFixed(6)} SOL`,
+                        },
+                      }));
+                    }
+                  }
+                } catch (err) {
+                  console.error('❌ アカウント作成シミュレーション例外:', err);
+                  accountCreationFeeFallback = true;
+
+                  // 例外時のフォールバック値
+                  const fallbackFee = 0.00203928;
+                  accountCreationFee += fallbackFee;
+                  totalEstimatedFee += fallbackFee;
+
+                  // エラー時の状態更新
+                  setFeeEstimation((prev) => ({
+                    ...prev,
+                    accountCreationFees: accountCreationFee,
+                    totalFee: totalEstimatedFee,
+                    accountCreationFeeFallback: true,
+                    progress: {
+                      ...prev.progress,
+                      step: `アカウント作成シミュレーションエラー: フォールバック使用`,
+                    },
+                  }));
+                }
+              }
+
+              // 進捗状態を更新
+              setFeeEstimation((prev) => ({
+                ...prev,
+                progress: {
+                  ...prev.progress,
+                  step: `SPLトークン転送シミュレーション中: ${entry.address.slice(0, 4)}...${entry.address.slice(-4)}`,
+                },
+              }));
+
+              // トークン転送シミュレーション
+              const transferTx = new Transaction();
+
+              // 転送命令を追加（デシマルを考慮）
+              const rawAmount = Math.floor(
+                entry.amount * Math.pow(10, tokenDecimals)
+              );
+              const transferInstruction = createTransferInstruction(
+                senderTokenAccount,
+                receiverTokenAccount,
+                publicKey,
+                rawAmount
+              );
+              transferTx.add(transferInstruction);
+
+              // シミュレーション用ブロックハッシュ
+              const { blockhash } =
+                await connection.getLatestBlockhash('confirmed');
+              transferTx.recentBlockhash = blockhash;
+              transferTx.feePayer = publicKey;
+
+              try {
+                // 転送シミュレーション実行
+                const transferSimulation =
+                  await connection.simulateTransaction(transferTx);
+                simulatedCount++;
+
+                if (transferSimulation.value.unitsConsumed === undefined) {
+                  console.error(
+                    '❌ トークン転送シミュレーションエラー:',
+                    transferSimulation.value.err
+                  );
+                  transactionFeeFallback = true;
+
+                  // フォールバック値を使用
+                  const fallbackFee = 0.000005;
+                  transactionFee += fallbackFee;
+                  totalEstimatedFee += fallbackFee;
+
+                  // フォールバック手数料を更新
+                  setFeeEstimation((prev) => ({
+                    ...prev,
+                    transactionFees: transactionFee,
+                    totalFee: totalEstimatedFee,
+                    transactionFeeFallback: true,
+                    progress: {
+                      ...prev.progress,
+                      step: `トークン転送手数料(概算): +${fallbackFee.toFixed(6)} SOL`,
+                    },
+                  }));
+                } else {
+                  // 成功したシミュレーションから手数料を計算
+                  const unitsConsumed =
+                    transferSimulation.value.unitsConsumed || 0;
+                  console.log(
+                    '✅ トークン転送シミュレーション成功 - 消費CU:',
+                    unitsConsumed,
+                    'Raw Amount:',
+                    rawAmount
+                  );
+
+                  // 計算単位から手数料計算
+                  const fee = Math.max(
+                    (unitsConsumed / 1000) * 0.000005,
+                    0.000005
+                  );
+
+                  if (!isNaN(fee) && fee > 0) {
+                    transactionFee += fee;
+                    totalEstimatedFee += fee;
+                    console.log(
+                      `💰 トークン転送手数料: ${fee.toFixed(8)} SOL (${unitsConsumed} CU使用)`
+                    );
+
+                    // トランザクション手数料を更新
+                    setFeeEstimation((prev) => ({
+                      ...prev,
+                      transactionFees: transactionFee,
+                      totalFee: totalEstimatedFee,
+                      progress: {
+                        ...prev.progress,
+                        step: `トークン転送手数料: +${fee.toFixed(6)} SOL`,
+                      },
+                    }));
+                  } else {
+                    const fallbackFee = 0.000005;
+                    transactionFee += fallbackFee;
+                    totalEstimatedFee += fallbackFee;
+                    transactionFeeFallback = true;
+                    console.warn(
+                      '⚠️ トークン転送手数料計算失敗 - フォールバック:',
+                      fallbackFee
+                    );
+
+                    // フォールバック手数料を更新
+                    setFeeEstimation((prev) => ({
+                      ...prev,
+                      transactionFees: transactionFee,
+                      totalFee: totalEstimatedFee,
+                      transactionFeeFallback: true,
+                      progress: {
+                        ...prev.progress,
+                        step: `トークン転送手数料(概算): +${fallbackFee.toFixed(6)} SOL`,
+                      },
+                    }));
+                  }
+                }
+              } catch (err) {
+                console.error('❌ トークン転送シミュレーション例外:', err);
+                transactionFeeFallback = true;
+
+                // 例外時のフォールバック値
+                const fallbackFee = 0.000005;
+                transactionFee += fallbackFee;
+                totalEstimatedFee += fallbackFee;
+
+                // エラー時の状態更新
+                setFeeEstimation((prev) => ({
+                  ...prev,
+                  transactionFees: transactionFee,
+                  totalFee: totalEstimatedFee,
+                  transactionFeeFallback: true,
+                  progress: {
+                    ...prev.progress,
+                    step: `トークン転送シミュレーションエラー: フォールバック使用`,
+                  },
+                }));
+              }
+
+              // 少し待機して状態の更新が反映されるようにする
+              await new Promise((resolve) => setTimeout(resolve, 50));
+            } catch (err) {
+              console.error(`❌ エントリ処理エラー (${entry.address}):`, err);
+              // 各種フォールバック値を適用
+              transactionFeeFallback = true;
+              const transferFallbackFee = 0.000005;
+              transactionFee += transferFallbackFee;
+              totalEstimatedFee += transferFallbackFee;
+
+              // エラー時の状態更新
+              setFeeEstimation((prev) => ({
+                ...prev,
+                transactionFees: transactionFee,
+                totalFee: totalEstimatedFee,
+                transactionFeeFallback: true,
+                progress: {
+                  ...prev.progress,
+                  step: `エントリ処理エラー: フォールバック使用`,
+                },
+              }));
+            }
+          }
+
+          // 残りのエントリの手数料を平均値から推定
+          if (parsedEntries.length > maxSimulations) {
+            const remainingEntries = parsedEntries.length - maxSimulations;
+
+            // 転送手数料平均計算
+            let avgTransferFee = 0;
+            if (simulatedCount > 0 && transactionFee > 0) {
+              avgTransferFee = transactionFee / maxSimulations;
+            } else {
+              avgTransferFee = 0.000005; // フォールバック平均値
+              transactionFeeFallback = true;
+            }
+
+            // トークンアカウント作成比率の計算
+            const creationRatio = accountsToCreate.length / maxSimulations;
+            const estimatedNewAccounts = Math.floor(
+              remainingEntries * creationRatio
+            );
+
+            // アカウント作成平均手数料計算
+            let avgCreationFee = 0;
+            if (accountsToCreate.length > 0) {
+              avgCreationFee = accountCreationFee / accountsToCreate.length;
+              if (isNaN(avgCreationFee) || avgCreationFee <= 0) {
+                avgCreationFee = 0.00203928; // フォールバック平均値
+                accountCreationFeeFallback = true;
+              }
+            }
+
+            // 追加推定手数料を計算
+            const extraTransferFee = avgTransferFee * remainingEntries;
+            const extraCreationFee = avgCreationFee * estimatedNewAccounts;
+            const extraTotalFee = extraTransferFee + extraCreationFee;
+
+            // 推定値を追加
+            transactionFee += extraTransferFee;
+            accountCreationFee += extraCreationFee;
+            totalEstimatedFee += extraTotalFee;
+            totalFeeFallback = true;
+
+            console.log(`📊 残り${remainingEntries}エントリの概算:
+            - 転送手数料: ${extraTransferFee.toFixed(8)} SOL (平均${avgTransferFee.toFixed(8)} SOL/トランザクション)
+            - 推定新アカウント: ${estimatedNewAccounts}個 (比率=${creationRatio.toFixed(2)})
+            - アカウント作成手数料: ${extraCreationFee.toFixed(8)} SOL (平均${avgCreationFee.toFixed(8)} SOL/アカウント)
+            - 合計追加手数料: ${extraTotalFee.toFixed(8)} SOL`);
+
+            // 概算で必要なアカウント数を追加
+            const conceptualAccounts =
+              Array(estimatedNewAccounts).fill('estimated');
+            setAccountsNeedingCreation([
+              ...accountsToCreate,
+              ...conceptualAccounts,
+            ]);
+          } else {
+            setAccountsNeedingCreation(accountsToCreate);
+          }
+        } catch (err) {
+          console.error('❌ SPLトークン手数料計算全体エラー:', err);
+
+          // 全体エラー時のフォールバック値
+          const transferFallbackFee = 0.000005 * parsedEntries.length;
+          const creationFallbackFee =
+            0.00203928 * Math.ceil(parsedEntries.length * 0.1); // 10%のアカウントが必要と仮定
+
+          transactionFee = transferFallbackFee;
+          accountCreationFee = creationFallbackFee;
+          totalEstimatedFee = transferFallbackFee + creationFallbackFee;
+
+          transactionFeeFallback = true;
+          accountCreationFeeFallback = true;
+          totalFeeFallback = true;
+
+          // 全概算のアカウント数を設定
+          const estimatedAccounts = Array(
+            Math.ceil(parsedEntries.length * 0.1)
+          ).fill('estimated');
+          setAccountsNeedingCreation(estimatedAccounts);
+        }
+      }
+
+      // 最終的なNaNチェック
+      if (isNaN(totalEstimatedFee) || totalEstimatedFee <= 0) {
+        console.error('❌ 合計手数料が無効:', totalEstimatedFee);
+        totalEstimatedFee = parsedEntries.length * 0.000005;
+        totalFeeFallback = true;
+      }
+
+      if (isNaN(transactionFee) || transactionFee < 0) {
+        console.error('❌ トランザクション手数料が無効:', transactionFee);
+        transactionFee = parsedEntries.length * 0.000005;
+        transactionFeeFallback = true;
+      }
+
+      if (isNaN(accountCreationFee) || accountCreationFee < 0) {
+        console.error('❌ アカウント作成手数料が無効:', accountCreationFee);
+        accountCreationFee = 0;
+        accountCreationFeeFallback = selectedToken !== 'SOL';
+      }
+
+      // 最終ログ出力
+      console.log(`🏁 手数料計算完了:
+      - 転送手数料: ${transactionFee.toFixed(8)} SOL ${transactionFeeFallback ? '(概算)' : '(実測)'}
+      - アカウント作成手数料: ${accountCreationFee.toFixed(8)} SOL ${accountCreationFeeFallback ? '(概算)' : '(実測)'}
+      - 運営手数料: ${operationFees.toFixed(8)} SOL (${operationFeePerTx} SOL × ${estimatedTxCount}トランザクション)
+      - 合計: ${totalEstimatedFee.toFixed(8)} SOL ${totalFeeFallback ? '(概算含む)' : '(実測)'}
+      - アカウント作成必要数: ${accountsNeedingCreation.length}個`);
+
+      // 手数料情報を更新
+      setFeeEstimation({
+        totalFee: totalEstimatedFee,
+        accountCreationFees: accountCreationFee,
+        transactionFees: transactionFee,
+        operationFees: operationFees,
+        isLoading: false,
+        simulatedSuccess: simulatedCount > 0,
+        transactionFeeFallback,
+        accountCreationFeeFallback,
+        totalFeeFallback,
+        progress: {
+          ...feeEstimation.progress,
+          current: simulatedCount,
+          total:
+            selectedToken === 'SOL'
+              ? Math.min(parsedEntries.length, 12)
+              : Math.min(parsedEntries.length, 12) * 2,
+          step: `手数料計算完了: ${simulatedCount}/${selectedToken === 'SOL' ? Math.min(parsedEntries.length, 12) : Math.min(parsedEntries.length, 12) * 2}`,
+        },
+      });
+    } catch (error) {
+      console.error('❌ 手数料シミュレーション全体エラー:', error);
+
+      // 全体エラー時のフォールバック
+      const estimatedTransactionFee = parsedEntries.length * 0.000005;
+      const estimatedCreationFee =
+        selectedToken !== 'SOL'
+          ? Math.ceil(parsedEntries.length * 0.1) * 0.00203928
+          : 0;
+      // 運営手数料の計算（エラー時も同じ計算）
+      const estimatedTxCount = Math.ceil(parsedEntries.length / BATCH_SIZE);
+      const estimatedOperationFees =
+        (parseFloat(SOL_VALIDATION_AMOUNT) || 0) * estimatedTxCount;
+      const totalFee =
+        estimatedTransactionFee + estimatedCreationFee + estimatedOperationFees;
+
+      setFeeEstimation({
+        totalFee: totalFee,
+        accountCreationFees: estimatedCreationFee,
+        transactionFees: estimatedTransactionFee,
+        operationFees: estimatedOperationFees,
+        isLoading: false,
+        simulatedSuccess: false,
+        transactionFeeFallback: true,
+        accountCreationFeeFallback: true,
+        totalFeeFallback: true,
+        progress: {
+          ...feeEstimation.progress,
+          current: 0,
+          total: 0,
+          step: 'エラー発生',
+        },
+      });
+
+      // エラー時のアカウント概算
+      if (selectedToken !== 'SOL') {
+        const estimatedAccounts = Array(
+          Math.ceil(parsedEntries.length * 0.1)
+        ).fill('estimated');
+        setAccountsNeedingCreation(estimatedAccounts);
+      } else {
+        setAccountsNeedingCreation([]);
+      }
+    }
+  }, [connection, publicKey, parsedEntries, selectedToken, tokensWithMetadata]);
+
+  // 入力内容や選択トークンが変更されたら手数料シミュレーションを実行
+  useEffect(() => {
+    if (connection && publicKey && parsedEntries.length > 0) {
+      // 計算処理を少し遅延させて連続入力時の過負荷を防止
+      const timer = setTimeout(() => {
+        simulateTransactionFees();
+      }, 800);
+
+      return () => clearTimeout(timer);
+    }
+  }, [
+    parsedEntries,
+    selectedToken,
+    connection,
+    publicKey,
+    simulateTransactionFees,
+  ]);
 
   return (
     <Box
@@ -1055,11 +1947,15 @@ const Sender: React.FC = () => {
                   {
                     title: t('Total Token Sent'),
                     value: totalAmount.toFixed(3),
-                    subText: `${t('Service Fee')}: 0.008SOL`,
+                    subText:
+                      accountsNeedingCreation.length > 0
+                        ? `${accountsNeedingCreation.length} ${t('accounts need creation')}`
+                        : `${t('All accounts exist')}`,
                   },
                   {
                     title: t('Total Transactions'),
-                    value: Math.ceil(parsedEntries.length / 9),
+                    value: Math.ceil(parsedEntries.length / BATCH_SIZE),
+                    subText: `≒ ${parsedEntries.length} / ${BATCH_SIZE}`,
                   },
                   {
                     title: t('SOL Balance'),
@@ -1118,6 +2014,248 @@ const Sender: React.FC = () => {
                   </Box>
                 ))}
               </Box>
+
+              {/* 手数料情報表示 */}
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  borderRadius: 2,
+                  bgcolor: 'rgba(25, 118, 210, 0.05)',
+                  border: '1px solid rgba(25, 118, 210, 0.2)',
+                }}
+              >
+                <Typography
+                  variant="subtitle2"
+                  fontWeight="bold"
+                  mb={1}
+                  display="flex"
+                  alignItems="center"
+                >
+                  {t('Simulated Network Fees')}
+                  {feeEstimation.isLoading && (
+                    <CircularProgress size={16} sx={{ ml: 1 }} />
+                  )}
+                  {!feeEstimation.isLoading &&
+                    feeEstimation.simulatedSuccess &&
+                    !feeEstimation.totalFeeFallback && (
+                      <Box
+                        component="span"
+                        sx={{
+                          ml: 1,
+                          color: 'success.main',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        (実際のシミュレーション結果)
+                      </Box>
+                    )}
+                  {!feeEstimation.isLoading &&
+                    (!feeEstimation.simulatedSuccess ||
+                      feeEstimation.totalFeeFallback) &&
+                    parsedEntries.length > 0 && (
+                      <Box
+                        component="span"
+                        sx={{
+                          ml: 1,
+                          color: 'warning.main',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        (概算値)
+                      </Box>
+                    )}
+                </Typography>
+
+                <Box display="flex" flexDirection="column" gap={0.5}>
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography variant="body2">
+                      {t('Transaction Fees')}:
+                    </Typography>
+                    <Box display="flex" alignItems="center" position="relative">
+                      <Typography variant="body2" fontWeight="medium">
+                        {feeEstimation.transactionFees.toFixed(6)} SOL
+                      </Typography>
+                      {feeEstimation.transactionFeeFallback &&
+                        parsedEntries.length > 0 && (
+                          <Box
+                            component="span"
+                            sx={{
+                              ml: 0.5,
+                              color: 'warning.main',
+                              fontSize: '0.7rem',
+                            }}
+                          >
+                            (概算値)
+                          </Box>
+                        )}
+                      {feeEstimation.isLoading && (
+                        <CircularProgress
+                          size={14}
+                          sx={{ position: 'absolute', right: -20 }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* 運営手数料を表示 */}
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography variant="body2">
+                      {t('Operation Fees')}:
+                    </Typography>
+                    <Box display="flex" alignItems="center" position="relative">
+                      <Typography variant="body2" fontWeight="medium">
+                        {feeEstimation.operationFees.toFixed(6)} SOL
+                      </Typography>
+                      <Box
+                        component="span"
+                        sx={{ ml: 0.5, fontSize: '0.7rem' }}
+                      >
+                        ({parseFloat(DEPOSIT_SOL_AMOUNT).toFixed(6)} SOL ×{' '}
+                        {Math.ceil(parsedEntries.length / BATCH_SIZE)}件)
+                      </Box>
+                      {feeEstimation.isLoading && (
+                        <CircularProgress
+                          size={14}
+                          sx={{ position: 'absolute', right: -20 }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+
+                  {selectedToken !== 'SOL' && (
+                    <Box display="flex" justifyContent="space-between">
+                      <Typography variant="body2">
+                        {t('Token Account Creation Fees')}:
+                      </Typography>
+                      <Box
+                        display="flex"
+                        alignItems="center"
+                        position="relative"
+                      >
+                        <Typography variant="body2" fontWeight="medium">
+                          {feeEstimation.accountCreationFees.toFixed(6)} SOL
+                        </Typography>
+                        {feeEstimation.accountCreationFeeFallback && (
+                          <Box
+                            component="span"
+                            sx={{
+                              ml: 0.5,
+                              color: 'warning.main',
+                              fontSize: '0.7rem',
+                            }}
+                          >
+                            (概算値)
+                          </Box>
+                        )}
+                        {feeEstimation.isLoading && (
+                          <CircularProgress
+                            size={14}
+                            sx={{ position: 'absolute', right: -20 }}
+                          />
+                        )}
+                      </Box>
+                    </Box>
+                  )}
+
+                  <Divider sx={{ my: 1 }} />
+
+                  <Box display="flex" justifyContent="space-between">
+                    <Typography variant="body1" fontWeight="bold">
+                      {t('Total Estimated Fees')}:
+                    </Typography>
+                    <Box display="flex" alignItems="center" position="relative">
+                      <Typography
+                        variant="body1"
+                        fontWeight="bold"
+                        color="primary.main"
+                      >
+                        {feeEstimation.totalFee.toFixed(6)} SOL
+                      </Typography>
+                      {feeEstimation.totalFeeFallback && (
+                        <Box
+                          component="span"
+                          sx={{
+                            ml: 0.5,
+                            color: 'warning.main',
+                            fontSize: '0.7rem',
+                          }}
+                        >
+                          (概算値)
+                        </Box>
+                      )}
+                      {feeEstimation.isLoading && (
+                        <CircularProgress
+                          size={14}
+                          sx={{ position: 'absolute', right: -20 }}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+
+                  {/* SOLの場合は合計必要額（手数料+送金額）を表示 */}
+                  {selectedToken === 'SOL' && (
+                    <>
+                      <Divider sx={{ my: 1 }} />
+                      <Box display="flex" justifyContent="space-between">
+                        <Typography variant="body1" fontWeight="bold">
+                          {t('Total Required SOL')}:
+                        </Typography>
+                        <Box
+                          display="flex"
+                          alignItems="center"
+                          position="relative"
+                        >
+                          <Typography
+                            variant="body1"
+                            fontWeight="bold"
+                            color="error.main"
+                          >
+                            {(feeEstimation.totalFee + totalAmount).toFixed(6)}{' '}
+                            SOL
+                          </Typography>
+                          <Box
+                            component="span"
+                            sx={{ ml: 0.5, fontSize: '0.7rem' }}
+                          >
+                            (手数料 + 送金額)
+                          </Box>
+                          {feeEstimation.isLoading && (
+                            <CircularProgress
+                              size={14}
+                              sx={{ position: 'absolute', right: -20 }}
+                            />
+                          )}
+                        </Box>
+                      </Box>
+                    </>
+                  )}
+
+                  {selectedToken !== 'SOL' &&
+                    accountsNeedingCreation.length > 0 && (
+                      <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        mt={0.5}
+                      >
+                        * {t('Creating')} {accountsNeedingCreation.length}{' '}
+                        {t('new token accounts')}
+                        {accountsNeedingCreation.includes('estimated') &&
+                          ' (一部概算)'}
+                      </Typography>
+                    )}
+                  {selectedToken == 'SOL' && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      mt={0.5}
+                    >
+                      {t('Total amount')}: {totalAmount.toFixed(6)}{' '}
+                      {selectedTokenInfo.symbol}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
             </Box>
 
             {/* Transfer Button */}
@@ -1138,7 +2276,7 @@ const Sender: React.FC = () => {
               {transferring ? (
                 <>
                   <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
-                  {t('Processing')}...
+                  {processingMessage}...
                 </>
               ) : (
                 t('Transfer')
