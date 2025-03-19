@@ -360,7 +360,7 @@ const Sender: React.FC = () => {
       );
       setIsPasted(true);
 
-      // 3秒後にisPastedをfalseに戻す
+      // 1秒後にisPastedをfalseに戻す
       setTimeout(() => {
         setIsPasted(false);
       }, 1000);
