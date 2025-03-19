@@ -1565,13 +1565,6 @@ const Sender: React.FC = () => {
                       sx={{
                         width: 24,
                         height: 24,
-                        bgcolor: 'background.paper',
-                        '& img': {
-                          width: '80%',
-                          height: '80%',
-                          margin: '10%',
-                          objectFit: 'cover',
-                        },
                       }}
                     />
                     <Typography>
@@ -1586,13 +1579,13 @@ const Sender: React.FC = () => {
                       src="/solana-logo.png"
                       alt="SOL"
                       sx={{
-                        width: '29px',
-                        height: '29px',
+                        width: '27px',
+                        height: '27px',
                         marginRight: '0',
                         bgcolor: 'background.paper',
                         '& img': {
-                          width: '22px',
-                          height: '22px',
+                          width: '19.5px',
+                          height: '19.5px',
                           margin: '0',
                           objectFit: 'contain',
                         },
