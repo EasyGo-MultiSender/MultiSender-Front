@@ -35,9 +35,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // カスタムフックのインポート
 import { useTranslation } from 'react-i18next';
-
-// カスタムフックのインポート
 import { useRecaptcha } from '@/hooks/useRecaptcha';
+import { useTokenListMetadata } from '@/hooks/useTokenListMetadata';
 
 // ヘッダーコンポーネント
 import SerializerList from '@/components/SerializerList';
@@ -88,6 +87,16 @@ const Sender: React.FC = () => {
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
 
+  // 新しいトークンリストメタデータフック
+  const {
+    tokensWithMetadata,
+    tokensLoading,
+    fetchTokensWithMetadata,
+    handleTokenDataLoaded,
+    isTokenListLoading: tokenListLoading,
+    getTokenInfo,
+  } = useTokenListMetadata(tokenListRef);
+
   // Local state
   const [selectedToken, setSelectedToken] = useState<string>('SOL');
   const [recipientAddresses, setRecipientAddresses] = useState<string>('');
@@ -134,57 +143,11 @@ const Sender: React.FC = () => {
       ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
       : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
 
-  // メタデータ付きトークンを保持する状態
-  const [tokensWithMetadata, setTokensWithMetadata] = useState<
-    TokenWithMetadata[]
-  >([]);
-  // トークンリストのロード状態
-  const [tokensLoading, setTokensLoading] = useState(true);
-
   // 最後にパースした内容を保持して不要な再パースを防止
   const lastParsedAddressesRef = useRef<string>('');
 
   // 色付けする行番号の配列（例：[1, 3, 5]は1行目、3行目、5行目を赤くする）
   const [highlightedLines, setHighlightedLines] = useState<number[]>([2, 4]); // 例として2行目と4行目
-
-  // トークンメタデータを含むトークンアカウントを取得する関数 (明示的に実行)
-  const fetchTokensWithMetadata = useCallback(async () => {
-    if (!tokenListRef.current) return [];
-
-    setTokensLoading(true);
-    try {
-      console.log('Explicitly fetching token metadata in Sender.tsx');
-      const tokens = await tokenListRef.current.fetchMetadata();
-      setTokensWithMetadata(tokens);
-
-      console.log(`Found ${tokens.length} tokens with metadata`);
-      // tokens配列の内容をコンソールに出力して確認
-      if (tokens.length > 0) {
-        tokens.forEach((token, index) => {
-          console.log(`Token ${index + 1}:`, {
-            mint: token.account.mint,
-            amount: token.account.uiAmount,
-            symbol: token.metadata?.symbol || 'Unknown',
-            name: token.metadata?.name || 'Unknown Token',
-          });
-        });
-      }
-
-      return tokens;
-    } catch (error) {
-      console.error('Error fetching tokens with metadata:', error);
-      return [];
-    } finally {
-      setTokensLoading(false);
-    }
-  }, []);
-
-  // TokenListからのデータロード完了時のコールバック
-  const handleTokenDataLoaded = useCallback((tokens: TokenWithMetadata[]) => {
-    console.log(`Token data loaded callback: ${tokens.length} tokens received`);
-    setTokensWithMetadata(tokens);
-    setTokensLoading(false);
-  }, []);
 
   // コンポーネントマウント時にトークンメタデータを取得
   useEffect(() => {
@@ -593,39 +556,10 @@ const Sender: React.FC = () => {
   };
 
   // 選択されたトークンの情報を取得
-  const getSelectedTokenInfo = useCallback(() => {
-    if (selectedToken === 'SOL') {
-      return {
-        symbol: 'SOL',
-        name: 'Solana',
-        mint: 'SOL',
-        icon: '/solana-icon.png', // SOLアイコンのパス
-      };
-    }
-
-    BATCH_SIZE =
-      selectedToken === 'SOL'
-        ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
-        : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
-    console.log('🔍 BATCH_SIZE:', BATCH_SIZE);
-
-    const tokenInfo = tokensWithMetadata.find(
-      (t) => t.account.mint === selectedToken
-    );
-    return {
-      symbol: tokenInfo?.metadata?.symbol || 'Unknown',
-      name: tokenInfo?.metadata?.name || 'Unknown Token',
-      mint: selectedToken,
-      icon: tokenInfo?.metadata?.uri || '/token-placeholder.png',
-    };
-  }, [selectedToken, tokensWithMetadata]);
-
-  // 選択中のトークン情報
-  const selectedTokenInfo = getSelectedTokenInfo();
+  const selectedTokenInfo = getTokenInfo(selectedToken);
 
   // トークンリストがロード中かどうか
-  const isTokenListLoading =
-    tokensLoading || (tokenListRef.current?.isLoading() ?? false);
+  const isLoading = tokenListLoading;
 
   // テンプレートダウンロード関数を追加
   const downloadTemplate = () => {
@@ -917,12 +851,10 @@ const Sender: React.FC = () => {
           const tokenMint = new PublicKey(selectedToken);
 
           // トークンのメタデータを探す（デシマル値の取得のため）
-          const selectedTokenInfo = tokensWithMetadata.find(
-            (t) => t.account.mint === selectedToken
-          );
-          const tokenDecimals = selectedTokenInfo?.account.decimals || 9; // デフォルトは9
+          const selectedTokenDetail = getTokenInfo(selectedToken);
+          const tokenDecimals = selectedTokenDetail.decimals;
           console.log(
-            `🪙 トークン情報: ${selectedTokenInfo?.metadata?.symbol || 'Unknown'}, デシマル=${tokenDecimals}`
+            `🪙 トークン情報: ${selectedTokenDetail.symbol}, デシマル=${tokenDecimals}`
           );
 
           // 進捗状態を更新
@@ -1618,7 +1550,7 @@ const Sender: React.FC = () => {
                 </MenuItem>
 
                 {/* トークンのロード状態表示 */}
-                {isTokenListLoading ? (
+                {isLoading ? (
                   <MenuItem disabled>
                     <Box display="flex" alignItems="center" py={1}>
                       <CircularProgress size={20} sx={{ mr: 2 }} />
@@ -1671,11 +1603,9 @@ const Sender: React.FC = () => {
                       justifyContent="center"
                     >
                       <Typography fontWeight="bold">
-                        {isTokenListLoading
-                          ? 'Refreshing...'
-                          : 'Refresh token list'}
+                        {isLoading ? 'Refreshing...' : 'Refresh token list'}
                       </Typography>
-                      {isTokenListLoading && (
+                      {isLoading && (
                         <CircularProgress size={16} sx={{ ml: 1 }} />
                       )}
                     </Box>

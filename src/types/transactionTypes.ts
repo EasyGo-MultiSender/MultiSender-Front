@@ -26,3 +26,9 @@ export interface Serializer {
   tokenSymbol: string;
   tokenMintAddress: string;
 }
+
+// CSVからインポートされた受取人情報
+export interface Recipient {
+  walletAddress: string;
+  amount: number;
+}

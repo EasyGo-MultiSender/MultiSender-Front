@@ -30,6 +30,7 @@ const CACHED_TOKEN_DATA = new Map<string, any>();
 export interface Account {
   mint: string;
   uiAmount: number;
+  decimals: number;
 }
 
 // メタデータを含む拡張トークン情報
