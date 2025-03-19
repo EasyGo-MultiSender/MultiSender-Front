@@ -47,7 +47,8 @@ const Footer: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          px: 4,
+          pr: 2,
+          pl: 1.5,
         }}
       >
         <Box>
@@ -79,7 +80,6 @@ const Footer: React.FC = () => {
           }}
           sx={{
             '& .MuiPopover-paper': {
-              p: 2,
               maxWidth: { xs: '80vw', sm: '400px' },
               bgcolor: '#f5f5f5',
             },
