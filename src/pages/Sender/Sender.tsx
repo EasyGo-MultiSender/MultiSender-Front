@@ -36,6 +36,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // カスタムフックのインポート
 import { useTranslation } from 'react-i18next';
 
+// カスタムフックのインポート
+import { useRecaptcha } from '@/hooks/useRecaptcha';
+
 // ヘッダーコンポーネント
 import SerializerList from '@/components/SerializerList';
 import TokenList, {
@@ -80,6 +83,7 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey, updateProcessingMessage);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
+  const { getRecaptchaToken, loading: recaptchaLoading } = useRecaptcha(); // reCAPTCHA フック
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -98,6 +102,7 @@ const Sender: React.FC = () => {
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [belowMinSolEntries, setBelowMinSolEntries] = useState<string[]>([]);
+  const [transferLoading, setTransferLoading] = useState(false);
   const [processingMessage, setProcessingMessage] = useState<string>(
     t('Processing')
   ); // 処理中メッセージ
@@ -371,6 +376,32 @@ const Sender: React.FC = () => {
       return;
     }
 
+    setTransferLoading(true);
+    try {
+      // reCAPTCHA v3トークンを取得
+      // setSnackbarMessage('reCAPTCHA検証中...');
+      // setSnackbarOpen(true);
+      const recaptchaResult = await getRecaptchaToken('transfer');
+
+      // reCAPTCHAの検証結果をチェック
+      if (!recaptchaResult.success) {
+        setSnackbarMessage(
+          `reCAPTCHA検証に失敗しました: ${recaptchaResult.error || '不明なエラー'}`
+        );
+        setSnackbarOpen(true);
+        setTransferLoading(false);
+        return;
+      }
+    } catch (error) {
+      console.error('reCAPTCHA error:', error);
+      setSnackbarMessage(
+        'reCAPTCHA検証に失敗しました。もう一度お試しください。'
+      );
+      setSnackbarOpen(true);
+      setTransferLoading(false);
+      return;
+    }
+
     // 妥当性エラーがある場合は処理中止
     if (invalidEntries.length > 0 || duplicateAddresses.length > 0) {
       setSnackbarMessage(
@@ -379,6 +410,7 @@ const Sender: React.FC = () => {
           : 'Please correct duplicate addresses'
       );
       setSnackbarOpen(true);
+      setTransferLoading(false);
       return;
     }
 
@@ -403,6 +435,7 @@ const Sender: React.FC = () => {
           `Insufficient SOL balance. Required: ${totalAmount.toFixed(6)}, Available: ${balance.toFixed(6)}`
         );
         setSnackbarOpen(true);
+        setTransferLoading(false);
         return;
       }
     } else {
@@ -421,6 +454,7 @@ const Sender: React.FC = () => {
           `Insufficient token balance. Required: ${totalAmount.toFixed(6)}, Available: ${selectedTokenInfo.account.uiAmount.toFixed(6)}`
         );
         setSnackbarOpen(true);
+        setTransferLoading(false);
         return;
       }
     }
@@ -541,10 +575,12 @@ const Sender: React.FC = () => {
         );
       }
       setSnackbarOpen(true);
+      setTransferLoading(false);
     } catch (error) {
       console.error('Transfer failed:', error);
       setSnackbarMessage(`Transfer failed: ${(error as Error).message}`);
       setSnackbarOpen(true);
+      setTransferLoading(false);
     }
   };
 
@@ -2273,7 +2309,7 @@ const Sender: React.FC = () => {
                 (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
               }
             >
-              {transferring ? (
+              {transferLoading ? (
                 <>
                   <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
                   {t(processingMessage)}...
