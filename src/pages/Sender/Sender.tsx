@@ -350,12 +350,20 @@ const Sender: React.FC = () => {
     setRecipientAddresses(formattedAddresses);
   }, []);
 
+  const [isPasted, setIsPasted] = useState(false);
+
   const pasteAddresses = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setRecipientAddresses((prev) =>
         prev.length > 0 ? prev + '\n' + text : text
       );
+      setIsPasted(true);
+
+      // 3秒後にisPastedをfalseに戻す
+      setTimeout(() => {
+        setIsPasted(false);
+      }, 1000);
     } catch (err) {
       console.error('Failed to read clipboard:', err);
     }
@@ -1894,7 +1902,11 @@ const Sender: React.FC = () => {
                 </Box>
 
                 {/* ペーストボタン - 元の見た目に戻しつつ機能を修正 */}
-                <Tooltip title="Paste" arrow placement="top">
+                <Tooltip
+                  title={isPasted ? 'Pasted !' : 'Paste'}
+                  arrow
+                  placement="top"
+                >
                   <Box
                     style={{
                       position: 'absolute',
