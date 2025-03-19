@@ -1423,7 +1423,7 @@ const Sender: React.FC = () => {
       // 運営手数料の計算（エラー時も同じ計算）
       const estimatedTxCount = Math.ceil(parsedEntries.length / BATCH_SIZE);
       const estimatedOperationFees =
-        (parseFloat(SOL_VALIDATION_AMOUNT) || 0) * estimatedTxCount;
+        (parseFloat(DEPOSIT_SOL_AMOUNT) || 0) * estimatedTxCount;
       const totalFee =
         estimatedTransactionFee + estimatedCreationFee + estimatedOperationFees;
 
