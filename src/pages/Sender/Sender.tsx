@@ -85,6 +85,7 @@ const Sender: React.FC = () => {
   const [parsedEntries, setParsedEntries] = useState<AddressEntry[]>([]);
   const [totalAmount, setTotalAmount] = useState<number>(0);
   const [belowMinSolEntries, setBelowMinSolEntries] = useState<string[]>([]);
+  const [transferLoading, setTransferLoading] = useState(false);
 
   // メタデータ付きトークンを保持する状態
   const [tokensWithMetadata, setTokensWithMetadata] = useState<
@@ -317,6 +318,7 @@ const Sender: React.FC = () => {
     }
 
     try {
+      setTransferLoading(true);
       // reCAPTCHA v3トークンを取得
       // setSnackbarMessage('reCAPTCHA検証中...');
       // setSnackbarOpen(true);
@@ -501,10 +503,12 @@ const Sender: React.FC = () => {
         );
       }
       setSnackbarOpen(true);
+      setTransferLoading(false);
     } catch (error) {
       console.error('Transfer failed:', error);
       setSnackbarMessage(`Transfer failed: ${(error as Error).message}`);
       setSnackbarOpen(true);
+      setTransferLoading(false);
     }
   };
 
@@ -1163,7 +1167,7 @@ const Sender: React.FC = () => {
                 (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
               }
             >
-              {transferring ? (
+              {transferLoading ? (
                 <>
                   <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
                   {t('Processing')}...
