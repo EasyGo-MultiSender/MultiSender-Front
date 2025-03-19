@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, Button, Popover } from '@mui/material';
 import { Email, Info } from '@mui/icons-material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import SvgIcon from '@mui/material/SvgIcon';
+import { useTranslation } from 'react-i18next';
 
 // Xのカスタムアイコン
 const XIcon = () => (
@@ -16,6 +17,7 @@ const XIcon = () => (
 
 const Footer: React.FC = () => {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { t } = useTranslation(); // 翻訳フック
 
   const handleInfoClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -87,27 +89,27 @@ const Footer: React.FC = () => {
         >
           <Typography
             variant="body2"
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, mx: 1 }}
           >
-            This site is protected by reCAPTCHA and the Google{' '}
+            {t('This site is protected by reCAPTCHA and the Google')}{' '}
             <a
               href="https://policies.google.com/privacy"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#1976d2', textDecoration: 'none' }}
             >
-              Privacy Policy
+              {t('Privacy Policy')}
             </a>{' '}
-            and{' '}
+            {t('and')}{' '}
             <a
               href="https://policies.google.com/terms"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#1976d2', textDecoration: 'none' }}
             >
-              Terms of Service
+              {t('Terms of Service')}
             </a>{' '}
-            apply.
+            {t('apply.')}
           </Typography>
         </Popover>
 
