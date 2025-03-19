@@ -1,6 +1,6 @@
-import React from 'react';
-import { Box, Typography, IconButton, Button } from '@mui/material';
-import { Email } from '@mui/icons-material';
+import React, { useState } from 'react';
+import { Box, Typography, IconButton, Button, Popover } from '@mui/material';
+import { Email, Info } from '@mui/icons-material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import SvgIcon from '@mui/material/SvgIcon';
 
@@ -15,6 +15,18 @@ const XIcon = () => (
 );
 
 const Footer: React.FC = () => {
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const handleInfoClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleInfoClose = () => {
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+
   return (
     <Box
       sx={{
@@ -34,78 +46,142 @@ const Footer: React.FC = () => {
           color: 'white',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'flex-end',
+          justifyContent: 'space-between',
           px: 4,
         }}
       >
-        <Typography
-          variant="body1"
-          sx={{
-            color: 'white',
-            fontWeight: 500,
-            mr: 1.0,
-          }}
-        >
-          Contact Us
-        </Typography>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
+        <Box>
           <IconButton
-            href="mailto:contact@easy-go.me"
             color="inherit"
+            onClick={handleInfoClick}
             sx={{
               '&:hover': {
                 color: '#78C1FD',
               },
             }}
+            aria-label="information"
           >
-            <Email />
-          </IconButton>
-
-          <IconButton
-            href="https://x.com/easymultisender"
-            target="_blank"
-            rel="noopener noreferrer"
-            color="inherit"
-            sx={{
-              '&:hover': {
-                color: '#78C1FD',
-              },
-            }}
-          >
-            <XIcon />
+            <Info />
           </IconButton>
         </Box>
 
-        <Button
-          href="https://murasakibv.medium.com/"
-          target="_blank"
-          rel="noopener noreferrer"
+        <Popover
+          open={open}
+          anchorEl={anchorEl}
+          onClose={handleInfoClose}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          transformOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
           sx={{
-            ml: 3,
-            bgcolor: '#2D325A',
-            color: 'white',
-            px: 1.6,
-            py: 0.8,
-            borderRadius: 2,
-            textTransform: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            '&:hover': {
-              bgcolor: '#373B6A',
+            '& .MuiPopover-paper': {
+              p: 2,
+              maxWidth: { xs: '80vw', sm: '400px' },
+              bgcolor: '#f5f5f5',
             },
           }}
         >
-          <RocketLaunchIcon sx={{ mr: 1.5 }} />
           <Typography
             variant="body2"
+            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}
+          >
+            This site is protected by reCAPTCHA and the Google{' '}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#1976d2', textDecoration: 'none' }}
+            >
+              Privacy Policy
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://policies.google.com/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: '#1976d2', textDecoration: 'none' }}
+            >
+              Terms of Service
+            </a>{' '}
+            apply.
+          </Typography>
+        </Popover>
+
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'white',
+                fontWeight: 500,
+                mr: 1.0,
+              }}
+            >
+              Contact Us
+            </Typography>
+
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
+              <IconButton
+                href="mailto:contact@easy-go.me"
+                color="inherit"
+                sx={{
+                  '&:hover': {
+                    color: '#78C1FD',
+                  },
+                }}
+              >
+                <Email />
+              </IconButton>
+
+              <IconButton
+                href="https://x.com/easymultisender"
+                target="_blank"
+                rel="noopener noreferrer"
+                color="inherit"
+                sx={{
+                  '&:hover': {
+                    color: '#78C1FD',
+                  },
+                }}
+              >
+                <XIcon />
+              </IconButton>
+            </Box>
+          </Box>
+
+          <Button
+            href="https://murasakibv.medium.com/"
+            target="_blank"
+            rel="noopener noreferrer"
             sx={{
-              fontWeight: 500,
+              bgcolor: '#2D325A',
+              color: 'white',
+              px: 1.6,
+              py: 0.8,
+              borderRadius: 2,
+              textTransform: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              '&:hover': {
+                bgcolor: '#373B6A',
+              },
             }}
           >
-            Help Center
-          </Typography>
-        </Button>
+            <RocketLaunchIcon sx={{ mr: 1.5 }} />
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+              }}
+            >
+              Help Center
+            </Typography>
+          </Button>
+        </Box>
       </Box>
     </Box>
   );
