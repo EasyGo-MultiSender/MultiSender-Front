@@ -5,8 +5,6 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 export const useConnection = () => {
   const connection = useMemo(() => {
-    // Get saved endpoint from localStorage or fall back to env/default
-    const savedEndpoint = window.localStorage.getItem('endpoint');
     const savedNetwork = window.localStorage.getItem(
       'network'
     ) as WalletAdapterNetwork;
@@ -18,7 +16,6 @@ export const useConnection = () => {
       WalletAdapterNetwork.Devnet;
 
     const endpoint =
-      savedEndpoint ||
       (network === WalletAdapterNetwork.Mainnet
         ? import.meta.env.VITE_RPC_ENDPOINT
         : import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT) ||
