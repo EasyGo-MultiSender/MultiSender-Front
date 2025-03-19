@@ -1893,25 +1893,32 @@ const Sender: React.FC = () => {
                   )}
                 </Box>
 
+                {/* ペーストボタン - 元の見た目に戻しつつ機能を修正 */}
                 <Tooltip title="Paste" arrow placement="top">
-                  <IconButton
-                    onClick={pasteAddresses}
-                    sx={{ position: 'absolute', top: 8, right: 18 }}
+                  <Box
+                    style={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      zIndex: 2,
+                    }}
                   >
-                    <ContentPaste />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        position: 'absolute',
-                        bottom: -5.0,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: '0.6rem',
-                      }}
-                    >
-                      Paste
-                    </Typography>
-                  </IconButton>
+                    <IconButton onClick={pasteAddresses}>
+                      <ContentPaste />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          bottom: -5.0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontSize: '0.6rem',
+                        }}
+                      >
+                        Paste
+                      </Typography>
+                    </IconButton>
+                  </Box>
                 </Tooltip>
               </Box>
               <Box
