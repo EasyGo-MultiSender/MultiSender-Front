@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Serializer } from '@/types/transactionTypes';
 import SerializerList from '@/components/SerializerList';
 import WalletAddressDisplay from '@/components/WalletAddressDisplay';
 import { getHistoryFiles } from '@/hooks/getHistoryFiles';
@@ -155,7 +156,7 @@ const History = () => {
 
               {!loading && !error && serializers.length > 0 && (
                 <Box>
-                  {serializers.map((serializer) => (
+                  {serializers.map((serializer: Serializer) => (
                     <SerializerList
                       key={serializer.uuid}
                       serializer={serializer}
