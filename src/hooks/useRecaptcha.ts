@@ -60,7 +60,6 @@ export const useRecaptcha = () => {
                   action: action,
                 }
               );
-              console.log('response', response);
 
               // バックエンドからの応答をチェック
               if (response.data && response.status === 200) {

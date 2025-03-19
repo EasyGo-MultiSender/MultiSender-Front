@@ -323,7 +323,6 @@ const Sender: React.FC = () => {
       // setSnackbarMessage('reCAPTCHA検証中...');
       // setSnackbarOpen(true);
       const recaptchaResult = await getRecaptchaToken('transfer');
-      console.log('reCAPTCHA result:', recaptchaResult);
 
       // reCAPTCHAの検証結果をチェック
       if (!recaptchaResult.success) {
