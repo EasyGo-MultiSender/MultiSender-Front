@@ -127,7 +127,7 @@ const Header = memo(() => {
             <Link
               to="/sender"
               onClick={() => setNavValue('Multi Sender')}
-              style={{ marginTop: 'rem' }}
+              style={{ marginTop: '1rem' }}
             >
               <img src="/title.png" alt="logo" style={{ width: '100px' }} />
             </Link>
