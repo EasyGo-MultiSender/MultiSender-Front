@@ -25,6 +25,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // カスタムフックのインポート
 import { useTranslation } from 'react-i18next';
 
+// カスタムフックのインポート
+import { useRecaptcha } from '@/hooks/useRecaptcha';
+
 // ヘッダーコンポーネント
 import SerializerList from '@/components/SerializerList';
 import TokenList, {
@@ -63,6 +66,7 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
+  const { getRecaptchaToken, loading: recaptchaLoading } = useRecaptcha(); // reCAPTCHA フック
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -308,6 +312,24 @@ const Sender: React.FC = () => {
 
     if (parsedEntries.length === 0) {
       setSnackbarMessage('No valid recipient addresses found');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      // reCAPTCHA v3トークンを取得
+      // setSnackbarMessage('reCAPTCHA検証中...');
+      // setSnackbarOpen(true);
+      const recaptchaToken = await getRecaptchaToken('transfer');
+      console.log('reCAPTCHA token:', recaptchaToken);
+
+      // ここでreCAPTCHAトークンをバックエンドに送信して検証することもできます
+      // 例: const verified = await verifyRecaptcha(recaptchaToken);
+    } catch (error) {
+      console.error('reCAPTCHA error:', error);
+      setSnackbarMessage(
+        'reCAPTCHA検証に失敗しました。もう一度お試しください。'
+      );
       setSnackbarOpen(true);
       return;
     }
