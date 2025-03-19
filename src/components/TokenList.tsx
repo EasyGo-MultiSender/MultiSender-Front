@@ -84,7 +84,7 @@ const TokenDisplay = memo(
           </Box>
         </Box>
         <Typography variant="body2" fontWeight="bold">
-          {account.uiAmount} {metadata?.symbol || ''}
+          {account.uiAmount.toLocaleString()} {metadata?.symbol || ''}
         </Typography>
       </Box>
     );
