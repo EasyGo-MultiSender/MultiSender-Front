@@ -920,7 +920,7 @@ const Sender: React.FC = () => {
           const selectedTokenInfo = tokensWithMetadata.find(
             (t) => t.account.mint === selectedToken
           );
-          const tokenDecimals = selectedTokenInfo?.account.uiAmount || 9; // デフォルトは9
+          const tokenDecimals = selectedTokenInfo?.account.decimals || 9; // デフォルトは9
           console.log(
             `🪙 トークン情報: ${selectedTokenInfo?.metadata?.symbol || 'Unknown'}, デシマル=${tokenDecimals}`
           );
