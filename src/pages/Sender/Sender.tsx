@@ -350,12 +350,20 @@ const Sender: React.FC = () => {
     setRecipientAddresses(formattedAddresses);
   }, []);
 
+  const [isPasted, setIsPasted] = useState(false);
+
   const pasteAddresses = async () => {
     try {
       const text = await navigator.clipboard.readText();
       setRecipientAddresses((prev) =>
         prev.length > 0 ? prev + '\n' + text : text
       );
+      setIsPasted(true);
+
+      // 1秒後にisPastedをfalseに戻す
+      setTimeout(() => {
+        setIsPasted(false);
+      }, 1000);
     } catch (err) {
       console.error('Failed to read clipboard:', err);
     }
@@ -1893,25 +1901,36 @@ const Sender: React.FC = () => {
                   )}
                 </Box>
 
-                <Tooltip title="Paste" arrow placement="top">
-                  <IconButton
-                    onClick={pasteAddresses}
-                    sx={{ position: 'absolute', top: 8, right: 18 }}
+                {/* ペーストボタン - 元の見た目に戻しつつ機能を修正 */}
+                <Tooltip
+                  title={isPasted ? 'Pasted !' : 'Paste'}
+                  arrow
+                  placement="top"
+                >
+                  <Box
+                    style={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
+                      zIndex: 2,
+                    }}
                   >
-                    <ContentPaste />
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        position: 'absolute',
-                        bottom: -5.0,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: '0.6rem',
-                      }}
-                    >
-                      Paste
-                    </Typography>
-                  </IconButton>
+                    <IconButton onClick={pasteAddresses}>
+                      <ContentPaste />
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          position: 'absolute',
+                          bottom: -5.0,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          fontSize: '0.6rem',
+                        }}
+                      >
+                        Paste
+                      </Typography>
+                    </IconButton>
+                  </Box>
                 </Tooltip>
               </Box>
               <Box
