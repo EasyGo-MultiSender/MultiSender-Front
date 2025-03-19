@@ -18,6 +18,8 @@ import {
   SignaturePayload,
 } from './util/postData';
 import { getWalletAdapter } from './util/wallet';
+// カスタムフックのインポート
+import { useTranslation } from 'react-i18next';
 
 const RPC_RATE_LIMIT = Number(import.meta.env.VITE_RPC_RATE_LIMIT) || 1000;
 
@@ -31,6 +33,8 @@ export function useTokenTransfer(
 ) {
   const [loading, setLoading] = useState(false);
   const { fetchMetadata } = useTokenMetadata(connection);
+
+  const { t } = useTranslation(); // 翻訳フック
 
   // 安全にメッセージを更新するヘルパー関数
   const updateMessage = useCallback(
@@ -112,7 +116,7 @@ export function useTokenTransfer(
       };
 
       try {
-        updateMessage('Checking balances...');
+        updateMessage(t('Checking balances...'));
 
         // ウォレットアダプタを事前に取得して検証
         const wallet = getWalletAdapter();
@@ -128,7 +132,7 @@ export function useTokenTransfer(
           amount: item.amount,
         }));
 
-        updateMessage('Preparing recipient batches...');
+        updateMessage(t('Preparing recipient batches...'));
 
         const batches: Array<Array<{ recipient: string; amount: number }>> = [];
         for (
@@ -136,7 +140,7 @@ export function useTokenTransfer(
           i < formattedRecipients.length;
           i += Number(BATCH_SIZE)
         ) {
-          // BAT CH_SIZEを数値として確実に扱う
+          // BATCH_SIZEを数値として確実に扱う
           const batchSize = Number(BATCH_SIZE);
           // 現在のバッチのインデックス範囲を計算
           const startIdx = i;
@@ -175,7 +179,7 @@ export function useTokenTransfer(
         );
         console.log(`Actual number of batches created: ${batches.length}`);
 
-        updateMessage('Creating transactions...');
+        updateMessage(t('Creating transactions...'));
 
         const transactions: {
           transaction: VersionedTransaction;
@@ -195,7 +199,8 @@ export function useTokenTransfer(
 
                 try {
                   updateMessage(
-                    `Creating transaction ${batchIndex + 1}/${batches.length}...`
+                    t('Checking balances...') +
+                      `[ ${batchIndex + 1}/${batches.length} ]`
                   );
 
                   console.log(
@@ -239,7 +244,7 @@ export function useTokenTransfer(
           );
         }
 
-        updateMessage('Waiting for wallet approval...');
+        updateMessage(t('Waiting for wallet approval...'));
         console.log('Requesting wallet signature...');
         // 署名リクエスト前にトランザクション数を再確認
         console.log(
@@ -254,7 +259,8 @@ export function useTokenTransfer(
         for (let i = 0; i < transactions.length; i += MAX_SIGN_BATCH) {
           const batchToSign = transactions.slice(i, i + MAX_SIGN_BATCH);
           updateMessage(
-            `Signing batch ${Math.floor(i / MAX_SIGN_BATCH) + 1}/${Math.ceil(transactions.length / MAX_SIGN_BATCH)}...`
+            t('Signing batch...') +
+              `[ ${Math.floor(i / MAX_SIGN_BATCH) + 1}/${Math.ceil(transactions.length / MAX_SIGN_BATCH)} ]`
           );
 
           console.log(
@@ -284,12 +290,13 @@ export function useTokenTransfer(
         const signedTransactions = allSignedTransactions;
 
         console.log('Transaction signed successfully by wallet');
-        updateMessage('Sending transactions to network...');
+        updateMessage(t('Sending transactions to network...'));
 
         for (const [batchIndex, batch] of batches.entries()) {
           await (async () => {
             updateMessage(
-              `Sending transaction ${batchIndex + 1}/${batches.length}...`
+              t('Sending transactions to network...') +
+                `[ ${batchIndex + 1}/${batches.length} ]`
             );
 
             const signedTx = transactions[batchIndex];
@@ -318,7 +325,8 @@ export function useTokenTransfer(
 
               console.log(`Transaction sent with signature: ${signature}`);
               updateMessage(
-                `Confirming transaction ${batchIndex + 1}/${batches.length}...`
+                t('Confirming transaction...') +
+                  `[ ${batchIndex + 1}/${batches.length} ]`
               );
 
               const success = await waitForTransactionConfirmation(
@@ -356,7 +364,8 @@ export function useTokenTransfer(
               }
 
               updateMessage(
-                `Saving transaction data ${batchIndex + 1}/${batches.length}...`
+                t('Saving transaction data...') +
+                  `[ ${batchIndex + 1}/${batches.length} ]`
               );
 
               signaturePayload.signature = transactionResult.signature;
@@ -426,7 +435,7 @@ export function useTokenTransfer(
           }
         }
 
-        updateMessage('Processing completed successfully');
+        updateMessage(t('Processing completed successfully'));
         console.log(`Transfer operation completed. Results:`, results);
         return {
           result: results,
@@ -443,7 +452,7 @@ export function useTokenTransfer(
             error.message?.includes('user rejected') ||
             error.message?.includes('request timed out')
           ) {
-            updateMessage('Transaction cancelled by user');
+            updateMessage(t('Transaction cancelled by user'));
             console.log('User cancelled transaction');
             results.push({
               signature: '',
@@ -454,11 +463,11 @@ export function useTokenTransfer(
               recipients: [],
             });
           } else {
-            updateMessage('Error occurred during processing');
+            updateMessage(t('Error occurred during processing'));
             throw error;
           }
         } else {
-          updateMessage('Unknown error occurred');
+          updateMessage(t('Unknown error occurred'));
           throw error;
         }
       } finally {

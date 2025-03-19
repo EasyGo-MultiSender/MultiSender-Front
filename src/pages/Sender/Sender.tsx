@@ -1950,7 +1950,7 @@ const Sender: React.FC = () => {
                     subText:
                       accountsNeedingCreation.length > 0
                         ? `${accountsNeedingCreation.length} ${t('accounts need creation')}`
-                        : `${t('All accounts exist')}`,
+                        : ``,
                   },
                   {
                     title: t('Total Transactions'),
@@ -2047,7 +2047,7 @@ const Sender: React.FC = () => {
                           fontSize: '0.75rem',
                         }}
                       >
-                        (実際のシミュレーション結果)
+                        {t('Results from the actual simulation')}
                       </Box>
                     )}
                   {!feeEstimation.isLoading &&
@@ -2062,7 +2062,7 @@ const Sender: React.FC = () => {
                           fontSize: '0.75rem',
                         }}
                       >
-                        (概算値)
+                        ({t('Estimated results')})
                       </Box>
                     )}
                 </Typography>
@@ -2086,7 +2086,7 @@ const Sender: React.FC = () => {
                               fontSize: '0.7rem',
                             }}
                           >
-                            (概算値)
+                            ({t('Estimated results')})
                           </Box>
                         )}
                       {feeEstimation.isLoading && (
@@ -2112,7 +2112,7 @@ const Sender: React.FC = () => {
                         sx={{ ml: 0.5, fontSize: '0.7rem' }}
                       >
                         ({parseFloat(DEPOSIT_SOL_AMOUNT).toFixed(6)} SOL ×{' '}
-                        {Math.ceil(parsedEntries.length / BATCH_SIZE)}件)
+                        {Math.ceil(parsedEntries.length / BATCH_SIZE)})
                       </Box>
                       {feeEstimation.isLoading && (
                         <CircularProgress
@@ -2145,7 +2145,7 @@ const Sender: React.FC = () => {
                               fontSize: '0.7rem',
                             }}
                           >
-                            (概算値)
+                            ({t('Estimated results')})
                           </Box>
                         )}
                         {feeEstimation.isLoading && (
@@ -2181,7 +2181,7 @@ const Sender: React.FC = () => {
                             fontSize: '0.7rem',
                           }}
                         >
-                          (概算値)
+                          {t('Estimated results')}
                         </Box>
                       )}
                       {feeEstimation.isLoading && (
@@ -2218,7 +2218,7 @@ const Sender: React.FC = () => {
                             component="span"
                             sx={{ ml: 0.5, fontSize: '0.7rem' }}
                           >
-                            (手数料 + 送金額)
+                            ({t('Fee + Amount')})
                           </Box>
                           {feeEstimation.isLoading && (
                             <CircularProgress
@@ -2241,7 +2241,7 @@ const Sender: React.FC = () => {
                         * {t('Creating')} {accountsNeedingCreation.length}{' '}
                         {t('new token accounts')}
                         {accountsNeedingCreation.includes('estimated') &&
-                          ' (一部概算)'}
+                          ' (' + t('Part of the estimated results') + ')'}
                       </Typography>
                     )}
                   {selectedToken == 'SOL' && (
@@ -2276,7 +2276,7 @@ const Sender: React.FC = () => {
               {transferring ? (
                 <>
                   <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
-                  {processingMessage}...
+                  {t(processingMessage)}...
                 </>
               ) : (
                 t('Transfer')
