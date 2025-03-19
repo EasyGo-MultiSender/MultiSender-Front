@@ -19,15 +19,28 @@ import {
 } from './util/postData';
 import { getWalletAdapter } from './util/wallet';
 
-const BATCH_SIZE = Number(import.meta.env.VITE_TRANSFER_BATCH_SIZE) || 9;
 const RPC_RATE_LIMIT = Number(import.meta.env.VITE_RPC_RATE_LIMIT) || 1000;
+
+// メッセージ更新用の型定義
+type ProcessingMessageUpdater = (message: string) => void;
 
 export function useTokenTransfer(
   connection: Connection,
-  publicKey: PublicKey | null
+  publicKey: PublicKey | null,
+  processingMessageUpdater?: ProcessingMessageUpdater
 ) {
   const [loading, setLoading] = useState(false);
   const { fetchMetadata } = useTokenMetadata(connection);
+
+  // 安全にメッセージを更新するヘルパー関数
+  const updateMessage = useCallback(
+    (message: string) => {
+      if (processingMessageUpdater) {
+        processingMessageUpdater(message);
+      }
+    },
+    [processingMessageUpdater]
+  );
 
   // ミントアドレスからトークンシンボルを取得する関数
   const getTokenSymbol = useCallback(
@@ -75,6 +88,12 @@ export function useTokenTransfer(
       }
 
       setLoading(true);
+
+      const BATCH_SIZE =
+        mint === undefined
+          ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
+          : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
+
       const uuid = uuidv4();
       const results: TransferResult[] = [];
 
@@ -93,9 +112,7 @@ export function useTokenTransfer(
       };
 
       try {
-        console.log(
-          `Starting transfer with individual amounts: ${recipientsWithAmounts.length} recipients, mint: ${mint || 'SOL'}`
-        );
+        updateMessage('Checking balances...');
 
         // ウォレットアダプタを事前に取得して検証
         const wallet = getWalletAdapter();
@@ -111,14 +128,54 @@ export function useTokenTransfer(
           amount: item.amount,
         }));
 
-        // バッチに分割 - 最大BATCH_SIZE件ずつ
+        updateMessage('Preparing recipient batches...');
+
         const batches: Array<Array<{ recipient: string; amount: number }>> = [];
-        for (let i = 0; i < formattedRecipients.length; i += BATCH_SIZE) {
-          batches.push(formattedRecipients.slice(i, i + BATCH_SIZE));
+        for (
+          let i = 0;
+          i < formattedRecipients.length;
+          i += Number(BATCH_SIZE)
+        ) {
+          // BAT CH_SIZEを数値として確実に扱う
+          const batchSize = Number(BATCH_SIZE);
+          // 現在のバッチのインデックス範囲を計算
+          const startIdx = i;
+          const endIdx = Math.min(
+            i + batchSize - 1,
+            formattedRecipients.length - 1
+          );
+
+          // このバッチに含める受信者を取得
+          const currentBatch = formattedRecipients.slice(startIdx, endIdx + 1);
+          batches.push(currentBatch);
         }
+
+        // バッチ作成の結果を検証
+        const totalRecipients = batches.reduce(
+          (sum, batch) => sum + batch.length,
+          0
+        );
+        if (totalRecipients !== formattedRecipients.length) {
+          console.error(
+            `⚠️ バッチ分割エラー: 元の受信者数=${formattedRecipients.length}, バッチ後の受信者数=${totalRecipients}`
+          );
+        }
+
         console.log(
           `Split into ${batches.length} batches of max ${BATCH_SIZE} recipients each`
         );
+        console.log(
+          `合計: ${formattedRecipients.length}件 -> ${batches.length}バッチ (平均${(formattedRecipients.length / batches.length).toFixed(1)}件/バッチ)`
+        );
+
+        // デバッグ: バッチの詳細を出力
+        console.log(`Total valid recipients: ${formattedRecipients.length}`);
+        console.log(
+          `Expected number of batches: ${Math.ceil(formattedRecipients.length / BATCH_SIZE)}`
+        );
+        console.log(`Actual number of batches created: ${batches.length}`);
+
+        updateMessage('Creating transactions...');
 
         const transactions: {
           transaction: VersionedTransaction;
@@ -137,6 +194,10 @@ export function useTokenTransfer(
                 );
 
                 try {
+                  updateMessage(
+                    `Creating transaction ${batchIndex + 1}/${batches.length}...`
+                  );
+
                   console.log(
                     `[${batchIndex + 1}/${batches.length}] Processing batch with ${batch.length} recipients`
                   );
@@ -166,15 +227,71 @@ export function useTokenTransfer(
           )
         );
 
-        console.log('Requesting wallet signature...');
-        const signedTransactions: Transaction[] =
-          await wallet.signAllTransactions(
-            transactions.map((t) => t.transaction)
+        // デバッグ: 作成されたトランザクション数を確認
+        console.log(
+          `Created ${transactions.length} transactions out of ${batches.length} batches`
+        );
+
+        // デバッグ: バッチとトランザクションの数に不一致がないか確認
+        if (transactions.length < batches.length) {
+          console.warn(
+            `⚠️ Some batches did not create transactions: ${batches.length - transactions.length} missing`
           );
+        }
+
+        updateMessage('Waiting for wallet approval...');
+        console.log('Requesting wallet signature...');
+        // 署名リクエスト前にトランザクション数を再確認
+        console.log(
+          `Requesting signatures for ${transactions.length} transactions...`
+        );
+
+        // ウォレット署名は一度に多数のトランザクションを処理できない可能性がある
+        // 25件ずつに分割して処理する
+        const MAX_SIGN_BATCH = 10;
+        let allSignedTransactions: Transaction[] = [];
+
+        for (let i = 0; i < transactions.length; i += MAX_SIGN_BATCH) {
+          const batchToSign = transactions.slice(i, i + MAX_SIGN_BATCH);
+          updateMessage(
+            `Signing batch ${Math.floor(i / MAX_SIGN_BATCH) + 1}/${Math.ceil(transactions.length / MAX_SIGN_BATCH)}...`
+          );
+
+          console.log(
+            `Signing batch ${i / MAX_SIGN_BATCH + 1}: ${batchToSign.length} transactions`
+          );
+
+          try {
+            const signedBatch = await wallet.signAllTransactions(
+              batchToSign.map((t) => t.transaction)
+            );
+            allSignedTransactions = [...allSignedTransactions, ...signedBatch];
+            console.log(
+              `Successfully signed batch ${i / MAX_SIGN_BATCH + 1}: got ${signedBatch.length} signatures`
+            );
+          } catch (error) {
+            console.error(
+              `Error signing batch ${i / MAX_SIGN_BATCH + 1}:`,
+              error
+            );
+            throw error;
+          }
+        }
+
+        console.log(
+          `Total signed transactions: ${allSignedTransactions.length} of ${transactions.length} requested`
+        );
+        const signedTransactions = allSignedTransactions;
+
         console.log('Transaction signed successfully by wallet');
+        updateMessage('Sending transactions to network...');
 
         for (const [batchIndex, batch] of batches.entries()) {
           await (async () => {
+            updateMessage(
+              `Sending transaction ${batchIndex + 1}/${batches.length}...`
+            );
+
             const signedTx = transactions[batchIndex];
             const signedTransaction = signedTransactions[batchIndex];
             const batchRecipients = batch.map((item) => item.recipient);
@@ -200,6 +317,9 @@ export function useTokenTransfer(
               );
 
               console.log(`Transaction sent with signature: ${signature}`);
+              updateMessage(
+                `Confirming transaction ${batchIndex + 1}/${batches.length}...`
+              );
 
               const success = await waitForTransactionConfirmation(
                 connection,
@@ -234,6 +354,10 @@ export function useTokenTransfer(
                   recipients: batchRecipients,
                 } as TransferResult;
               }
+
+              updateMessage(
+                `Saving transaction data ${batchIndex + 1}/${batches.length}...`
+              );
 
               signaturePayload.signature = transactionResult.signature;
               signaturePayload.senderWallet = publicKey.toString();
@@ -302,6 +426,7 @@ export function useTokenTransfer(
           }
         }
 
+        updateMessage('Processing completed successfully');
         console.log(`Transfer operation completed. Results:`, results);
         return {
           result: results,
@@ -318,6 +443,7 @@ export function useTokenTransfer(
             error.message?.includes('user rejected') ||
             error.message?.includes('request timed out')
           ) {
+            updateMessage('Transaction cancelled by user');
             console.log('User cancelled transaction');
             results.push({
               signature: '',
@@ -328,9 +454,11 @@ export function useTokenTransfer(
               recipients: [],
             });
           } else {
+            updateMessage('Error occurred during processing');
             throw error;
           }
         } else {
+          updateMessage('Unknown error occurred');
           throw error;
         }
       } finally {
@@ -342,7 +470,7 @@ export function useTokenTransfer(
         uuid: uuidv4(),
       };
     },
-    [connection, publicKey, getTokenSymbol]
+    [connection, publicKey, getTokenSymbol, updateMessage]
   );
 
   return {
