@@ -1560,9 +1560,31 @@ const Sender: React.FC = () => {
                 renderValue={() => (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Avatar
-                      src={selectedTokenInfo.icon}
+                      src={
+                        selectedTokenInfo.symbol === 'SOL'
+                          ? '/solana-logo.png'
+                          : selectedTokenInfo.icon
+                      }
                       alt={selectedTokenInfo.symbol}
-                      sx={{ width: 24, height: 24 }}
+                      sx={{
+                        ...(selectedTokenInfo.symbol === 'SOL'
+                          ? {
+                              width: '27px',
+                              height: '27px',
+                              marginRight: '0',
+                              bgcolor: 'background.paper',
+                              '& img': {
+                                width: '19.5px',
+                                height: '19.5px',
+                                margin: '0',
+                                objectFit: 'contain',
+                              },
+                            }
+                          : {
+                              width: 24,
+                              height: 24,
+                            }),
+                      }}
                     />
                     <Typography>
                       {selectedTokenInfo.symbol} - {selectedTokenInfo.name}
@@ -1573,9 +1595,20 @@ const Sender: React.FC = () => {
                 <MenuItem value="SOL">
                   <ListItemAvatar>
                     <Avatar
-                      src="/solana-icon.png"
+                      src="/solana-logo.png"
                       alt="SOL"
-                      sx={{ width: 24, height: 24 }}
+                      sx={{
+                        width: '27px',
+                        height: '27px',
+                        marginRight: '0',
+                        bgcolor: 'background.paper',
+                        '& img': {
+                          width: '19.5px',
+                          height: '19.5px',
+                          margin: '0',
+                          objectFit: 'contain',
+                        },
+                      }}
                     />
                   </ListItemAvatar>
                   <ListItemText
