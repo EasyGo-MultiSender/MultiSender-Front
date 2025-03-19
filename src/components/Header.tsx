@@ -122,10 +122,15 @@ const Header = memo(() => {
               marginLeft: 2,
               fontSize: isMobile ? '1.5rem' : '1.2rem',
               display: 'flex',
-              mt: 0.5,
             }}
           >
-            <img src="/title.png" alt="logo" style={{ width: '100px' }} />
+            <Link
+              to="/sender"
+              onClick={() => setNavValue('Multi Sender')}
+              style={{ marginTop: 'rem' }}
+            >
+              <img src="/title.png" alt="logo" style={{ width: '100px' }} />
+            </Link>
           </Typography>
 
           {!isMobile && (
