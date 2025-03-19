@@ -376,8 +376,8 @@ const Sender: React.FC = () => {
       return;
     }
 
+    setTransferLoading(true);
     try {
-      setTransferLoading(true);
       // reCAPTCHA v3トークンを取得
       // setSnackbarMessage('reCAPTCHA検証中...');
       // setSnackbarOpen(true);
