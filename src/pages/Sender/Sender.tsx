@@ -320,11 +320,17 @@ const Sender: React.FC = () => {
       // reCAPTCHA v3トークンを取得
       // setSnackbarMessage('reCAPTCHA検証中...');
       // setSnackbarOpen(true);
-      const recaptchaToken = await getRecaptchaToken('transfer');
-      console.log('reCAPTCHA token:', recaptchaToken);
+      const recaptchaResult = await getRecaptchaToken('transfer');
+      console.log('reCAPTCHA result:', recaptchaResult);
 
-      // ここでreCAPTCHAトークンをバックエンドに送信して検証することもできます
-      // 例: const verified = await verifyRecaptcha(recaptchaToken);
+      // reCAPTCHAの検証結果をチェック
+      if (!recaptchaResult.success) {
+        setSnackbarMessage(
+          `reCAPTCHA検証に失敗しました: ${recaptchaResult.error || '不明なエラー'}`
+        );
+        setSnackbarOpen(true);
+        return;
+      }
     } catch (error) {
       console.error('reCAPTCHA error:', error);
       setSnackbarMessage(
