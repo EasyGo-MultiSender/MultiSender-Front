@@ -389,6 +389,7 @@ const Sender: React.FC = () => {
           `reCAPTCHA検証に失敗しました: ${recaptchaResult.error || '不明なエラー'}`
         );
         setSnackbarOpen(true);
+        setTransferLoading(false);
         return;
       }
     } catch (error) {
@@ -397,6 +398,7 @@ const Sender: React.FC = () => {
         'reCAPTCHA検証に失敗しました。もう一度お試しください。'
       );
       setSnackbarOpen(true);
+      setTransferLoading(false);
       return;
     }
 
@@ -408,6 +410,7 @@ const Sender: React.FC = () => {
           : 'Please correct duplicate addresses'
       );
       setSnackbarOpen(true);
+      setTransferLoading(false);
       return;
     }
 
@@ -432,6 +435,7 @@ const Sender: React.FC = () => {
           `Insufficient SOL balance. Required: ${totalAmount.toFixed(6)}, Available: ${balance.toFixed(6)}`
         );
         setSnackbarOpen(true);
+        setTransferLoading(false);
         return;
       }
     } else {
@@ -450,6 +454,7 @@ const Sender: React.FC = () => {
           `Insufficient token balance. Required: ${totalAmount.toFixed(6)}, Available: ${selectedTokenInfo.account.uiAmount.toFixed(6)}`
         );
         setSnackbarOpen(true);
+        setTransferLoading(false);
         return;
       }
     }
