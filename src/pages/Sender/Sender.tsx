@@ -1562,7 +1562,17 @@ const Sender: React.FC = () => {
                     <Avatar
                       src={selectedTokenInfo.icon}
                       alt={selectedTokenInfo.symbol}
-                      sx={{ width: 24, height: 24 }}
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        bgcolor: 'background.paper',
+                        '& img': {
+                          width: '80%',
+                          height: '80%',
+                          margin: '10%',
+                          objectFit: 'cover',
+                        },
+                      }}
                     />
                     <Typography>
                       {selectedTokenInfo.symbol} - {selectedTokenInfo.name}
@@ -1573,9 +1583,20 @@ const Sender: React.FC = () => {
                 <MenuItem value="SOL">
                   <ListItemAvatar>
                     <Avatar
-                      src="/solana-icon.png"
+                      src="/solana-logo.png"
                       alt="SOL"
-                      sx={{ width: 24, height: 24 }}
+                      sx={{
+                        width: '29px',
+                        height: '29px',
+                        marginRight: '0',
+                        bgcolor: 'background.paper',
+                        '& img': {
+                          width: '22px',
+                          height: '22px',
+                          margin: '0',
+                          objectFit: 'contain',
+                        },
+                      }}
                     />
                   </ListItemAvatar>
                   <ListItemText
