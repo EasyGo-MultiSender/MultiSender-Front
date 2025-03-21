@@ -14,7 +14,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
@@ -25,7 +24,7 @@ import { NetworkSelector } from '@/components/NetworkSelector';
 import { useTranslation } from 'react-i18next';
 import TranslateSelector from '@/components/TranslateSelector';
 import HeaderDrawer from '@/components/HeaderDrawer';
-
+import { COLORS } from '@/constants/color';
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック
   const [navValue, setNavValue] = useState<string | false>(false);
@@ -99,10 +98,10 @@ const Header = memo(() => {
     <Box>
       <AppBar
         position="fixed"
-        sx={{ backgroundColor: '#17062e', height: '8vh' }}
+        sx={{ backgroundColor: COLORS.PURPLE.DARK, height: '8vh' }}
       >
         <Toolbar sx={{ minHeight: '8vh !important' }}>
-          {/* <IconButton
+          <IconButton
             edge="start"
             color="inherit"
             aria-label="logo"
@@ -110,10 +109,12 @@ const Header = memo(() => {
             to="/"
             sx={{ padding: '4px' }}
           >
-            <RocketLaunchIcon
-              sx={{ color: '#47dded', fontSize: '1.2rem', ml: 1 }}
+            <img
+              src="/symbolmark.svg"
+              alt="logo"
+              style={{ width: '1.6rem', marginLeft: '4px' }}
             />
-          </IconButton> */}
+          </IconButton>
 
           <Typography
             variant="h6"
@@ -149,7 +150,7 @@ const Header = memo(() => {
                   backgroundColor: '#47dded',
                   transition: 'none',
                 },
-                '& .Mui-selected': { color: '#47dded' },
+                '& .Mui-selected': { color: COLORS.BLUE.TURQUOISE },
                 '& .MuiTab-root': {
                   minHeight: '6vh',
                   padding: '0 16px',
