@@ -31,17 +31,11 @@ jobs:
         
   build:
     needs: vars
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Build application
-        uses: ./.github/actions/build/
-        with:
-          node-version: '18'
-          artifact-name: 'build-output'
-          artifact-path: 'build'
+    uses: ./.github/workflows/_build.yml
+    with:
+      node-version: '18'
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: 'build'
 
   deploy:
     needs:
