@@ -400,7 +400,7 @@ const Sender: React.FC = () => {
         recaptchaResult = await getRecaptchaToken('transfer');
       }
 
-      console.log('recaptchaResult', recaptchaResult);
+
 
       // reCAPTCHAの検証結果をチェック
       if (!recaptchaResult.success) {
