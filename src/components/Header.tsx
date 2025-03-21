@@ -100,14 +100,14 @@ const Header = memo(() => {
         position="fixed"
         sx={{
           backgroundColor: COLORS.PURPLE.DARK,
-          height: '8vh',
+          height: '9vh',
           boxSizing: 'border-box',
           borderRadius: '5px',
         }}
       >
         <Toolbar
           sx={{
-            minHeight: '8vh !important',
+            minHeight: '9vh !important',
             padding: '0 20px',
             display: 'flex',
             alignItems: 'center',

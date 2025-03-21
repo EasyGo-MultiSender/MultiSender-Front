@@ -69,8 +69,8 @@ button:hover {
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  padding: 0 10px;
-  gap: 5px;
+  padding: 0 12px;
+  gap: 6px;
 
   width: 160px;
   height: 36px;
@@ -81,19 +81,20 @@ button:hover {
   color: white;
   font-weight: 600;
   transition: all 0.3s ease;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 /* ウォレット接続後のボタンスタイル */
 .wallet-adapter-button.wallet-adapter-button-trigger.wallet-adapter-button-connected {
   justify-content: center !important;
   text-align: center;
+  padding: 0 12px !important;
 }
 
 /* Phantomアイコンのスタイル調整 */
 .wallet-adapter-button-start-icon {
-  margin-right: 8px !important;
-  margin-left: 4px !important;
+  margin-right: 6px !important;
+  margin-left: 2px !important;
   padding-left: 0 !important;
   display: flex;
   align-items: center;
