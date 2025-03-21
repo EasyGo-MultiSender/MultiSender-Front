@@ -41,7 +41,7 @@ runs:
       shell: bash
 
     - name: Install dependencies
-      run: npm ci
+      run: npm i
       shell: bash
 
     - name: Build
