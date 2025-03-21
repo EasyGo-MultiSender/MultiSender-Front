@@ -32,3 +32,9 @@ export interface Recipient {
   walletAddress: string;
   amount: number;
 }
+
+// CSVからインポートされた受取人情報
+export interface Recipient {
+  walletAddress: string;
+  amount: number;
+}
