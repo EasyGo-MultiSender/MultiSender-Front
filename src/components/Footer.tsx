@@ -161,7 +161,7 @@ const Footer: React.FC = () => {
             href="https://murasakibv.medium.com/"
             target="_blank"
             sx={{
-              bgcolor: COLORS.PURPLE.MEDIUM,
+              bgcolor: COLORS.PURPLE.MEDIUM_BRIGHT,
               color: 'white',
               px: 1.6,
               py: 0.76,
@@ -171,8 +171,8 @@ const Footer: React.FC = () => {
               alignItems: 'center',
               '&:hover': {
                 transition: 'all 0.2s ease',
-                bgcolor: '#3A2D77',
-                color: COLORS.BLUE.TURQUOISE,
+                bgcolor: '#504194',
+                color: '#e6f0f7',
               },
             }}
           >
