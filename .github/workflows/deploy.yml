@@ -13,25 +13,57 @@ on:
           - production
 
 jobs:
-  build-and-deploy:
+
+  vars:
+    runs-on: ubuntu-latest
+    if: github.event.inputs.environment == 'production'
+    outputs:
+      environment: ${{ github.event.inputs.environment }}
+      instance-id: ${{ secrets.AWS_PROD_INSTANCE_ID }}
+      region: ${{ secrets.AWS_PROD_REGION }}
+      aws-role: ${{ secrets.AWS_PROD_ROLE_ARN }}
+      artifact-name: 'build-output' 
+      aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
+      app-path: ${{ secrets.AWS_PROD_APP_PATH }}
+
+  # vars:
+  #   runs-on: ubuntu-latest
+  #   if: github.event.inputs.environment == 'staging'
+  #   outputs:
+  #     environment: ${{ github.event.inputs.environment }}
+  #     instance-id: ${{ secrets.AWS_INSTANCE_ID }}
+  #     region: ${{ secrets.AWS_REGION }}
+  #     aws-role: ${{ secrets.AWS_ROLE_ARN }}
+  #     artifact-name: 'build-output' 
+  #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #     app-path: '/var/www/vhosts/bulksender-front/'
+        
+  build:
+    needs: vars
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Print selected environment
-        run: |
-          echo "Selected environment: ${{ github.event.inputs.environment }}"
-      
-      # ビルドステップ
       - name: Build application
         uses: ./.github/actions/build
-      
-      # 環境に基づいたデプロイ
-      - name: Deploy to Production
-        if: github.event.inputs.environment == 'production'
+        with:
+          node-version: '18'
+          artifact-name: 'build-output'
+          artifact-path: 'build'
+
+  deploy:
+    needs:
+      - vars
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        if: needs.vars.outputs.environment == 'production'
         uses: ./.github/actions/deploy/prod
-        
-      - name: Deploy to Staging
-        if: github.event.inputs.environment == 'staging'
-        uses: ./.github/actions/deploy/stg
+        with:
+          instance-id: ${{ needs.vars.outputs.instance-id }}
+          region: ${{ needs.vars.outputs.region }}
+          aws-access-key-id: ${{ needs.vars.outputs.aws-access-key-id }}
+          aws-secret-access-key: ${{ needs.vars.outputs.aws-secret-access-key }}
+          app-path: ${{ needs.vars.outputs.app-path }}
+          artifact-name: ${{ needs.vars.outputs.artifact-name }}
