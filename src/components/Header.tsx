@@ -100,14 +100,13 @@ const Header = memo(() => {
         position="fixed"
         sx={{
           backgroundColor: COLORS.PURPLE.DARK,
-          height: '9vh',
+          height: '8vh',
           boxSizing: 'border-box',
-          borderRadius: '5px',
         }}
       >
         <Toolbar
           sx={{
-            minHeight: '9vh !important',
+            minHeight: '8vh !important',
             padding: '0 20px',
             display: 'flex',
             alignItems: 'center',
@@ -155,7 +154,7 @@ const Header = memo(() => {
               aria-label="navigation tabs"
               sx={{
                 position: 'absolute',
-                left: '50%',
+                left: '42%',
                 transform: 'translateX(-50%)',
                 minHeight: '6vh',
                 '& .MuiTabs-indicator': {
@@ -207,7 +206,7 @@ const Header = memo(() => {
                 to="/sender"
                 sx={{
                   fontSize: '0.8rem !important',
-                  marginRight: '2rem',
+                  marginRight: '4rem',
                 }}
               />
               <Tab
