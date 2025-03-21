@@ -39,15 +39,13 @@ const History = () => {
   return (
     <Box
       sx={{
-        height: 'calc(100vh - 8vh - 8vh)', // Subtract header (6vh) and footer (64px) heights
-        backgroundImage: `url("/image.webp")`,
-        backgroundSize: '120%',
-        backgroundPosition: '0% 80%',
-        bgcolor: '#2b2e45',
+        height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(8vh)とフッター(8vh)引く
+        backgroundImage: `url("/bg.webp")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         position: 'relative',
         overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
       }}
     >
       <Container maxWidth="md" sx={{ flex: 1 }}>
