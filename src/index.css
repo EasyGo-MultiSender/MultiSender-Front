@@ -34,9 +34,9 @@ h1 {
 }
 
 .MuiCard-root {
-  /* COLORS.PURPLE.MEDIUM */
   background-color: #251c59 !important;
   color: #ffffff !important;
+  border: 1px solid #7867ea !important;
 }
 
 @media (prefers-color-scheme: light) {
