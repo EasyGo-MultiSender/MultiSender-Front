@@ -85,7 +85,9 @@
   "new token accounts": "新しいトークンアカウント",
   "recipients": "受取人",
   "template": "テンプレート",
+  "Invalid lines": "無効なエントリ",
   "Invalid addresses": "無効なアドレス",
   "Duplicate addresses": "重複するアドレス",
+  "Invalid amounts": "無効な金額",
   "Below": "必須"
 }

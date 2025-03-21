@@ -23,6 +23,8 @@ export interface CSVValidationResult {
   duplicates: string[];
   belowMinimumSolLines: string[];
   belowMinimumSolLineNumbers: number[];
+  invalidAddressNumbers: number[];
+  invalidSolNumbers: number[];
 }
 
 export interface OperationFee {

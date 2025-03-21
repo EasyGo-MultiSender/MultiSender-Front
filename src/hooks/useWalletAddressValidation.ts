@@ -77,7 +77,9 @@ export const validationCSV = (
   selectedToken: string
 ): CSVValidationResult => {
   let entries: AddressEntry[] = [];
-  const invalidLineNumbers: number[] = []; // 無効な行の行番号を追跡
+  const invalidLineNumbers: number[] = []; // 全種類の無効な行の行番号を追跡
+  const invalidAddressNumbers: number[] = []; // 無効なアドレス
+  const invalidSolNumbers: number[] = []; // 無効な金額（001等）
   const addressMap = new Map<string, number>();
   // SOL最小額チェック用の配列
   const belowMinimumSolLines: string[] = [];
@@ -100,15 +102,19 @@ export const validationCSV = (
 
     const amount = parseFloat(amountStr);
 
-    // アドレスとアマウントの検証
+    // アドレスの検証
+    if (!address || !isValidSolanaAddress(address)) {
+      invalidAddressNumbers.push(i + 1);
+      continue;
+    }
+
+    // 無効な金額（001等）の検証
     if (
-      !address ||
-      !isValidSolanaAddress(address) ||
       !amountStr ||
       isNaN(amount) ||
       (amountStr.startsWith('0') && !amountStr.startsWith('0.'))
     ) {
-      invalidLineNumbers.push(i + 1);
+      invalidSolNumbers.push(i + 1);
       continue;
     }
 
@@ -149,6 +155,9 @@ export const validationCSV = (
   }
 
   invalidLineNumbers.push(...duplicateLineNumbers);
+  invalidLineNumbers.push(...belowMinimumSolLineNumbers);
+  invalidLineNumbers.push(...invalidAddressNumbers);
+  invalidLineNumbers.push(...invalidSolNumbers);
 
   return {
     invalidLineNumbers,
@@ -157,5 +166,7 @@ export const validationCSV = (
     duplicates,
     belowMinimumSolLines,
     belowMinimumSolLineNumbers,
+    invalidAddressNumbers,
+    invalidSolNumbers,
   };
 };

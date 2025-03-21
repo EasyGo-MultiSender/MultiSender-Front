@@ -111,6 +111,8 @@ const Sender: React.FC = () => {
       duplicates: [],
       belowMinimumSolLines: [],
       belowMinimumSolLineNumbers: [],
+      invalidAddressNumbers: [],
+      invalidSolNumbers: [],
     });
   const [transactionResults, setTransactionResults] = useState<
     TransactionResult[]
@@ -524,8 +526,43 @@ const Sender: React.FC = () => {
       setHighlightedLines(
         highlightedLines.filter((line) => line !== lineNumber)
       );
+
+      // コンソールに行のIDと行番号を表示
+      console.log(
+        `Line ${lineNumber} unhighlighted (ID: csv-row-${lineNumber})`
+      );
     } else {
       setHighlightedLines([...highlightedLines, lineNumber]);
+
+      // コンソールに行のIDと行番号を表示
+      console.log(`Line ${lineNumber} highlighted (ID: csv-row-${lineNumber})`);
+
+      // その行の内容をコンソールに表示
+      const lines = recipientAddresses.split('\n');
+      if (lineNumber <= lines.length) {
+        console.log(`Line ${lineNumber} content:`, lines[lineNumber - 1]);
+      }
+
+      // エラー行の場合は、エラータイプを表示
+      if (validationCSVResult.invalidLineNumbers.includes(lineNumber)) {
+        console.log(`Line ${lineNumber} has invalid address format`);
+      }
+      if (validationCSVResult.duplicateLineNumbers.includes(lineNumber)) {
+        console.log(`Line ${lineNumber} contains a duplicate address`);
+      }
+      if (validationCSVResult.belowMinimumSolLineNumbers.includes(lineNumber)) {
+        console.log(
+          `Line ${lineNumber} has SOL amount below minimum (${SOL_VALIDATION_AMOUNT})`
+        );
+      }
+    }
+
+    // エラー行をスクロールで表示しやすくする視覚的フィードバック
+    const lineElement = document.querySelector(
+      `[data-row-id="csv-row-${lineNumber}"]`
+    );
+    if (lineElement) {
+      lineElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
   };
 
@@ -1575,7 +1612,7 @@ const Sender: React.FC = () => {
                   <Box
                     sx={{
                       display: 'flex',
-                      maxHeight: '220px', // 約10行分の高さに制限
+                      maxHeight: '300px', // 約10行分の高さに制限
                       overflow: 'auto', // スクロール可能に
                       '&::-webkit-scrollbar': {
                         width: '8px',
@@ -1615,6 +1652,8 @@ const Sender: React.FC = () => {
                       {recipientAddresses.split('\n').map((_, i) => (
                         <Box
                           key={i}
+                          data-row-id={`line-number-${i + 1}`}
+                          data-line-number={i + 1}
                           sx={{
                             pr: 1,
                             height: '20px',
@@ -1622,6 +1661,15 @@ const Sender: React.FC = () => {
                               ? 'red'
                               : 'inherit', // ハイライト行の番号も赤くする
                             cursor: 'pointer', // クリック可能であることを示す
+                            backgroundColor: highlightedLines.includes(i + 1)
+                              ? 'rgba(255, 0, 0, 0.05)'
+                              : 'transparent', // ハイライト行の背景もわずかに色付け
+                            transition: 'background-color 0.2s ease',
+                            '&:hover': {
+                              backgroundColor: highlightedLines.includes(i + 1)
+                                ? 'rgba(255, 0, 0, 0.1)'
+                                : 'rgba(0, 0, 0, 0.05)', // ホバー時の背景色
+                            },
                           }}
                           onClick={() => handleLineClick(i + 1)}
                         >
@@ -1637,10 +1685,29 @@ const Sender: React.FC = () => {
                           (_, i) => (
                             <Box
                               key={i + recipientAddresses.split('\n').length}
+                              data-row-id={`line-number-${i + recipientAddresses.split('\n').length + 1}`}
+                              data-line-number={
+                                i + recipientAddresses.split('\n').length + 1
+                              }
                               sx={{
                                 pr: 1,
                                 height: '20px',
                                 cursor: 'pointer',
+                                backgroundColor: highlightedLines.includes(
+                                  i + recipientAddresses.split('\n').length + 1
+                                )
+                                  ? 'rgba(255, 0, 0, 0.05)'
+                                  : 'transparent',
+                                transition: 'background-color 0.2s ease',
+                                '&:hover': {
+                                  backgroundColor: highlightedLines.includes(
+                                    i +
+                                      recipientAddresses.split('\n').length +
+                                      1
+                                  )
+                                    ? 'rgba(255, 0, 0, 0.1)'
+                                    : 'rgba(0, 0, 0, 0.05)',
+                                },
                               }}
                               onClick={() =>
                                 handleLineClick(
@@ -1677,7 +1744,7 @@ const Sender: React.FC = () => {
                           top: 0,
                           left: 0,
                           width: 'calc(100% - 16px)',
-                          height: '100%',
+                          height: 'calc(100% - 16px);',
                           border: 'none',
                           outline: 'none',
                           resize: 'none',
@@ -1713,12 +1780,30 @@ const Sender: React.FC = () => {
                         {recipientAddresses.split('\n').map((line, i) => (
                           <Box
                             key={i}
+                            data-row-id={`csv-row-${i + 1}`}
+                            data-line-number={i + 1}
                             sx={{
                               height: '20px',
                               color: highlightedLines.includes(i + 1)
                                 ? 'red'
                                 : 'inherit', // 指定行を赤色に
+                              position: 'relative',
+                              '&::before': {
+                                content: '""',
+                                position: 'absolute',
+                                left: '-8px',
+                                top: '0',
+                                width: '4px',
+                                height: '100%',
+                                backgroundColor: highlightedLines.includes(
+                                  i + 1
+                                )
+                                  ? 'red'
+                                  : 'transparent',
+                                transition: 'background-color 0.2s ease',
+                              },
                             }}
+                            onClick={() => handleLineClick(i + 1)} // コンポーネントをクリック可能に
                           >
                             {line || ' '} {/* 空行の場合でも高さを確保 */}
                           </Box>
@@ -1733,7 +1818,31 @@ const Sender: React.FC = () => {
                             (_, i) => (
                               <Box
                                 key={i + recipientAddresses.split('\n').length}
-                                sx={{ height: '20px' }}
+                                data-row-id={`csv-row-${i + recipientAddresses.split('\n').length + 1}`}
+                                data-line-number={
+                                  i + recipientAddresses.split('\n').length + 1
+                                }
+                                sx={{
+                                  height: '20px',
+                                  position: 'relative',
+                                  '&::before': {
+                                    content: '""',
+                                    position: 'absolute',
+                                    left: '-8px',
+                                    top: '0',
+                                    width: '4px',
+                                    height: '100%',
+                                    backgroundColor: 'transparent',
+                                    transition: 'background-color 0.2s ease',
+                                  },
+                                }}
+                                onClick={() =>
+                                  handleLineClick(
+                                    i +
+                                      recipientAddresses.split('\n').length +
+                                      1
+                                  )
+                                }
                               >
                                 &nbsp;
                               </Box>
@@ -1748,10 +1857,14 @@ const Sender: React.FC = () => {
                     duplicateAddresses.length > 0 ||
                     (selectedToken === 'SOL' &&
                       belowMinSolEntries.length > 0)) && (
-                    <Typography
-                      variant="caption"
-                      color="error"
-                      sx={{ px: 2, py: 0.5 }}
+                    <Box
+                      component="table"
+                      sx={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        fontSize: '0.75rem',
+                        mt: 0.5,
+                      }}
                     >
                       {invalidEntries.length > 0
                         ? `Invalid entries: ${invalidEntries.length}`
@@ -1761,7 +1874,7 @@ const Sender: React.FC = () => {
                               belowMinSolEntries.length > 0
                             ? `${belowMinSolEntries.length} entries below minimum SOL amount (${SOL_VALIDATION_AMOUNT})`
                             : ''}
-                    </Typography>
+                    </Box>
                   )}
                 </Box>
 
@@ -1811,35 +1924,246 @@ const Sender: React.FC = () => {
                   {(invalidEntries.length > 0 ||
                     duplicateAddresses.length > 0 ||
                     belowMinSolEntries.length > 0) && (
-                    <Typography variant="caption" color="error" display="block">
-                      {validationCSVResult.invalidLineNumbers.length > 0 && (
-                        <>
-                          {t('Invalid addresses')}: Line{' '}
-                          {validationCSVResult.invalidLineNumbers.join(
-                            ' / Line '
-                          )}
-                          <br />
-                        </>
-                      )}
-                      {validationCSVResult.duplicateLineNumbers.length > 0 && (
-                        <>
-                          {t('Duplicate addresses')}: Line{' '}
-                          {validationCSVResult.duplicateLineNumbers.join(
-                            ' / Line '
-                          )}
-                          <br />
-                        </>
-                      )}
-                      {validationCSVResult.belowMinimumSolLineNumbers.length >
-                        0 && (
-                        <>
-                          {t('Below')} {SOL_VALIDATION_AMOUNT} SOL: Line{' '}
-                          {validationCSVResult.belowMinimumSolLineNumbers.join(
-                            ' / Line '
-                          )}
-                        </>
-                      )}
-                    </Typography>
+                    <Box
+                      component="table"
+                      sx={{
+                        width: '100%',
+                        borderCollapse: 'collapse',
+                        fontSize: '0.75rem',
+                        mt: 0.5,
+                      }}
+                    >
+                      <tbody>
+                        {validationCSVResult.invalidLineNumbers.length > 0 && (
+                          <tr>
+                            <Box
+                              component="td"
+                              sx={{
+                                color: 'error.main',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                pr: 1,
+                                verticalAlign: 'top',
+                                width: '1%',
+                              }}
+                            >
+                              {t('Invalid lines')}:
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                verticalAlign: 'top',
+                                color: 'transparent', // 行の色を透明に
+                                textShadow: '0 0 0 rgba(211, 47, 47, 0.7)', // テキストのアウトラインだけを表示
+                              }}
+                            >
+                              {validationCSVResult.invalidLineNumbers.map(
+                                (lineNum, index) => (
+                                  <Box
+                                    component="span"
+                                    key={`invalid-summary-${lineNum}`}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      display: 'inline-block',
+                                      mx: 0.5,
+                                      '&:hover': {
+                                        textDecoration: 'underline',
+                                      },
+                                    }}
+                                    onClick={() => handleLineClick(lineNum)}
+                                  >
+                                    {lineNum}
+                                  </Box>
+                                )
+                              )}
+                            </Box>
+                          </tr>
+                        )}
+                        {validationCSVResult.invalidAddressNumbers.length >
+                          0 && (
+                          <tr>
+                            <Box
+                              component="td"
+                              sx={{
+                                color: 'error.main',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                pr: 1,
+                                verticalAlign: 'top',
+                                width: '1%',
+                              }}
+                            >
+                              | {t('Invalid addresses')}:
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                verticalAlign: 'top',
+                                color: 'transparent',
+                                textShadow: '0 0 0 rgba(211, 47, 47, 0.7)',
+                              }}
+                            >
+                              {validationCSVResult.invalidAddressNumbers.map(
+                                (lineNum, index) => (
+                                  <Box
+                                    component="span"
+                                    key={`duplicate-summary-${lineNum}`}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      display: 'inline-block',
+                                      mx: 0.5,
+                                      '&:hover': {
+                                        textDecoration: 'underline',
+                                      },
+                                    }}
+                                    onClick={() => handleLineClick(lineNum)}
+                                  >
+                                    {lineNum}
+                                  </Box>
+                                )
+                              )}
+                            </Box>
+                          </tr>
+                        )}
+                        {validationCSVResult.duplicateLineNumbers.length >
+                          0 && (
+                          <tr>
+                            <Box
+                              component="td"
+                              sx={{
+                                color: 'error.main',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                pr: 1,
+                                verticalAlign: 'top',
+                                width: '1%',
+                              }}
+                            >
+                              | {t('Duplicate addresses')}:
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                verticalAlign: 'top',
+                                color: 'transparent',
+                                textShadow: '0 0 0 rgba(211, 47, 47, 0.7)',
+                              }}
+                            >
+                              {validationCSVResult.duplicateLineNumbers.map(
+                                (lineNum, index) => (
+                                  <Box
+                                    component="span"
+                                    key={`duplicate-summary-${lineNum}`}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      display: 'inline-block',
+                                      mx: 0.5,
+                                      '&:hover': {
+                                        textDecoration: 'underline',
+                                      },
+                                    }}
+                                    onClick={() => handleLineClick(lineNum)}
+                                  >
+                                    {lineNum}
+                                  </Box>
+                                )
+                              )}
+                            </Box>
+                          </tr>
+                        )}
+                        {validationCSVResult.invalidSolNumbers.length > 0 && (
+                          <tr>
+                            <Box
+                              component="td"
+                              sx={{
+                                color: 'error.main',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                pr: 1,
+                                verticalAlign: 'top',
+                                width: '1%',
+                              }}
+                            >
+                              | {t('Invalid amounts')}:
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                verticalAlign: 'top',
+                                color: 'transparent',
+                                textShadow: '0 0 0 rgba(211, 47, 47, 0.7)',
+                              }}
+                            >
+                              {validationCSVResult.invalidSolNumbers.map(
+                                (lineNum, index) => (
+                                  <Box
+                                    component="span"
+                                    key={`duplicate-summary-${lineNum}`}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      display: 'inline-block',
+                                      mx: 0.5,
+                                      '&:hover': {
+                                        textDecoration: 'underline',
+                                      },
+                                    }}
+                                    onClick={() => handleLineClick(lineNum)}
+                                  >
+                                    {lineNum}
+                                  </Box>
+                                )
+                              )}
+                            </Box>
+                          </tr>
+                        )}
+                        {validationCSVResult.belowMinimumSolLineNumbers.length >
+                          0 && (
+                          <tr>
+                            <Box
+                              component="td"
+                              sx={{
+                                color: 'error.main',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                pr: 1,
+                                verticalAlign: 'top',
+                                width: '1%',
+                              }}
+                            >
+                              | {t('Below')} {SOL_VALIDATION_AMOUNT} SOL:
+                            </Box>
+                            <Box
+                              component="td"
+                              sx={{
+                                verticalAlign: 'top',
+                                color: 'transparent',
+                                textShadow: '0 0 0 rgba(211, 47, 47, 0.7)',
+                              }}
+                            >
+                              {validationCSVResult.belowMinimumSolLineNumbers.map(
+                                (lineNum, index) => (
+                                  <Box
+                                    component="span"
+                                    key={`below-sol-summary-${lineNum}`}
+                                    sx={{
+                                      cursor: 'pointer',
+                                      display: 'inline-block',
+                                      mx: 0.5,
+                                      '&:hover': {
+                                        textDecoration: 'underline',
+                                      },
+                                    }}
+                                    onClick={() => handleLineClick(lineNum)}
+                                  >
+                                    {lineNum}
+                                  </Box>
+                                )
+                              )}
+                            </Box>
+                          </tr>
+                        )}
+                      </tbody>
+                    </Box>
                   )}
                 </Box>
                 <Box display="flex" alignItems="center" gap={1}>
