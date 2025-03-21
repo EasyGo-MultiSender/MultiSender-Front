@@ -13,6 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import NetworkCheckIcon from '@mui/icons-material/NetworkCheck';
+import COLORS from '@/constants/color';
 
 export const NetworkSelector = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -91,16 +92,16 @@ export const NetworkSelector = () => {
           width: '160px',
           height: '36px',
 
-          background: 'linear-gradient(90deg, #03B0E4 0%, #02D7B7 100%)',
+          background: COLORS.GRADIENTS.BLUE_TO_TEAL,
           borderRadius: '8px',
 
-          color: 'white',
+          color: COLORS.GRAY.LIGHT,
           fontWeight: 600,
           textTransform: 'none',
           fontSize: '0.9rem',
 
           '&:hover': {
-            background: 'linear-gradient(90deg, #039DC8 0%, #02C0A3 100%)',
+            background: COLORS.GRADIENTS.BLUE_TO_TEAL,
             boxShadow: '0 4px 10px rgba(2, 215, 183, 0.4)',
           },
         }}
@@ -113,8 +114,8 @@ export const NetworkSelector = () => {
         onClose={handleClose}
         sx={{
           '& .MuiPaper-root': {
-            backgroundColor: '#353859',
-            color: 'white',
+            backgroundColor: COLORS.PURPLE.MEDIUM,
+            color: COLORS.GRAY.LIGHT,
             borderRadius: '8px',
             minWidth: '160px',
           },
