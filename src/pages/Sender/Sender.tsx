@@ -1365,11 +1365,15 @@ const Sender: React.FC = () => {
     <Box
       sx={{
         height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(8vh)引く
-        backgroundImage: `url("/image.webp")`,
+        backgroundImage: `url("/bg.webp")`,
         backgroundSize: '120%',
         backgroundPosition: '0% 80%',
         position: 'relative',
         overflowY: 'auto',
+        '@media (max-width: 600px)': {
+          backgroundSize: '250%',
+          backgroundPosition: 'center',
+        },
       }}
     >
       <Container maxWidth="md">
