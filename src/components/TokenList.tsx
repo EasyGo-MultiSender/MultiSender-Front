@@ -20,8 +20,8 @@ import { ExpandMore } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { TokenMetadata, useTokenMetadata } from '../hooks/useTokenMetadata';
-import { useTokenAccounts } from '../hooks/useTokenAccounts';
+import { TokenMetadata, useTokenMetadata } from '@/hooks/useTokenMetadata';
+import { useTokenAccounts } from '@/hooks/useTokenAccounts';
 
 // グローバルキャッシュ - コンポーネントのマウント間で保持される
 const CACHED_TOKEN_DATA = new Map<string, any>();
@@ -30,6 +30,7 @@ const CACHED_TOKEN_DATA = new Map<string, any>();
 export interface Account {
   mint: string;
   uiAmount: number;
+  decimals: number;
 }
 
 // メタデータを含む拡張トークン情報
@@ -84,7 +85,7 @@ const TokenDisplay = memo(
           </Box>
         </Box>
         <Typography variant="body2" fontWeight="bold">
-          {account.uiAmount} {metadata?.symbol || ''}
+          {account.uiAmount.toLocaleString()} {metadata?.symbol || ''}
         </Typography>
       </Box>
     );
@@ -168,9 +169,12 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
             .catch(() => ({ account, metadata: null }))
         );
 
-        const results = await Promise.all(metadataPromises);
+        let results = await Promise.all(metadataPromises);
         // 降順にソート
         results.sort((a, b) => b.account.uiAmount - a.account.uiAmount);
+
+        // Null排除
+        results = results.filter((r) => r.metadata !== null);
 
         // 結果をキャッシュと状態に保存
         CACHED_TOKEN_DATA.set(cacheKey, results);

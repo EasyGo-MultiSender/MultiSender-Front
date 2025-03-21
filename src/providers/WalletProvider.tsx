@@ -14,7 +14,6 @@ interface Props {
 }
 
 export const WalletConnectionProvider: FC<Props> = ({ children }) => {
-  // Get network from localStorage or fallback to env/default
   const savedNetwork = window.localStorage.getItem(
     'network'
   ) as WalletAdapterNetwork;
@@ -25,15 +24,11 @@ export const WalletConnectionProvider: FC<Props> = ({ children }) => {
     (import.meta.env.VITE_SOLANA_DEV_NETWORK as WalletAdapterNetwork) ||
     WalletAdapterNetwork.Devnet;
 
-  const savedEndpoint = window.localStorage.getItem('endpoint');
-
   // Use saved endpoint or fallback to appropriate env variable based on network
   const endpoint =
-    savedEndpoint ||
     (network === WalletAdapterNetwork.Mainnet
       ? import.meta.env.VITE_RPC_ENDPOINT
-      : import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT) ||
-    clusterApiUrl(network);
+      : import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT) || clusterApiUrl(network);
 
   // Configure available wallets
   const wallets = useMemo(
@@ -44,7 +39,7 @@ export const WalletConnectionProvider: FC<Props> = ({ children }) => {
   // function to hide phantom and solflare wallets
   useEffect(() => {
     // モーダルが開かれたときにPhantom以外を非表示にする
-    const observer = new MutationObserver((mutations) => {
+    const observer = new MutationObserver((_) => {
       // モーダルリストを探す
       const walletList = document.querySelector('.wallet-adapter-modal-list');
       if (walletList) {

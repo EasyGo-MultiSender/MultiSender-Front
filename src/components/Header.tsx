@@ -20,11 +20,11 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
 import { memo, useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useWallet } from '../hooks/useWallet';
-import { NetworkSelector } from './NetworkSelector';
+import { useWallet } from '@/hooks/useWallet';
+import { NetworkSelector } from '@/components/NetworkSelector';
 import { useTranslation } from 'react-i18next';
-import TranslateSelector from './TranslateSelector';
-import HeaderDrawer from './HeaderDrawer';
+import TranslateSelector from '@/components/TranslateSelector';
+import HeaderDrawer from '@/components/HeaderDrawer';
 
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック
@@ -56,8 +56,15 @@ const Header = memo(() => {
     if (!connected && !connecting) {
       return (
         <>
-          {!isMobile && <AccountBalanceWalletIcon sx={{ mr: 1 }} />}
-          {!isMobile ? 'Connect Wallet' : 'Connect'}
+          <AccountBalanceWalletIcon
+            sx={{
+              mr: isMobile ? 0 : 1,
+              fontSize: isMobile ? '1.2rem' : '1.4rem',
+            }}
+          />
+          {!isMobile && (
+            <span style={{ whiteSpace: 'nowrap' }}>Connect Wallet</span>
+          )}
         </>
       );
     }
@@ -68,14 +75,23 @@ const Header = memo(() => {
             size={isMobile ? 16 : 20}
             sx={{ mr: isMobile ? 0 : 1 }}
           />
-          {!isMobile ? 'Connecting...' : ''}
+          {!isMobile && (
+            <span style={{ whiteSpace: 'nowrap' }}>Connecting...</span>
+          )}
         </>
       );
     }
 
     if (connected) {
-      // On mobile, just show a very short version of the address or nothing
-      return <>{isMobile ? '' : walletInfo?.shortAddress}</>;
+      return (
+        <>
+          {!isMobile && (
+            <span style={{ whiteSpace: 'nowrap' }}>
+              {walletInfo?.shortAddress}
+            </span>
+          )}
+        </>
+      );
     }
   };
 
@@ -86,7 +102,7 @@ const Header = memo(() => {
         sx={{ backgroundColor: '#17062e', height: '8vh' }}
       >
         <Toolbar sx={{ minHeight: '8vh !important' }}>
-          <IconButton
+          {/* <IconButton
             edge="start"
             color="inherit"
             aria-label="logo"
@@ -97,7 +113,7 @@ const Header = memo(() => {
             <RocketLaunchIcon
               sx={{ color: '#47dded', fontSize: '1.2rem', ml: 1 }}
             />
-          </IconButton>
+          </IconButton> */}
 
           <Typography
             variant="h6"
@@ -105,9 +121,16 @@ const Header = memo(() => {
               flexGrow: 1,
               marginLeft: 2,
               fontSize: isMobile ? '1.5rem' : '1.2rem',
+              display: 'flex',
             }}
           >
-            {t('easy go')}
+            <Link
+              to="/sender"
+              onClick={() => setNavValue('Multi Sender')}
+              style={{ marginTop: '1rem' }}
+            >
+              <img src="/title.png" alt="logo" style={{ width: '100px' }} />
+            </Link>
           </Typography>
 
           {!isMobile && (
@@ -178,6 +201,11 @@ const Header = memo(() => {
               transition: 'all 0.2s ease',
               fontSize: '16px',
               // 共通のスタイル
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: connected ? 'center' : 'flex-start',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
 
               // 条件に基づいてスタイルをまとめて適用
               ...(isMobile
@@ -185,19 +213,18 @@ const Header = memo(() => {
                     // モバイル用スタイル
                     width: '40px',
                     height: '40px',
+                    minWidth: '40px',
                     padding: 0,
-                    display: 'grid',
-                    placeItems: 'center',
+                    borderRadius: '8px',
                     marginRight: '10px',
                   }
                 : {
                     // デスクトップ用スタイル
-                    height: '32px',
-                    padding: '0px 10px',
-                    display: 'flex',
-                    fontSize: '16px',
-                    alignItems: 'center',
-                    gap: connected ? '0px' : '8px',
+                    minWidth: connected ? '140px' : '180px',
+                    width: connected ? '140px' : '180px',
+                    height: '36px',
+                    padding: connected ? '0px' : '0px 10px',
+                    borderRadius: '6px',
                   }),
             }}
           >

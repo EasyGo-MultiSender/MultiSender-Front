@@ -1,7 +1,7 @@
 import { TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { describe, it, vi, expect, beforeEach } from 'vitest';
-import { validateMintAddress } from '../../../src/hooks/util/address'; // エイリアスがない場合は `../src/validateMintAddress`
+import { validateMintAddress } from '@/hooks/util/address'; // エイリアスがない場合は `../src/validateMintAddress`
 
 // テスト用のミントアドレス
 const VALID_MINT_ADDRESS = 'CKAd3fZnQMeSjsgdFs1JfKPWS9RDpqJAMf9MjKE7i9LS';
