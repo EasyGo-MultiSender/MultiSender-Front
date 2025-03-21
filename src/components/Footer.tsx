@@ -38,6 +38,7 @@ const Footer: React.FC = () => {
         right: 0,
         height: '8vh',
         backgroundColor: COLORS.PURPLE.DARK,
+        boxShadow: '0px 0px 10px 0px rgba(0, 0, 0, 0.5)',
         zIndex: 1000,
       }}
     >
