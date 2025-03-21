@@ -13,15 +13,6 @@ on:
           - production
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Skip test"
-
-  eslint:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Skip eslint"
       
   build:
     uses: ./.github/workflows/_build.yml
