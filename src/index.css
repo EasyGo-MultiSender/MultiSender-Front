@@ -33,6 +33,12 @@ h1 {
   line-height: 1.1;
 }
 
+.MuiCard-root {
+  /* COLORS.PURPLE.MEDIUM */
+  background-color: #251c59 !important;
+  color: #ffffff !important;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
