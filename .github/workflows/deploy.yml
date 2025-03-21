@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Build application
-        uses: ./.github/actions/build
+        uses: ./.github/actions/build/
         with:
           node-version: '18'
           artifact-name: 'build-output'
@@ -48,7 +48,7 @@ jobs:
     steps:
       - name: Deploy
         if: needs.vars.outputs.environment == 'production'
-        uses: ./.github/actions/deploy/prod
+        uses: ./.github/actions/deploy/prod/
         with:
           instance-id: ${{ needs.vars.outputs.instance-id }}
           region: ${{ needs.vars.outputs.region }}
