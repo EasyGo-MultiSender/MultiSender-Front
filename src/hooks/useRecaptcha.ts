@@ -17,7 +17,7 @@ declare global {
 /**
  * reCAPTCHA検証結果の型定義
  */
-interface RecaptchaVerificationResult {
+export interface RecaptchaVerificationResult {
   success: boolean;
   token: string;
   error?: string;

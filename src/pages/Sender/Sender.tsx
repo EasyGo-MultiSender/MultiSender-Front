@@ -57,6 +57,7 @@ import {
   AddressEntry,
   Serializer,
 } from '@/types/transactionTypes';
+import { RecaptchaVerificationResult } from '@/hooks/useRecaptcha';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -389,7 +390,17 @@ const Sender: React.FC = () => {
       // reCAPTCHA v3トークンを取得
       // setSnackbarMessage('reCAPTCHA検証中...');
       // setSnackbarOpen(true);
-      const recaptchaResult = await getRecaptchaToken('transfer');
+      let recaptchaResult: RecaptchaVerificationResult = {
+        success: true,
+        token: '',
+        error: undefined,
+      };
+
+      if (import.meta.env.VITE_RECAPTCHA_ACTIVE === 'true') {
+        recaptchaResult = await getRecaptchaToken('transfer');
+      }
+
+
 
       // reCAPTCHAの検証結果をチェック
       if (!recaptchaResult.success) {
