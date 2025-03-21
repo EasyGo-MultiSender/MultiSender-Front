@@ -104,7 +104,14 @@ const Sender: React.FC = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [validationCSVResult, setValidationCSVResult] =
-    useState<CSVValidationResult>(CSVValidationResult.initial);
+    useState<CSVValidationResult>({
+      invalidLineNumbers: [],
+      entries: [],
+      duplicateLineNumbers: [],
+      duplicates: [],
+      belowMinimumSolLines: [],
+      belowMinimumSolLineNumbers: [],
+    });
   const [transactionResults, setTransactionResults] = useState<
     TransactionResult[]
   >([]);
@@ -1797,9 +1804,44 @@ const Sender: React.FC = () => {
                 alignItems="center"
                 mt={1}
               >
-                <Typography variant="caption" color="gray">
-                  {t('Valid entries')}: {parsedEntries.length}
-                </Typography>
+                <Box>
+                  <Typography variant="caption" color="gray">
+                    {t('Valid entries')}: {parsedEntries.length}
+                  </Typography>
+                  {(invalidEntries.length > 0 ||
+                    duplicateAddresses.length > 0 ||
+                    belowMinSolEntries.length > 0) && (
+                    <Typography variant="caption" color="error" display="block">
+                      {validationCSVResult.invalidLineNumbers.length > 0 && (
+                        <>
+                          {t('Invalid addresses')}: Line{' '}
+                          {validationCSVResult.invalidLineNumbers.join(
+                            ' / Line '
+                          )}
+                          <br />
+                        </>
+                      )}
+                      {validationCSVResult.duplicateLineNumbers.length > 0 && (
+                        <>
+                          {t('Duplicate addresses')}: Line{' '}
+                          {validationCSVResult.duplicateLineNumbers.join(
+                            ' / Line '
+                          )}
+                          <br />
+                        </>
+                      )}
+                      {validationCSVResult.belowMinimumSolLineNumbers.length >
+                        0 && (
+                        <>
+                          {t('Below')} {SOL_VALIDATION_AMOUNT} SOL: Line{' '}
+                          {validationCSVResult.belowMinimumSolLineNumbers.join(
+                            ' / Line '
+                          )}
+                        </>
+                      )}
+                    </Typography>
+                  )}
+                </Box>
                 <Box display="flex" alignItems="center" gap={1}>
                   <Tooltip title="download" arrow placement="top">
                     <Button
