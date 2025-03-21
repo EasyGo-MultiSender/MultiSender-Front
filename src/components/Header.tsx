@@ -252,7 +252,7 @@ const Header = memo(() => {
           {!isMobile && (
             <>
               <TranslateSelector />
-              <Box sx={{ mx: 1 }}>
+              <Box sx={{ mx: 2 }}>
                 <NetworkSelector />
               </Box>
             </>
