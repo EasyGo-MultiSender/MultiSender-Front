@@ -39,7 +39,7 @@ const History = () => {
   return (
     <Box
       sx={{
-        height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(8vh)引く
+        height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(8vh)とフッター(8vh)引く
         backgroundImage: `url("/bg.webp")`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
