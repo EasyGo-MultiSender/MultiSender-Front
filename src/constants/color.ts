@@ -41,11 +41,11 @@ export const GRADIENTS = {
 
 // カラーパレット全体
 export const COLORS = {
-  ...PURPLE,
-  ...GRAY,
-  ...BLUE,
-  ...PINK,
-  ...GRADIENTS,
+  PURPLE,
+  GRAY,
+  BLUE,
+  PINK,
+  GRADIENTS,
 };
 
 export default COLORS;
