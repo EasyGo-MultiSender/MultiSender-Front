@@ -184,39 +184,29 @@ const Sender: React.FC = () => {
       const address = parts[0];
       const amountStr = parts[1];
 
+      const amount = parseFloat(amountStr);
+
       // アドレスとアマウントの検証
       if (
         !address ||
         !isValidSolanaAddress(address) ||
         !amountStr ||
-        isNaN(parseFloat(amountStr))
+        isNaN(amount) ||
+        (amountStr.startsWith('0') && !amountStr.startsWith('0.'))
       ) {
-        // 実際の行番号は0ベースのインデックス + 1
-        const lineNumber =
-          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
-          1;
-        if (lineNumber > 0) {
-          invalidLineNumbers.push(lineNumber);
-        }
+        invalidLineNumbers.push(i + 1);
         continue;
       }
 
-      const amount = parseFloat(amountStr);
-
       // SOL選択時の最小額チェック
       if (
-        selectedToken === 'SOL' &&
-        amount < minSolAmount &&
-        minSolAmount > 0
+        (selectedToken === 'SOL' &&
+          amount < minSolAmount &&
+          minSolAmount > 0) ||
+        (selectedToken !== 'SOL' && amount <= 0)
       ) {
         belowMinimumSolLines.push(line);
-        // 行番号を追跡
-        const lineNumber =
-          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
-          1;
-        if (lineNumber > 0) {
-          belowMinimumSolLineNumbers.push(lineNumber);
-        }
+        belowMinimumSolLineNumbers.push(i + 1);
         continue;
       }
 
