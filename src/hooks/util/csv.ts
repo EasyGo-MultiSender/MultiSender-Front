@@ -100,16 +100,3 @@ export const downloadTemplate = () => {
   a.click();
   window.URL.revokeObjectURL(url);
 };
-
-// テンプレートダウンロード関数を追加
-export const downloadTemplate = () => {
-  const template =
-    'wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547';
-  const blob = new Blob([template], { type: 'text/csv' });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'template.csv';
-  a.click();
-  window.URL.revokeObjectURL(url);
-};
