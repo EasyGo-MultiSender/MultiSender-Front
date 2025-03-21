@@ -139,7 +139,6 @@ const Header = memo(() => {
               value={navValue}
               onChange={navHandleChange}
               textColor="inherit"
-              indicatorColor="secondary"
               aria-label="navigation tabs"
               sx={{
                 position: 'absolute',
@@ -150,10 +149,10 @@ const Header = memo(() => {
                   backgroundColor: '#47dded',
                   transition: 'none',
                 },
-                '& .Mui-selected': { color: COLORS.BLUE.TURQUOISE },
                 '& .MuiTab-root': {
                   minHeight: '6vh',
-                  padding: '0 16px',
+                  padding: '0',
+                  paddingRight: '16px',
                   fontSize: '1rem',
                 },
                 '& .MuiTab-root:not(.Mui-selected):hover': {
@@ -165,21 +164,73 @@ const Header = memo(() => {
               <Tab
                 disableRipple
                 value="Multi Sender"
-                label="Multi Sender"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <img
+                      src="/icons/sender-active.svg"
+                      alt="sender"
+                      style={{
+                        width: '1rem',
+                        marginRight: '0.5rem',
+                        filter:
+                          navValue !== 'Multi Sender'
+                            ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                            : 'none',
+                      }}
+                    />
+                    <span
+                      style={{
+                        color:
+                          navValue === 'Multi Sender'
+                            ? COLORS.BLUE.TURQUOISE
+                            : COLORS.PURPLE.LIGHT,
+                      }}
+                    >
+                      Multi Sender
+                    </span>
+                  </Box>
+                }
                 component={Link}
                 to="/sender"
                 sx={{
                   fontSize: '0.8rem !important',
+                  marginRight: '2rem',
                 }}
               />
               <Tab
                 disableRipple
                 value="History"
-                label="History"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <img
+                      src={'/icons/history-active.svg'}
+                      alt="history"
+                      style={{
+                        width: '1rem',
+                        marginRight: '0.5rem',
+                        filter:
+                          navValue !== 'History'
+                            ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                            : 'none',
+                      }}
+                    />
+                    <span
+                      style={{
+                        color:
+                          navValue === 'History'
+                            ? COLORS.BLUE.TURQUOISE
+                            : COLORS.PURPLE.LIGHT,
+                      }}
+                    >
+                      History
+                    </span>
+                  </Box>
+                }
                 component={Link}
                 to="/history"
                 sx={{
                   fontSize: '0.8rem !important',
+                  marginRight: '2rem',
                 }}
               />
             </Tabs>
