@@ -84,5 +84,8 @@
   "easy go": "",
   "new token accounts": "新しいトークンアカウント",
   "recipients": "受取人",
-  "template": "テンプレート"
+  "template": "テンプレート",
+  "Invalid addresses": "無効なアドレス",
+  "Duplicate addresses": "重複するアドレス",
+  "Below": "必須"
 }
