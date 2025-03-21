@@ -59,7 +59,7 @@ const Footer: React.FC = () => {
             onClick={handleInfoClick}
             sx={{
               '&:hover': {
-                color: '#78C1FD',
+                color: COLORS.BLUE.TURQUOISE,
               },
             }}
             aria-label="information"
@@ -132,7 +132,8 @@ const Footer: React.FC = () => {
                 color="inherit"
                 sx={{
                   '&:hover': {
-                    color: '#78C1FD',
+                    color: COLORS.BLUE.TURQUOISE,
+                    transition: 'all 0.2s ease',
                   },
                 }}
               >
@@ -146,7 +147,8 @@ const Footer: React.FC = () => {
                 color="inherit"
                 sx={{
                   '&:hover': {
-                    color: '#78C1FD',
+                    color: COLORS.BLUE.TURQUOISE,
+                    transition: 'all 0.2s ease',
                   },
                 }}
               >
@@ -158,7 +160,6 @@ const Footer: React.FC = () => {
           <Button
             href="https://murasakibv.medium.com/"
             target="_blank"
-            rel="noopener noreferrer"
             sx={{
               bgcolor: COLORS.PURPLE.MEDIUM,
               color: 'white',
@@ -169,7 +170,9 @@ const Footer: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               '&:hover': {
-                bgcolor: '#373B6A',
+                transition: 'all 0.2s ease',
+                bgcolor: '#3A2D77',
+                color: COLORS.BLUE.TURQUOISE,
               },
             }}
           >
