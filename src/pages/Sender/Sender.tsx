@@ -1366,13 +1366,13 @@ const Sender: React.FC = () => {
       sx={{
         height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(6vh)とフッター(8vh)引く
         backgroundImage: `url("/bg.webp")`,
-        backgroundSize: '120%',
-        backgroundPosition: '0% 80%',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         position: 'relative',
         overflowY: 'auto',
         '@media (max-width: 600px)': {
-          backgroundSize: '250%',
-          backgroundPosition: 'center',
+          backgroundSize: 'cover',
         },
       }}
     >
