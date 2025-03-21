@@ -11,12 +11,12 @@ import {
 } from '@mui/material';
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Serializer } from '@/types/transactionTypes';
 import SerializerList from '@/components/SerializerList';
 import WalletAddressDisplay from '@/components/WalletAddressDisplay';
 import { getHistoryFiles } from '@/hooks/getHistoryFiles';
 import { useConnection } from '@/hooks/useConnection';
 import { useWallet } from '@/hooks/useWallet';
+import { Serializer } from '@/types/transactionTypes';
 
 const History = () => {
   const { t } = useTranslation();

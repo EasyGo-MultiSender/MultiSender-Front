@@ -13,3 +13,9 @@ export interface TransferResult {
   recipients: string[];
   amounts?: number[];
 }
+
+export interface OperationFee {
+  operationFeePerTx: number;
+  estimatedTxCount: number;
+  operationFees: number;
+}

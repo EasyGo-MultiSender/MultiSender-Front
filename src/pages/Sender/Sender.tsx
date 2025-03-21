@@ -23,35 +23,31 @@ import {
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
-import {
-  PublicKey,
-  Transaction,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
-} from '@solana/web3.js';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // カスタムフックのインポート
 import { useTranslation } from 'react-i18next';
 
-// カスタムフックのインポート
-import { useRecaptcha } from '@/hooks/useRecaptcha';
-
 // ヘッダーコンポーネント
 import SerializerList from '@/components/SerializerList';
-import TokenList, {
-  TokenListRef,
-  TokenWithMetadata,
-} from '@/components/TokenList';
+import TokenList, { TokenListRef } from '@/components/TokenList';
 import UploadButton from '@/components/UploadButton';
 import WalletAddressDisplay from '@/components/WalletAddressDisplay';
 import { useBalance } from '@/hooks/useBalance';
 import { useConnection } from '@/hooks/useConnection';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
+import { useTokenListMetadata } from '@/hooks/useTokenListMetadata';
 import { useTokenTransfer } from '@/hooks/useTokenTransfer';
+import {
+  createAccountInstruction,
+  createInstruction,
+  getOperationFee,
+} from '@/hooks/useTransactionFeeSimulation.ts';
 import { useWallet } from '@/hooks/useWallet';
 import { useWalletAddressValidation } from '@/hooks/useWalletAddressValidation';
+import { downloadTemplate } from '@/hooks/util/csv.ts';
 import {
   TransactionResult,
   AddressEntry,
@@ -84,10 +80,19 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey, updateProcessingMessage);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
-  const { getRecaptchaToken, loading: recaptchaLoading } = useRecaptcha(); // reCAPTCHA フック
+  const { getRecaptchaToken } = useRecaptcha(); // reCAPTCHA フック
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
+
+  // 新しいトークンリストメタデータフック
+  const {
+    tokensWithMetadata,
+    fetchTokensWithMetadata,
+    handleTokenDataLoaded,
+    isTokenListLoading: tokenListLoading,
+    getTokenInfo,
+  } = useTokenListMetadata(tokenListRef);
 
   // Local state
   const [selectedToken, setSelectedToken] = useState<string>('SOL');
@@ -130,62 +135,16 @@ const Sender: React.FC = () => {
     },
   });
 
-  let BATCH_SIZE =
+  const BATCH_SIZE =
     selectedToken === 'SOL'
       ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
       : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
-
-  // メタデータ付きトークンを保持する状態
-  const [tokensWithMetadata, setTokensWithMetadata] = useState<
-    TokenWithMetadata[]
-  >([]);
-  // トークンリストのロード状態
-  const [tokensLoading, setTokensLoading] = useState(true);
 
   // 最後にパースした内容を保持して不要な再パースを防止
   const lastParsedAddressesRef = useRef<string>('');
 
   // 色付けする行番号の配列（例：[1, 3, 5]は1行目、3行目、5行目を赤くする）
   const [highlightedLines, setHighlightedLines] = useState<number[]>([2, 4]); // 例として2行目と4行目
-
-  // トークンメタデータを含むトークンアカウントを取得する関数 (明示的に実行)
-  const fetchTokensWithMetadata = useCallback(async () => {
-    if (!tokenListRef.current) return [];
-
-    setTokensLoading(true);
-    try {
-      console.log('Explicitly fetching token metadata in Sender.tsx');
-      const tokens = await tokenListRef.current.fetchMetadata();
-      setTokensWithMetadata(tokens);
-
-      console.log(`Found ${tokens.length} tokens with metadata`);
-      // tokens配列の内容をコンソールに出力して確認
-      if (tokens.length > 0) {
-        tokens.forEach((token, index) => {
-          console.log(`Token ${index + 1}:`, {
-            mint: token.account.mint,
-            amount: token.account.uiAmount,
-            symbol: token.metadata?.symbol || 'Unknown',
-            name: token.metadata?.name || 'Unknown Token',
-          });
-        });
-      }
-
-      return tokens;
-    } catch (error) {
-      console.error('Error fetching tokens with metadata:', error);
-      return [];
-    } finally {
-      setTokensLoading(false);
-    }
-  }, []);
-
-  // TokenListからのデータロード完了時のコールバック
-  const handleTokenDataLoaded = useCallback((tokens: TokenWithMetadata[]) => {
-    console.log(`Token data loaded callback: ${tokens.length} tokens received`);
-    setTokensWithMetadata(tokens);
-    setTokensLoading(false);
-  }, []);
 
   // コンポーネントマウント時にトークンメタデータを取得
   useEffect(() => {
@@ -226,39 +185,29 @@ const Sender: React.FC = () => {
       const address = parts[0];
       const amountStr = parts[1];
 
+      const amount = parseFloat(amountStr);
+
       // アドレスとアマウントの検証
       if (
         !address ||
         !isValidSolanaAddress(address) ||
         !amountStr ||
-        isNaN(parseFloat(amountStr))
+        isNaN(amount) ||
+        (amountStr.startsWith('0') && !amountStr.startsWith('0.'))
       ) {
-        // 実際の行番号は0ベースのインデックス + 1
-        const lineNumber =
-          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
-          1;
-        if (lineNumber > 0) {
-          invalidLineNumbers.push(lineNumber);
-        }
+        invalidLineNumbers.push(i + 1);
         continue;
       }
 
-      const amount = parseFloat(amountStr);
-
       // SOL選択時の最小額チェック
       if (
-        selectedToken === 'SOL' &&
-        amount < minSolAmount &&
-        minSolAmount > 0
+        (selectedToken === 'SOL' &&
+          amount < minSolAmount &&
+          minSolAmount > 0) ||
+        (selectedToken !== 'SOL' && amount <= 0)
       ) {
         belowMinimumSolLines.push(line);
-        // 行番号を追跡
-        const lineNumber =
-          recipientAddresses.split('\n').findIndex((l) => l.trim() === line) +
-          1;
-        if (lineNumber > 0) {
-          belowMinimumSolLineNumbers.push(lineNumber);
-        }
+        belowMinimumSolLineNumbers.push(i + 1);
         continue;
       }
 
@@ -604,52 +553,10 @@ const Sender: React.FC = () => {
   };
 
   // 選択されたトークンの情報を取得
-  const getSelectedTokenInfo = useCallback(() => {
-    if (selectedToken === 'SOL') {
-      return {
-        symbol: 'SOL',
-        name: 'Solana',
-        mint: 'SOL',
-        icon: '/solana-icon.png', // SOLアイコンのパス
-      };
-    }
-
-    BATCH_SIZE =
-      selectedToken === 'SOL'
-        ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
-        : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
-    console.log('🔍 BATCH_SIZE:', BATCH_SIZE);
-
-    const tokenInfo = tokensWithMetadata.find(
-      (t) => t.account.mint === selectedToken
-    );
-    return {
-      symbol: tokenInfo?.metadata?.symbol || 'Unknown',
-      name: tokenInfo?.metadata?.name || 'Unknown Token',
-      mint: selectedToken,
-      icon: tokenInfo?.metadata?.uri || '/token-placeholder.png',
-    };
-  }, [selectedToken, tokensWithMetadata]);
-
-  // 選択中のトークン情報
-  const selectedTokenInfo = getSelectedTokenInfo();
+  const selectedTokenInfo = getTokenInfo(selectedToken);
 
   // トークンリストがロード中かどうか
-  const isTokenListLoading =
-    tokensLoading || (tokenListRef.current?.isLoading() ?? false);
-
-  // テンプレートダウンロード関数を追加
-  const downloadTemplate = () => {
-    const template =
-      'wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547';
-    const blob = new Blob([template], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'template.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
+  const isLoading = tokenListLoading;
 
   // textareaでの編集をハンドリングする関数
   const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -724,15 +631,8 @@ const Sender: React.FC = () => {
       let simulatedCount = 0; // 実際にシミュレーションを実行した回数
       const maxSimulations = 12; // 最大シミュレーション回数（RPCコール数を抑制）
 
-      // 運営手数料の計算 (1トランザクションあたりのDEPOSIT_SOL_AMOUNT)
-      const operationFeePerTx = parseFloat(DEPOSIT_SOL_AMOUNT) || 0;
-      // トランザクション数の推定（バッチサイズで割って切り上げ）
-      const estimatedTxCount = Math.ceil(parsedEntries.length / BATCH_SIZE);
-      // 運営手数料の合計
-      const operationFees = operationFeePerTx * estimatedTxCount;
-      console.log(
-        `💼 運営手数料: ${operationFees.toFixed(8)} SOL (${operationFeePerTx} SOL × ${estimatedTxCount}トランザクション)`
-      );
+      const { operationFeePerTx, estimatedTxCount, operationFees } =
+        getOperationFee(DEPOSIT_SOL_AMOUNT, parsedEntries, BATCH_SIZE);
 
       // 運営手数料を合計に加算
       totalEstimatedFee += operationFees;
@@ -790,11 +690,7 @@ const Sender: React.FC = () => {
 
             // SOL送金命令を追加
             batch.forEach((entry) => {
-              const instruction = SystemProgram.transfer({
-                fromPubkey: publicKey,
-                toPubkey: new PublicKey(entry.address),
-                lamports: Math.floor(entry.amount * LAMPORTS_PER_SOL),
-              });
+              const instruction = createInstruction(publicKey, entry);
               transaction.add(instruction);
             });
 
@@ -928,12 +824,10 @@ const Sender: React.FC = () => {
           const tokenMint = new PublicKey(selectedToken);
 
           // トークンのメタデータを探す（デシマル値の取得のため）
-          const selectedTokenInfo = tokensWithMetadata.find(
-            (t) => t.account.mint === selectedToken
-          );
-          const tokenDecimals = selectedTokenInfo?.account.decimals || 9; // デフォルトは9
+          const selectedTokenDetail = getTokenInfo(selectedToken);
+          const tokenDecimals = selectedTokenDetail.decimals;
           console.log(
-            `🪙 トークン情報: ${selectedTokenInfo?.metadata?.symbol || 'Unknown'}, デシマル=${tokenDecimals}`
+            `🪙 トークン情報: ${selectedTokenDetail.symbol}, デシマル=${tokenDecimals}`
           );
 
           // 進捗状態を更新
@@ -1005,23 +899,13 @@ const Sender: React.FC = () => {
 
               // アカウント作成シミュレーション（必要な場合のみ）
               if (needsAccountCreation) {
-                const createTx = new Transaction();
-
-                // ATA作成命令を追加
-                const createATAInstruction =
-                  createAssociatedTokenAccountInstruction(
-                    publicKey,
-                    receiverTokenAccount,
-                    receiverPubkey,
-                    tokenMint
-                  );
-                createTx.add(createATAInstruction);
-
-                // シミュレーション用ブロックハッシュ
-                const { blockhash } =
-                  await connection.getLatestBlockhash('confirmed');
-                createTx.recentBlockhash = blockhash;
-                createTx.feePayer = publicKey;
+                const createTx = await createAccountInstruction(
+                  publicKey,
+                  receiverTokenAccount,
+                  receiverPubkey,
+                  tokenMint,
+                  connection
+                );
 
                 try {
                   // アカウント作成シミュレーション実行
@@ -1629,7 +1513,7 @@ const Sender: React.FC = () => {
                 </MenuItem>
 
                 {/* トークンのロード状態表示 */}
-                {isTokenListLoading ? (
+                {isLoading ? (
                   <MenuItem disabled>
                     <Box display="flex" alignItems="center" py={1}>
                       <CircularProgress size={20} sx={{ mr: 2 }} />
@@ -1682,11 +1566,9 @@ const Sender: React.FC = () => {
                       justifyContent="center"
                     >
                       <Typography fontWeight="bold">
-                        {isTokenListLoading
-                          ? 'Refreshing...'
-                          : 'Refresh token list'}
+                        {isLoading ? 'Refreshing...' : 'Refresh token list'}
                       </Typography>
-                      {isTokenListLoading && (
+                      {isLoading && (
                         <CircularProgress size={16} sx={{ ml: 1 }} />
                       )}
                     </Box>
