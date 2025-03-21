@@ -98,9 +98,22 @@ const Header = memo(() => {
     <Box>
       <AppBar
         position="fixed"
-        sx={{ backgroundColor: COLORS.PURPLE.DARK, height: '8vh' }}
+        sx={{
+          backgroundColor: COLORS.PURPLE.DARK,
+          height: '8vh',
+          boxSizing: 'border-box',
+          borderRadius: '5px',
+        }}
       >
-        <Toolbar sx={{ minHeight: '8vh !important' }}>
+        <Toolbar
+          sx={{
+            minHeight: '8vh !important',
+            padding: '0 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
           <IconButton
             edge="start"
             color="inherit"
@@ -248,36 +261,9 @@ const Header = memo(() => {
           {/* Wallet button - completely redesigned for mobile */}
           <WalletMultiButton
             style={{
-              backgroundColor: '#78c1fd',
-              color: '#06234e',
-              transition: 'all 0.2s ease',
-              fontSize: '16px',
-              // 共通のスタイル
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: connected ? 'center' : 'flex-start',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-
-              // 条件に基づいてスタイルをまとめて適用
-              ...(isMobile
-                ? {
-                    // モバイル用スタイル
-                    width: '40px',
-                    height: '40px',
-                    minWidth: '40px',
-                    padding: 0,
-                    borderRadius: '8px',
-                    marginRight: '10px',
-                  }
-                : {
-                    // デスクトップ用スタイル
-                    minWidth: connected ? '140px' : '180px',
-                    width: connected ? '140px' : '180px',
-                    height: '36px',
-                    padding: connected ? '0px' : '0px 10px',
-                    borderRadius: '6px',
-                  }),
+              // スタイルをCSSに移動したので、ここでは最低限のものだけ残す
+              marginRight: isMobile ? '10px' : '0',
+              alignSelf: 'center',
             }}
           >
             {getWalletButtonContent()}
