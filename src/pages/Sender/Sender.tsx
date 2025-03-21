@@ -1504,20 +1504,21 @@ const Sender: React.FC = () => {
                 </MenuItem>
 
                 {/* トークンのロード状態表示 */}
-                {isLoading ? (
+                {tokensWithMetadata.length === 0 && isLoading ? (
                   <MenuItem disabled>
                     <Box display="flex" alignItems="center" py={1}>
                       <CircularProgress size={20} sx={{ mr: 2 }} />
-                      <Typography>Loading tokens...</Typography>
+                      <Typography>トークンを読み込み中...</Typography>
                     </Box>
                   </MenuItem>
-                ) : tokensWithMetadata.length === 0 ? (
+                ) : tokensWithMetadata.length === 0 && !isLoading ? (
                   <MenuItem disabled>
                     <Typography color="text.secondary">
-                      No SPL tokens found
+                      SPLトークンが見つかりません
                     </Typography>
                   </MenuItem>
                 ) : (
+                  // ロード済みの各トークンを表示
                   tokensWithMetadata.map((token) => (
                     <MenuItem
                       key={token.account.mint}
@@ -1536,6 +1537,16 @@ const Sender: React.FC = () => {
                       />
                     </MenuItem>
                   ))
+                )}
+
+                {/* トークンがある場合でもまだロード中の表示 */}
+                {tokensWithMetadata.length > 0 && isLoading && (
+                  <MenuItem disabled>
+                    <Box display="flex" alignItems="center" py={1}>
+                      <CircularProgress size={20} sx={{ mr: 2 }} />
+                      <Typography>さらにトークンを読み込み中...</Typography>
+                    </Box>
+                  </MenuItem>
                 )}
 
                 {/* トークンデータ手動更新ボタン */}
