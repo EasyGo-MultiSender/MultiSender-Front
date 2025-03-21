@@ -29,14 +29,12 @@ runs:
   steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      shell: bash
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
         node-version: ${{ inputs.node-version }}
         cache: 'npm'
-      shell: bash
 
     - name: Copy .env
       run: cp .env.production .env
@@ -59,4 +57,3 @@ runs:
       with:
         name: ${{ inputs.artifact-name }}
         path: ${{ inputs.artifact-path }}
-      shell: bash

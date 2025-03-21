@@ -33,14 +33,12 @@ runs:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
         aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
         aws-region: ${{ inputs.region }}
-      shell: bash
 
     - name: Download build artifacts
       uses: actions/download-artifact@v3
       with:
         name: ${{ inputs.artifact-name }}
         path: ./build
-      shell: bash
 
     - name: Create deployment package
       id: create-package
