@@ -1,24 +1,62 @@
 name: build
 author: hitsuzen-002
-description: build
+description: 'Build the project and output the build artifacts'
+
+inputs:
+  node-version:
+    description: 'Node.js version to use'
+    required: false
+    default: '18'
+  artifact-name:
+    description: 'Name of the artifact to upload'
+    required: false
+    default: 'build-artifact'
+  artifact-path:
+    description: 'Path to the directory to upload'
+    required: false
+    default: 'build'
+
+outputs:
+  build-directory:
+    description: 'Path to the build directory'
+    value: ${{ steps.build-step.outputs.build-directory }}
+  artifact-name:
+    description: 'Name of the uploaded artifact'
+    value: ${{ inputs.artifact-name }}
+
 runs:
-  using:
-    - name: code checkout
+  using: "composite"
+  steps:
+    - name: Checkout code
       uses: actions/checkout@v4
+      shell: bash
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: 18
+        node-version: ${{ inputs.node-version }}
         cache: 'npm'
+      shell: bash
 
     - name: Copy .env
       run: cp .env.production .env
+      shell: bash
 
-    - name: npm install
-      run: npm install
+    - name: Install dependencies
+      run: npm ci
+      shell: bash
 
-    - name: build
+    - name: Build
+      id: build-step
       run: |
         export NODE_OPTIONS="--max_old_space_size=4096"
         npm run build
+        echo "build-directory=$(pwd)/${{ inputs.artifact-path }}" >> $GITHUB_OUTPUT
+      shell: bash
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.artifact-path }}
+      shell: bash
