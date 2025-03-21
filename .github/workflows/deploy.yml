@@ -22,23 +22,12 @@ jobs:
       instance-id: ${{ secrets.AWS_PROD_INSTANCE_ID }}
       region: ${{ secrets.AWS_PROD_REGION }}
       aws-role: ${{ secrets.AWS_PROD_ROLE_ARN }}
-      artifact-name: 'build-output' 
+      artifact-name: 'build-output'
       aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
       app-path: ${{ secrets.AWS_PROD_APP_PATH }}
-
-  # vars:
-  #   runs-on: ubuntu-latest
-  #   if: github.event.inputs.environment == 'staging'
-  #   outputs:
-  #     environment: ${{ github.event.inputs.environment }}
-  #     instance-id: ${{ secrets.AWS_INSTANCE_ID }}
-  #     region: ${{ secrets.AWS_REGION }}
-  #     aws-role: ${{ secrets.AWS_ROLE_ARN }}
-  #     artifact-name: 'build-output' 
-  #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #     app-path: '/var/www/vhosts/bulksender-front/'
+    steps:
+      - run: echo "Set production environment variables"
         
   build:
     needs: vars
