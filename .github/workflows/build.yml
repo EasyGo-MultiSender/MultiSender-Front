@@ -13,15 +13,19 @@ on:
           - production
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Build application
-        uses: ./.github/actions/build/
-        with:
-          node-version: '18'
-          artifact-name: 'build-output'
-          artifact-path: 'build'
+      - run: echo "Skip test"
+
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skip eslint"
+      
+  build:
+    uses: ./.github/workflows/_build.yml
+    with:
+      node-version: '22'
+      artifact-name: 'build-output'
+      artifact-path: 'build'

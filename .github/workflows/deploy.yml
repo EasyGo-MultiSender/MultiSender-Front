@@ -11,6 +11,11 @@ on:
         options:
           - staging
           - production
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '22'
 
 jobs:
 
@@ -26,14 +31,16 @@ jobs:
       aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
       app-path: ${{ secrets.AWS_PROD_APP_PATH }}
+      node-version: ${{ github.event.inputs.node-version || '22' }}
     steps:
       - run: echo "Set production environment variables"
+      - run: echo "Using Node.js version ${{ github.event.inputs.node-version || '22' }}"
         
   build:
     needs: vars
     uses: ./.github/workflows/_build.yml
     with:
-      node-version: '18'
+      node-version: ${{ needs.vars.outputs.node-version }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
       artifact-path: 'build'
 

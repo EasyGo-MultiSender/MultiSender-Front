@@ -32,13 +32,19 @@ jobs:
     outputs:
       build-directory: ${{ steps.build-step.outputs.build-directory }}
     steps:
+      - name: Debug inputs
+        run: |
+          echo "Received node-version: ${{ inputs.node-version }}"
+          echo "Received artifact-name: ${{ inputs.artifact-name }}"
+          echo "Received artifact-path: ${{ inputs.artifact-path }}"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: ${{ inputs.node-version }}
+          node-version: '${{ inputs.node-version }}'
           cache: 'npm'
 
       - name: Copy .env
