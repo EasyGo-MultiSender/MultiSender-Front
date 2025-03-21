@@ -171,7 +171,7 @@ const Header = memo(() => {
                       alt="sender"
                       style={{
                         width: '1rem',
-                        marginRight: '0.5rem',
+                        marginRight: '0.3rem',
                         filter:
                           navValue !== 'Multi Sender'
                             ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
@@ -207,7 +207,7 @@ const Header = memo(() => {
                       alt="history"
                       style={{
                         width: '1rem',
-                        marginRight: '0.5rem',
+                        marginRight: '0.3rem',
                         filter:
                           navValue !== 'History'
                             ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
