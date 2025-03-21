@@ -391,16 +391,16 @@ const Sender: React.FC = () => {
       // setSnackbarMessage('reCAPTCHA検証中...');
       // setSnackbarOpen(true);
       let recaptchaResult: RecaptchaVerificationResult = {
-        success: true,
+        success: false,
         token: '',
         error: undefined,
       };
 
       if (import.meta.env.VITE_RECAPTCHA_ACTIVE === 'true') {
         recaptchaResult = await getRecaptchaToken('transfer');
+      } else {
+        recaptchaResult.success = true;
       }
-
-
 
       // reCAPTCHAの検証結果をチェック
       if (!recaptchaResult.success) {
