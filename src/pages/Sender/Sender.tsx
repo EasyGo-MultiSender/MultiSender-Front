@@ -46,7 +46,10 @@ import {
   getOperationFee,
 } from '@/hooks/useTransactionFeeSimulation.ts';
 import { useWallet } from '@/hooks/useWallet';
-import { useWalletAddressValidation } from '@/hooks/useWalletAddressValidation';
+import {
+  useWalletAddressValidation,
+  validationCSV,
+} from '@/hooks/useWalletAddressValidation';
 import { downloadTemplate } from '@/hooks/util/csv.ts';
 import {
   TransactionResult,
@@ -54,6 +57,7 @@ import {
   Serializer,
 } from '@/types/transactionTypes';
 import { RecaptchaVerificationResult } from '@/hooks/useRecaptcha';
+import { CSVValidationResult } from '@/hooks/interfaces/transfer.ts';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -99,6 +103,8 @@ const Sender: React.FC = () => {
   const [recipientAddresses, setRecipientAddresses] = useState<string>('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [validationCSVResult, setValidationCSVResult] =
+    useState<CSVValidationResult>(CSVValidationResult.initial);
   const [transactionResults, setTransactionResults] = useState<
     TransactionResult[]
   >([]);
@@ -163,111 +169,52 @@ const Sender: React.FC = () => {
 
     lastParsedAddressesRef.current = recipientAddresses;
 
-    let entries: AddressEntry[] = [];
-    const invalidLineNumbers: number[] = []; // 無効な行の行番号を追跡
-    const addressMap = new Map<string, number>();
-    // SOL最小額チェック用の配列
-    const belowMinimumSolLines: string[] = [];
-    const belowMinimumSolLineNumbers: number[] = []; // SOL最小額未満の行番号
+    // validationCSVの結果を一度変数に格納する
+    const validationResult = validationCSV(
+      SOL_VALIDATION_AMOUNT,
+      recipientAddresses,
+      isValidSolanaAddress,
+      selectedToken
+    );
 
-    // 最小SOL額の取得（設定されていない場合は0を使用）
-    const minSolAmount = parseFloat(SOL_VALIDATION_AMOUNT) || 0;
+    // 結果を状態に設定
+    setValidationCSVResult(validationResult);
 
-    // 各行を解析
-    const lines = recipientAddresses
-      .split('\n')
-      .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const parts = line.split(',').map((part) => part.trim());
-      const address = parts[0];
-      const amountStr = parts[1];
-
-      const amount = parseFloat(amountStr);
-
-      // アドレスとアマウントの検証
-      if (
-        !address ||
-        !isValidSolanaAddress(address) ||
-        !amountStr ||
-        isNaN(amount) ||
-        (amountStr.startsWith('0') && !amountStr.startsWith('0.'))
-      ) {
-        invalidLineNumbers.push(i + 1);
-        continue;
-      }
-
-      // SOL選択時の最小額チェック
-      if (
-        (selectedToken === 'SOL' &&
-          amount < minSolAmount &&
-          minSolAmount > 0) ||
-        (selectedToken !== 'SOL' && amount <= 0)
-      ) {
-        belowMinimumSolLines.push(line);
-        belowMinimumSolLineNumbers.push(i + 1);
-        continue;
-      }
-
-      // 有効なエントリを追加
-      entries.push({ address, amount });
-
-      // 重複アドレスを追跡
-      addressMap.set(address, (addressMap.get(address) || 0) + 1);
-    }
-
-    // 重複アドレスの特定
-    const duplicates = Array.from(addressMap.entries())
-      .filter(([_, count]) => count > 1)
-      .map(([address]) => address);
-
-    // 重複アドレスの行番号を特定
-    const duplicateLineNumbers: number[] = [];
-    if (duplicates.length > 0) {
-      recipientAddresses.split('\n').forEach((line, index) => {
-        const parts = line.split(',');
-        const address = parts[0]?.trim();
-        if (address && duplicates.includes(address)) {
-          duplicateLineNumbers.push(index + 1); // 1-indexed
-        }
-      });
-
-      entries = entries.filter((e) => !duplicates.includes(e.address));
-    }
-
-    invalidLineNumbers.push(...duplicateLineNumbers);
-
-    // 状態を更新
-    setInvalidEntries(invalidLineNumbers);
-    setParsedEntries(entries);
-    setDuplicateAddresses(duplicates);
+    // 状態を更新（validationResultを使用）
+    setInvalidEntries(validationResult.invalidLineNumbers);
+    setParsedEntries(validationResult.entries);
+    setDuplicateAddresses(validationResult.duplicates);
 
     // SOL最小額チェックの結果を状態に追加
-    setBelowMinSolEntries(belowMinimumSolLines);
+    setBelowMinSolEntries(validationResult.belowMinimumSolLines);
 
     // エラー状態に基づいてハイライト行を更新
     const newHighlightedLines: number[] = [];
-    if (invalidLineNumbers.length > 0) {
-      newHighlightedLines.push(...invalidLineNumbers);
+    if (validationResult.invalidLineNumbers.length > 0) {
+      newHighlightedLines.push(...validationResult.invalidLineNumbers);
     }
-    if (duplicateLineNumbers.length > 0) {
-      newHighlightedLines.push(...duplicateLineNumbers);
+    if (validationResult.duplicateLineNumbers.length > 0) {
+      newHighlightedLines.push(...validationResult.duplicateLineNumbers);
     }
-    if (selectedToken === 'SOL' && belowMinimumSolLineNumbers.length > 0) {
-      newHighlightedLines.push(...belowMinimumSolLineNumbers);
+    if (
+      selectedToken === 'SOL' &&
+      validationResult.belowMinimumSolLineNumbers.length > 0
+    ) {
+      newHighlightedLines.push(...validationResult.belowMinimumSolLineNumbers);
     }
 
     // ハイライト行を更新
     setHighlightedLines(newHighlightedLines);
 
     // 合計金額を計算
-    const sum = entries.reduce((total, entry) => total + entry.amount, 0);
+    const sum = validationResult.entries.reduce(
+      (total, entry) => total + entry.amount,
+      0
+    );
     setTotalAmount(sum);
 
     // 有効な行がなければ
-    if (entries.length === 0) {
+    if (validationResult.entries.length === 0) {
       setFeeEstimation((prev) => ({
         ...prev,
         isLoading: false,
