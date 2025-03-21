@@ -47,7 +47,6 @@ const History = () => {
         position: 'relative',
         overflowY: 'auto',
         '@media (max-width: 600px)': {
-          backgroundSize: 'cover',
         },
       }}
     >
