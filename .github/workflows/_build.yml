@@ -27,18 +27,20 @@ on:
         value: ${{ inputs.artifact-name }}
 
 jobs:
-
   test:
+    name: Test
     runs-on: ubuntu-latest
     steps:
       - run: echo "Skip test"
 
   eslint:
+    name: ESLint
     runs-on: ubuntu-latest
     steps:
       - run: echo "Skip eslint"
 
   build:
+    name: Build
     needs:
       - test
       - eslint

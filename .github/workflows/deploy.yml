@@ -15,6 +15,7 @@ on:
 jobs:
 
   vars:
+    name: Vars Job
     runs-on: ubuntu-latest
     if: github.event.inputs.environment == 'production'
     outputs:
@@ -31,6 +32,7 @@ jobs:
       - run: echo "Set production environment variables"
         
   build:
+    name: Build Job
     needs: vars
     uses: ./.github/workflows/_build.yml
     with:
@@ -39,6 +41,7 @@ jobs:
       artifact-path: 'build'
 
   deploy:
+    name: Deploy Job
     needs:
       - vars
       - build
