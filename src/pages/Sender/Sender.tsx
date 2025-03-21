@@ -23,34 +23,31 @@ import {
 import {
   createTransferInstruction,
   getAssociatedTokenAddress,
-  createAssociatedTokenAccountInstruction,
 } from '@solana/spl-token';
-import {
-  PublicKey,
-  Transaction,
-  SystemProgram,
-  LAMPORTS_PER_SOL,
-} from '@solana/web3.js';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // カスタムフックのインポート
 import { useTranslation } from 'react-i18next';
-import { useRecaptcha } from '@/hooks/useRecaptcha';
-import { useTokenListMetadata } from '@/hooks/useTokenListMetadata';
 
 // ヘッダーコンポーネント
 import SerializerList from '@/components/SerializerList';
-import TokenList, {
-  TokenListRef,
-  TokenWithMetadata,
-} from '@/components/TokenList';
+import TokenList, { TokenListRef } from '@/components/TokenList';
 import UploadButton from '@/components/UploadButton';
 import WalletAddressDisplay from '@/components/WalletAddressDisplay';
 import { useBalance } from '@/hooks/useBalance';
 import { useConnection } from '@/hooks/useConnection';
+import { useRecaptcha } from '@/hooks/useRecaptcha';
+import { useTokenListMetadata } from '@/hooks/useTokenListMetadata';
 import { useTokenTransfer } from '@/hooks/useTokenTransfer';
+import {
+  createAccountInstruction,
+  createInstruction,
+  getOperationFee,
+} from '@/hooks/useTransactionFeeSimulation.ts';
 import { useWallet } from '@/hooks/useWallet';
 import { useWalletAddressValidation } from '@/hooks/useWalletAddressValidation';
+import { downloadTemplate } from '@/hooks/util/csv.ts';
 import {
   TransactionResult,
   AddressEntry,
@@ -82,7 +79,7 @@ const Sender: React.FC = () => {
     useTokenTransfer(connection, publicKey, updateProcessingMessage);
   const { t } = useTranslation(); // 翻訳フック
   const { isValidSolanaAddress } = useWalletAddressValidation();
-  const { getRecaptchaToken, loading: recaptchaLoading } = useRecaptcha(); // reCAPTCHA フック
+  const { getRecaptchaToken } = useRecaptcha(); // reCAPTCHA フック
 
   // TokenList から公開される関数を利用するための参照
   const tokenListRef = useRef<TokenListRef>(null);
@@ -90,7 +87,6 @@ const Sender: React.FC = () => {
   // 新しいトークンリストメタデータフック
   const {
     tokensWithMetadata,
-    tokensLoading,
     fetchTokensWithMetadata,
     handleTokenDataLoaded,
     isTokenListLoading: tokenListLoading,
@@ -138,7 +134,7 @@ const Sender: React.FC = () => {
     },
   });
 
-  let BATCH_SIZE =
+  const BATCH_SIZE =
     selectedToken === 'SOL'
       ? import.meta.env.VITE_SOL_TRANSFER_BATCH_SIZE
       : import.meta.env.VITE_SPL_TRANSFER_BATCH_SIZE;
@@ -561,19 +557,6 @@ const Sender: React.FC = () => {
   // トークンリストがロード中かどうか
   const isLoading = tokenListLoading;
 
-  // テンプレートダウンロード関数を追加
-  const downloadTemplate = () => {
-    const template =
-      'wallet_address,amount\nBZsKiYDM3V71cJGnCTQV6As8G2hh6QiKEx65px8oATwz,1.822817\nBv938nFFBFRe8rFEqVQMC77jKQiuBybfh6W51KMLHtKh,0.006547';
-    const blob = new Blob([template], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'template.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-  };
-
   // textareaでの編集をハンドリングする関数
   const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setRecipientAddresses(e.target.value);
@@ -647,15 +630,8 @@ const Sender: React.FC = () => {
       let simulatedCount = 0; // 実際にシミュレーションを実行した回数
       const maxSimulations = 12; // 最大シミュレーション回数（RPCコール数を抑制）
 
-      // 運営手数料の計算 (1トランザクションあたりのDEPOSIT_SOL_AMOUNT)
-      const operationFeePerTx = parseFloat(DEPOSIT_SOL_AMOUNT) || 0;
-      // トランザクション数の推定（バッチサイズで割って切り上げ）
-      const estimatedTxCount = Math.ceil(parsedEntries.length / BATCH_SIZE);
-      // 運営手数料の合計
-      const operationFees = operationFeePerTx * estimatedTxCount;
-      console.log(
-        `💼 運営手数料: ${operationFees.toFixed(8)} SOL (${operationFeePerTx} SOL × ${estimatedTxCount}トランザクション)`
-      );
+      const { operationFeePerTx, estimatedTxCount, operationFees } =
+        getOperationFee(DEPOSIT_SOL_AMOUNT, parsedEntries, BATCH_SIZE);
 
       // 運営手数料を合計に加算
       totalEstimatedFee += operationFees;
@@ -713,11 +689,7 @@ const Sender: React.FC = () => {
 
             // SOL送金命令を追加
             batch.forEach((entry) => {
-              const instruction = SystemProgram.transfer({
-                fromPubkey: publicKey,
-                toPubkey: new PublicKey(entry.address),
-                lamports: Math.floor(entry.amount * LAMPORTS_PER_SOL),
-              });
+              const instruction = createInstruction(publicKey, entry);
               transaction.add(instruction);
             });
 
@@ -926,23 +898,13 @@ const Sender: React.FC = () => {
 
               // アカウント作成シミュレーション（必要な場合のみ）
               if (needsAccountCreation) {
-                const createTx = new Transaction();
-
-                // ATA作成命令を追加
-                const createATAInstruction =
-                  createAssociatedTokenAccountInstruction(
-                    publicKey,
-                    receiverTokenAccount,
-                    receiverPubkey,
-                    tokenMint
-                  );
-                createTx.add(createATAInstruction);
-
-                // シミュレーション用ブロックハッシュ
-                const { blockhash } =
-                  await connection.getLatestBlockhash('confirmed');
-                createTx.recentBlockhash = blockhash;
-                createTx.feePayer = publicKey;
+                const createTx = await createAccountInstruction(
+                  publicKey,
+                  receiverTokenAccount,
+                  receiverPubkey,
+                  tokenMint,
+                  connection
+                );
 
                 try {
                   // アカウント作成シミュレーション実行
