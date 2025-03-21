@@ -27,7 +27,7 @@ on:
         value: ${{ inputs.artifact-name }}
 
 jobs:
-  
+
   test:
     runs-on: ubuntu-latest
     steps:
@@ -37,7 +37,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo "Skip eslint"
+
   build:
+    needs:
+      - test
+      - eslint
     runs-on: ubuntu-latest
     outputs:
       build-directory: ${{ steps.build-step.outputs.build-directory }}
@@ -54,10 +58,13 @@ jobs:
       - name: Copy .env
         run: cp .env.production .env
 
-      - name: Clean npm cache and install dependencies
+      - name: Clean npm cache
         run: |
           rm -rf node_modules package-lock.json
           npm cache clean --force
+
+      - name: Install dependencies
+        run: |
           npm install
 
       - name: Build
