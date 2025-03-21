@@ -396,11 +396,11 @@ const Sender: React.FC = () => {
         error: undefined,
       };
 
-      if (import.meta.env.VITE_RECAPTCHA_ACTIVE === 'true') {
+      if (import.meta.env.VITE_RECAPTCHA_ACTIVE === 'false') {
+        recaptchaResult.success = true;
+      } else {
         recaptchaResult = await getRecaptchaToken('transfer');
       }
-
-
 
       // reCAPTCHAの検証結果をチェック
       if (!recaptchaResult.success) {
