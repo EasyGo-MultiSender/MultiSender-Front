@@ -70,10 +70,10 @@ button:hover {
   justify-content: flex-start;
   align-items: center;
   padding: 0 10px;
-  gap: 1px;
+  gap: 5px;
 
   width: 160px;
-  height: 32px;
+  height: 36px;
 
   background: linear-gradient(90deg, #fc00ff 0%, #6a3fea 100%);
   border-radius: 8px;
@@ -81,7 +81,13 @@ button:hover {
   color: white;
   font-weight: 600;
   transition: all 0.3s ease;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
+}
+
+/* ウォレット接続後のボタンスタイル */
+.wallet-adapter-button.wallet-adapter-button-trigger.wallet-adapter-button-connected {
+  justify-content: center !important;
+  text-align: center;
 }
 
 /* Phantomアイコンのスタイル調整 */
