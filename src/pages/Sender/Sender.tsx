@@ -396,9 +396,7 @@ const Sender: React.FC = () => {
         error: undefined,
       };
 
-      if (import.meta.env.VITE_RECAPTCHA_ACTIVE === 'false') {
-        recaptchaResult.success = true;
-      } else {
+      if (import.meta.env.VITE_RECAPTCHA_ACTIVE === 'true') {
         recaptchaResult = await getRecaptchaToken('transfer');
       }
 
