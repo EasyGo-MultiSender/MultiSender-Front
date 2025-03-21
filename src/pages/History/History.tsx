@@ -46,8 +46,6 @@ const History = () => {
         backgroundRepeat: 'no-repeat',
         position: 'relative',
         overflowY: 'auto',
-        '@media (max-width: 600px)': {
-        },
       }}
     >
       <Container maxWidth="md" sx={{ flex: 1 }}>

@@ -1371,9 +1371,6 @@ const Sender: React.FC = () => {
         backgroundRepeat: 'no-repeat',
         position: 'relative',
         overflowY: 'auto',
-        '@media (max-width: 600px)': {
-          backgroundSize: 'cover',
-        },
       }}
     >
       <Container maxWidth="md">
