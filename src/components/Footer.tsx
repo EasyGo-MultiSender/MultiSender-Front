@@ -4,7 +4,7 @@ import { Email, Info } from '@mui/icons-material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import SvgIcon from '@mui/material/SvgIcon';
 import { useTranslation } from 'react-i18next';
-
+import { COLORS } from '@/constants/color';
 // Xのカスタムアイコン
 const XIcon = () => (
   <SvgIcon viewBox="0 0 24 24">
@@ -37,7 +37,7 @@ const Footer: React.FC = () => {
         left: 0,
         right: 0,
         height: '8vh',
-        backgroundColor: '#1E2142',
+        backgroundColor: COLORS.PURPLE.DARK,
         zIndex: 1000,
       }}
     >
@@ -59,7 +59,7 @@ const Footer: React.FC = () => {
             onClick={handleInfoClick}
             sx={{
               '&:hover': {
-                color: '#78C1FD',
+                color: COLORS.BLUE.TURQUOISE,
               },
             }}
             aria-label="information"
@@ -132,7 +132,8 @@ const Footer: React.FC = () => {
                 color="inherit"
                 sx={{
                   '&:hover': {
-                    color: '#78C1FD',
+                    color: COLORS.BLUE.TURQUOISE,
+                    transition: 'all 0.2s ease',
                   },
                 }}
               >
@@ -146,7 +147,8 @@ const Footer: React.FC = () => {
                 color="inherit"
                 sx={{
                   '&:hover': {
-                    color: '#78C1FD',
+                    color: COLORS.BLUE.TURQUOISE,
+                    transition: 'all 0.2s ease',
                   },
                 }}
               >
@@ -158,22 +160,23 @@ const Footer: React.FC = () => {
           <Button
             href="https://murasakibv.medium.com/"
             target="_blank"
-            rel="noopener noreferrer"
             sx={{
-              bgcolor: '#2D325A',
+              bgcolor: COLORS.PURPLE.MEDIUM_BRIGHT,
               color: 'white',
               px: 1.6,
-              py: 0.8,
+              py: 0.76,
               borderRadius: 2,
               textTransform: 'none',
               display: 'flex',
               alignItems: 'center',
               '&:hover': {
-                bgcolor: '#373B6A',
+                transition: 'all 0.2s ease',
+                bgcolor: '#504194',
+                color: '#e6f0f7',
               },
             }}
           >
-            <RocketLaunchIcon sx={{ mr: 1.5 }} />
+            <RocketLaunchIcon sx={{ mr: 1.5, fontSize: '1.2rem' }} />
             <Typography
               variant="body2"
               sx={{
