@@ -1,3 +1,5 @@
+import { AddressEntry } from '@/types/transactionTypes.ts';
+
 export interface TransferParams {
   recipients: string[];
   amount: number;
@@ -12,6 +14,15 @@ export interface TransferResult {
   timestamp: number;
   recipients: string[];
   amounts?: number[];
+}
+
+export interface CSVValidationResult {
+  invalidLineNumbers: number[];
+  entries: AddressEntry[];
+  duplicateLineNumbers: number[];
+  duplicates: string[];
+  belowMinimumSolLines: string[];
+  belowMinimumSolLineNumbers: number[];
 }
 
 export interface OperationFee {
