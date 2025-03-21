@@ -26,10 +26,9 @@ jobs:
       aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
       aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
       app-path: ${{ secrets.AWS_PROD_APP_PATH }}
-      node-version: '18'
+      node-version: '22'
     steps:
       - run: echo "Set production environment variables"
-      - run: echo "Using Node.js version 18 for stability"
         
   build:
     needs: vars
@@ -43,18 +42,12 @@ jobs:
     needs:
       - vars
       - build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        
-      - name: Deploy
-        if: needs.vars.outputs.environment == 'production'
-        uses: ./.github/actions/deploy/prod/
-        with:
-          instance-id: ${{ needs.vars.outputs.instance-id }}
-          region: ${{ needs.vars.outputs.region }}
-          aws-access-key-id: ${{ needs.vars.outputs.aws-access-key-id }}
-          aws-secret-access-key: ${{ needs.vars.outputs.aws-secret-access-key }}
-          app-path: ${{ needs.vars.outputs.app-path }}
-          artifact-name: ${{ needs.vars.outputs.artifact-name }}
+    if: needs.vars.outputs.environment == 'production'
+    uses: ./.github/workflows/_prod_deploy.yml
+    with:
+      instance-id: ${{ needs.vars.outputs.instance-id }}
+      region: ${{ needs.vars.outputs.region }}
+      aws-access-key-id: ${{ needs.vars.outputs.aws-access-key-id }}
+      aws-secret-access-key: ${{ needs.vars.outputs.aws-secret-access-key }}
+      app-path: ${{ needs.vars.outputs.app-path }}
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
