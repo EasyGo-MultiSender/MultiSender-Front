@@ -17,12 +17,6 @@ jobs:
     steps:
       - run: echo "Set production environment variables"
 
-  echo:
-    name: Echo Job
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo '${{ toJSON(github) }}'
-
   dummy_build:
     needs: vars
     name: Build( Dummy )
@@ -45,6 +39,15 @@ jobs:
         with:
           name: ${{ needs.vars.outputs.artifact-name }}
           path: 'build'
+
+  echo:
+    needs:
+      - vars
+      - dummy_build
+    name: Echo Job
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ toJSON(github) }}'
 
   deploy:
     name: Deploy Job ( Prod )

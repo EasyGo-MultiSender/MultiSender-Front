@@ -62,7 +62,7 @@ jobs:
           REPO="${{ github.repository }}"
           ARTIFACT_NAME="${{ inputs.artifact-name }}"
           # GitHubトークンを使用してアーティファクトURLを取得
-          echo "artifact_url=\"https://github.com/${{ github.workspace }}/actions/runs/${{ github.run_id }}/artifacts/${{ github.workflow }}\"" >> $GITHUB_OUTPUT
+          echo "artifact_url=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ github.workflow }}\"" >> $GITHUB_OUTPUT
           # トークンを出力変数に設定
           echo "token=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_OUTPUT
 
