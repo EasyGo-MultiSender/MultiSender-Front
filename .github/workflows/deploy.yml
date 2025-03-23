@@ -11,7 +11,7 @@ on:
         options:
           - staging
           - production
-
+      
 jobs:
 
   vars:
@@ -20,14 +20,9 @@ jobs:
     if: github.event.inputs.environment == 'production'
     outputs:
       environment: ${{ github.event.inputs.environment }}
-      instance-id: ${{ secrets.AWS_PROD_INSTANCE_ID }}
-      aws-region: ${{ secrets.AWS_PROD_REGION }}
-      aws-role: ${{ secrets.AWS_PROD_ROLE_ARN }}
       artifact-name: 'build-output'
-      aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
-      app-path: ${{ secrets.AWS_PROD_APP_PATH }}
       node-version: '22'
+      app-path: '/var/www/vhosts/multisender.easy-go.me'
     steps:
       - run: echo "Set production environment variables"
         
@@ -48,9 +43,6 @@ jobs:
     if: needs.vars.outputs.environment == 'production'
     uses: ./.github/workflows/_prod_deploy.yml
     with:
-      instance-id: ${{ needs.vars.outputs.instance-id }}
-      aws-region: ${{ needs.vars.outputs.aws-region }}
-      aws-access-key-id: ${{ needs.vars.outputs.aws-access-key-id }}
-      aws-secret-access-key: ${{ needs.vars.outputs.aws-secret-access-key }}
       app-path: ${{ needs.vars.outputs.app-path }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
+    secrets: inherit

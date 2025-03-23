@@ -56,10 +56,10 @@ jobs:
             --document-name "AWS-RunShellScript" \
             --parameters '{
               "commands": [
+                "sudo su deploy",
                 "cd ${{ inputs.app-path }}",
                 "rm -rf ./* || true",
                 "echo \"${{ steps.create-package.outputs.package_content }}\" | base64 -d | tar -xz",
-                "sudo su deploy",
                 "pm2 restart npm --name multisender-pm2 -- run prod",
                 "pm2 ls"
               ]
