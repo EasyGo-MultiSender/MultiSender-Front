@@ -25,6 +25,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     steps:
+      - run: echo ${{ env.AWS_ACCESS_KEY_ID }}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
