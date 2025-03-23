@@ -1,6 +1,7 @@
 name: Test Deploy Connections
 on:
   workflow_dispatch:
+  push:
 
 jobs:
 
