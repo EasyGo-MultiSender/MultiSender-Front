@@ -34,9 +34,10 @@ jobs:
           aws-region: ${{ steps.set-env-vars.outputs.AWS_REGION }}
 
       - name: Deploy using SSM
+        id: deploy-ssm
         run: |
-          # SSMを使用してデプロイスクリプトを実行
-          aws ssm send-command \
+          # SSMを使用してデプロイスクリプトを実行し、コマンドIDを保存
+          COMMAND_ID=$(aws ssm send-command \
             --instance-ids ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
             --parameters '{
@@ -54,4 +55,61 @@ jobs:
                 "pm2 ls"
               ]
             }' \
-            --output text 
+            --output json | jq -r '.Command.CommandId')
+          
+          echo "command-id=$COMMAND_ID" >> $GITHUB_OUTPUT
+          echo "Command ID: $COMMAND_ID"
+          
+          # コマンドの実行結果を待つ（最大5分）
+          echo "コマンドの実行状況を確認しています..."
+          for i in {1..30}; do
+            # コマンドの状態を確認
+            STATUS=$(aws ssm list-commands \
+              --command-id "$COMMAND_ID" \
+              --output json | jq -r '.Commands[0].Status')
+            
+            echo "コマンドの状態: $STATUS"
+            
+            # 成功または失敗した場合は終了
+            if [ "$STATUS" = "Success" ]; then
+              echo "コマンドが正常に完了しました。"
+              break
+            elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ] || [ "$STATUS" = "TimedOut" ]; then
+              echo "コマンドが失敗しました: $STATUS"
+              # 詳細な実行結果を取得
+              aws ssm get-command-invocation \
+                --command-id "$COMMAND_ID" \
+                --instance-id "${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }}" \
+                --output json
+              exit 1
+            fi
+            
+            # まだ実行中の場合は10秒待機
+            echo "コマンドはまだ実行中です。10秒待機します..."
+            sleep 10
+          done
+          
+          # 詳細な実行結果を取得
+          echo "デプロイコマンドの実行結果:"
+          RESULT=$(aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }}" \
+            --output json)
+          
+          echo "$RESULT" | jq .
+          
+          # 標準出力と標準エラー出力を出力
+          echo "標準出力:"
+          echo "$RESULT" | jq -r '.StandardOutputContent'
+          
+          echo "標準エラー出力:"
+          echo "$RESULT" | jq -r '.StandardErrorContent'
+          
+          # 終了ステータスを確認
+          EXIT_CODE=$(echo "$RESULT" | jq -r '.ResponseCode')
+          if [ "$EXIT_CODE" -ne 0 ]; then
+            echo "コマンドは非ゼロの終了コードで終了しました: $EXIT_CODE"
+            exit $EXIT_CODE
+          fi
+          
+          echo "デプロイが完了しました。" 
