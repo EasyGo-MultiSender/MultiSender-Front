@@ -21,7 +21,7 @@ jobs:
     name: Echo Job
     runs-on: ubuntu-latest
     steps:
-      - run: echo -A ${{ github }}
+      - run: echo '${{ toJSON(github) }}'
 
   dummy_build:
     needs: vars
