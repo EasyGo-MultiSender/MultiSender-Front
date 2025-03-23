@@ -59,8 +59,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: "echo App Path: ${{ needs.vars.outputs.app-path }}"
-      - run: "echo AWS Region (from secret): ${{ secrets.AWS_PROD_REGION }}"
-      - run: "echo AWS Region (from output): ${{ needs.vars.outputs.aws-region }}"
+      - run: "echo AWS Region from secret: ${{ secrets.AWS_PROD_REGION }}"
+      - run: "echo AWS Region from output: ${{ needs.vars.outputs.aws-region }}"
       - run: "echo Artifact Name: ${{ needs.vars.outputs.artifact-name }}"
       - run: "echo AWS Role: ${{ needs.vars.outputs.aws-role }}"
 
