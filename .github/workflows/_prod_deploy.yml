@@ -54,5 +54,14 @@ jobs:
           aws ssm send-command \
             --instance-ids ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }} \
             --document-name "AWS-RunShellScript" \
-            --parameters '{"commands":["cd ${{ inputs.app-path }}", "rm -rf ./* || true", "echo \"${{ steps.create-package.outputs.package_content }}\" | base64 -d | tar -xz", "sudo su deploy", "pm2 restart npm --name multisender-pm2 -- run prod", "pm2 ls"]}' \
+            --parameters '{
+              "commands": [
+                "cd ${{ inputs.app-path }}",
+                "rm -rf ./* || true",
+                "echo \"${{ steps.create-package.outputs.package_content }}\" | base64 -d | tar -xz",
+                "sudo su deploy",
+                "pm2 restart npm --name multisender-pm2 -- run prod",
+                "pm2 ls"
+              ]
+            }' \
             --output text 
