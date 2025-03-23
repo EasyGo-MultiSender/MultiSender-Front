@@ -23,6 +23,7 @@ jobs:
 
 
   dummy_build:
+    needs: vars
     name: Build( Dummy )
     runs-on: ubuntu-latest
     outputs:
