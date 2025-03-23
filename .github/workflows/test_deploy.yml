@@ -48,7 +48,9 @@ jobs:
     needs: vars
     runs-on: ubuntu-latest
     steps:
-      - run: "echo ${{ needs.vars.outputs.aws-region }}"
+      - run: "echo ${{ needs.vars.outputs.app-path }}"
+      - run: "echo ${{ needs.vars.outputs.artifact-name }}"
+      - run: "echo ${{ needs.vars.outputs.artifact-name }}"
 
   deploy:
     name: Deploy Job ( Prod )
