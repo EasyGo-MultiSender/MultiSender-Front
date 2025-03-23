@@ -35,6 +35,7 @@ jobs:
           echo "AWS_ACCESS_KEY_ID is defined: ${{ steps.set-env-vars.outputs.AWS_ACCESS_KEY_ID != '' }}"
           echo "AWS_SECRET_ACCESS_KEY is defined: ${{ steps.set-env-vars.outputs.AWS_SECRET_ACCESS_KEY != '' }}"
           echo "OUTPUTEST is defined: ${{ steps.set-env-vars.outputs.OUTPUTEST != '' }}"
+          echo "OUTPUTEST is defined: ${{ steps.set-env-vars.outputs.AWS_SECRET_ACCESS_KEY }}"
           echo "OUTPUTEST is defined: ${{ steps.set-env-vars.outputs.OUTPUTEST }}"
 
       - name: Configure AWS credentials
