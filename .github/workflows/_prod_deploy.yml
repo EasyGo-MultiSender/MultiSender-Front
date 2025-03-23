@@ -63,10 +63,15 @@ jobs:
           # コマンドの実行結果を待つ（最大5分）
           echo "コマンドの実行状況を確認しています..."
           for i in {1..30}; do
-            # コマンドの状態を確認
-            STATUS=$(aws ssm list-commands \
+            # get-command-invocationを使用してコマンドの状態を確認
+            # AccessDeniedExceptionを回避するためにlist-commandsではなくこちらを使用
+            RESULT=$(aws ssm get-command-invocation \
               --command-id "$COMMAND_ID" \
-              --output json | jq -r '.Commands[0].Status')
+              --instance-id "${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }}" \
+              --output json 2>/dev/null || echo '{"Status":"Running"}')
+            
+            # コマンドの状態を取得
+            STATUS=$(echo "$RESULT" | jq -r '.Status')
             
             echo "コマンドの状態: $STATUS"
             
@@ -76,37 +81,47 @@ jobs:
               break
             elif [ "$STATUS" = "Failed" ] || [ "$STATUS" = "Cancelled" ] || [ "$STATUS" = "TimedOut" ]; then
               echo "コマンドが失敗しました: $STATUS"
-              # 詳細な実行結果を取得
-              aws ssm get-command-invocation \
-                --command-id "$COMMAND_ID" \
-                --instance-id "${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }}" \
-                --output json
+              echo "$RESULT" | jq .
               exit 1
+            elif [ "$STATUS" = "Pending" ] || [ "$STATUS" = "InProgress" ] || [ "$STATUS" = "Delayed" ] || [ "$STATUS" = "Running" ]; then
+              # まだ実行中の場合は10秒待機
+              echo "コマンドはまだ実行中です。10秒待機します..."
+              sleep 10
+            else
+              # 不明な状態の場合
+              echo "コマンドは不明な状態です: $STATUS"
+              echo "$RESULT" | jq .
+              # 10秒待機して再確認
+              sleep 10
             fi
-            
-            # まだ実行中の場合は10秒待機
-            echo "コマンドはまだ実行中です。10秒待機します..."
-            sleep 10
           done
+          
+          # 30回のループが終了したが成功も失敗もしていない場合
+          if [ "$STATUS" != "Success" ]; then
+            echo "コマンドは30回の確認後も完了していません。タイムアウトとみなします。"
+            # 最終状態を表示
+            echo "$RESULT" | jq .
+            exit 1
+          fi
           
           # 詳細な実行結果を取得
           echo "デプロイコマンドの実行結果:"
-          RESULT=$(aws ssm get-command-invocation \
+          FINAL_RESULT=$(aws ssm get-command-invocation \
             --command-id "$COMMAND_ID" \
             --instance-id "${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }}" \
             --output json)
           
-          echo "$RESULT" | jq .
+          echo "$FINAL_RESULT" | jq .
           
           # 標準出力と標準エラー出力を出力
           echo "標準出力:"
-          echo "$RESULT" | jq -r '.StandardOutputContent'
+          echo "$FINAL_RESULT" | jq -r '.StandardOutputContent'
           
           echo "標準エラー出力:"
-          echo "$RESULT" | jq -r '.StandardErrorContent'
+          echo "$FINAL_RESULT" | jq -r '.StandardErrorContent'
           
           # 終了ステータスを確認
-          EXIT_CODE=$(echo "$RESULT" | jq -r '.ResponseCode')
+          EXIT_CODE=$(echo "$FINAL_RESULT" | jq -r '.ResponseCode')
           if [ "$EXIT_CODE" -ne 0 ]; then
             echo "コマンドは非ゼロの終了コードで終了しました: $EXIT_CODE"
             exit $EXIT_CODE
