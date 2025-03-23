@@ -20,16 +20,26 @@ jobs:
     if: github.event.inputs.environment == 'production'
     outputs:
       environment: ${{ github.event.inputs.environment }}
-      instance-id: ${{ secrets.AWS_PROD_INSTANCE_ID }}
-      aws-region: ${{ secrets.AWS_PROD_REGION }}
-      aws-role: ${{ secrets.AWS_PROD_ROLE_ARN }}
+      instance-id: ${{ steps.set_vars.outputs.instance-id }}
+      aws-region: ${{ steps.set_vars.outputs.aws-region }}
+      aws-role: ${{ steps.set_vars.outputs.aws-role }}
       artifact-name: 'build-output'
-      aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
-      aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
-      app-path: ${{ secrets.AWS_PROD_APP_PATH }}
-      node-version: '22'
+      aws-access-key-id: ${{ steps.set_vars.outputs.aws-access-key-id }}
+      aws-secret-access-key: ${{ steps.set_vars.outputs.aws-secret-access-key }}
+      app-path: ${{ steps.set_vars.outputs.app-path }}
+      node-version: '18'
     steps:
+      - id: set_vars
+        name: Set variables and secrets as outputs
+        run: |
+          echo "instance-id=${{ secrets.AWS_PROD_INSTANCE_ID }}" >> $GITHUB_OUTPUT
+          echo "aws-region=${{ secrets.AWS_PROD_REGION }}" >> $GITHUB_OUTPUT
+          echo "aws-role=${{ secrets.AWS_PROD_ROLE_ARN }}" >> $GITHUB_OUTPUT
+          echo "aws-access-key-id=${{ secrets.AWS_PROD_ACCESS_KEY_ID }}" >> $GITHUB_OUTPUT
+          echo "aws-secret-access-key=${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}" >> $GITHUB_OUTPUT
+          echo "app-path=${{ secrets.AWS_PROD_APP_PATH }}" >> $GITHUB_OUTPUT
       - run: echo "Set production environment variables"
+      - run: echo "Using Node.js version 18 for stability"
         
   build:
     name: Build Job
