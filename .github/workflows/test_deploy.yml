@@ -16,6 +16,11 @@ jobs:
     steps:
       - run: echo "Set production environment variables"
 
+  echo:
+    name: Echo Job
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ github }}
 
   dummy_build:
     needs: vars

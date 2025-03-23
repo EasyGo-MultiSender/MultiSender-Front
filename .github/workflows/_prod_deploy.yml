@@ -55,6 +55,17 @@ jobs:
           echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
           echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
+      - name: Get artifact URL
+        id: get-artifact-url
+        run: |
+          # 必要な変数を設定
+          REPO="${{ github.repository }}"
+          ARTIFACT_NAME="${{ inputs.artifact-name }}"
+          # GitHubトークンを使用してアーティファクトURLを取得
+          echo "artifact_url=\"https://github.com/${{ github.workspace }}/actions/runs/${{ github.run_id }}/artifacts/${{ github.workflow }}\"" >> $GITHUB_OUTPUT
+          # トークンを出力変数に設定
+          echo "token=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_OUTPUT
+
       - name: Deploy using SSM
         run: |
           # SSMを使用してデプロイスクリプトを実行
@@ -66,19 +77,8 @@ jobs:
                 "sudo su deploy",
                 "cd ${{ inputs.app-path }}",
                 "rm -rf ./* || true",
-                "# GitHubアーティファクトのダウンロード",
-                "TOKEN=\"${{ secrets.GITHUB_TOKEN }}\"",
-                "REPO=\"${{ steps.create-package.outputs.repository }}\"",
-                "RUN_ID=\"${{ steps.create-package.outputs.run_id }}\"",
-                "ARTIFACT_NAME=\"${{ inputs.artifact-name }}\"",
-                "# 直接アーティファクトURLを取得",
-                "ARTIFACT_URL=\"https://github.com/${REPO}/actions/runs/${RUN_ID}/artifacts\"",
-                "echo \"アーティファクトページURL: ${ARTIFACT_URL}\"",
-                "# GitHubのREST APIを使用してアーティファクトのダウンロードURLを取得",
-                "DOWNLOAD_URL=$(curl -s -H \"Authorization: token ${TOKEN}\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/${REPO}/actions/artifacts\" | jq -r \".artifacts[] | select(.name==\\\"${ARTIFACT_NAME}\\\") | .archive_download_url\")",
-                "echo \"ダウンロードURL: ${DOWNLOAD_URL}\"",
                 "# URLからアーティファクトをダウンロード",
-                "curl -L -H \"Authorization: token ${TOKEN}\" \"${DOWNLOAD_URL}\" --output artifact.zip",
+                "curl -L -H \"Authorization: token ${{ steps.get-artifact-url.outputs.token }}\" \"${{ steps.get-artifact-url.outputs.artifact_url }}\" --output artifact.zip",
                 "# 展開",
                 "unzip -q artifact.zip",
                 "rm artifact.zip",
