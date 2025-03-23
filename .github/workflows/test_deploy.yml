@@ -34,7 +34,7 @@ jobs:
           mkdir build -p
           echo "tetetetete" >> build/test.txt
           echo "build-directory=$(pwd)/build" >> $GITHUB_OUTPUT
-
+          
       - name: Upload build artifacts
         id: upload-artifact
         uses: actions/upload-artifact@v4
@@ -60,5 +60,6 @@ jobs:
     uses: ./.github/workflows/_prod_deploy.yml
     with:
       app-path: ${{ needs.vars.outputs.app-path }}
-      artifact-url: ${{ needs.dummy_build.outputs.artifact-url }}
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
     secrets: inherit
