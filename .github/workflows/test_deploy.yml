@@ -50,3 +50,4 @@ jobs:
     with:
       app-path: ${{ needs.vars.outputs.app-path }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
+    secrets: inherit
