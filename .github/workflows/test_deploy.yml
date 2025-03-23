@@ -53,7 +53,7 @@ jobs:
     uses: ./.github/workflows/_prod_deploy.yml
     with:
       instance-id: ${{ needs.vars.outputs.instance-id }}
-      aws-region: ${{ needs.vars.outputs.aws-region }}
+      aws-region: '${{ needs.vars.outputs.aws-region }}'
       aws-access-key-id: ${{ needs.vars.outputs.aws-access-key-id }}
       aws-secret-access-key: ${{ needs.vars.outputs.aws-secret-access-key }}
       app-path: ${{ needs.vars.outputs.app-path }}

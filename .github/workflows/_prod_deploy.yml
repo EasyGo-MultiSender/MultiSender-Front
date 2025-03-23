@@ -36,8 +36,7 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     steps:
-      - name: debug
-        run: "echo ${{ inputs.aws-region }}"
+      - run: "echo ${{ inputs.aws-region }}"
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
