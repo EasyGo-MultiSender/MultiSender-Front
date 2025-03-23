@@ -50,6 +50,7 @@ jobs:
     steps:
       - run: "echo ${{ needs.vars.outputs.app-path }}"
       - run: echo secret "${{secrets.AWS_PROD_REGION }}" | sed 's/./& /g'
+      - run: echo secret ${{secrets.AWS_PROD_REGION }} | sed 's/./& /g'
       - run: "echo ${{ needs.vars.outputs.aws-region }}"
       - run: "echo ${{ needs.vars.outputs.artifact-name }}"
       - run: "echo ${{ needs.vars.outputs.aws-role }}"
