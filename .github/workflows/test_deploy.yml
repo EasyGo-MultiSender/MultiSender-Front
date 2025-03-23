@@ -1,0 +1,59 @@
+name: Test Deploy
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+
+  vars:
+    name: Vars Job
+    runs-on: ubuntu-latest
+    outputs:
+      environment: 'production'
+      instance-id: ${{ secrets.AWS_PROD_INSTANCE_ID }}
+      aws-region: ${{ secrets.AWS_PROD_REGION }}
+      aws-role: ${{ secrets.AWS_PROD_ROLE_ARN }}
+      artifact-name: 'build-output'
+      aws-access-key-id: ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
+      aws-secret-access-key: ${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}
+      app-path: '/var/www/vhosts/multisender.easy-go.me_test_deploy'
+      node-version: '22'
+    steps:
+      - run: echo "Set production environment variables"
+
+
+  dummy_build:
+    name: Build( Dummy )
+    runs-on: ubuntu-latest
+    outputs:
+      build-directory: ${{ steps.build-step.outputs.build-directory }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build
+        id: build-step
+        run: |
+          echo "tetetetete" >> test.txt
+          echo "build-directory=$(pwd)/build" >> $GITHUB_OUTPUT
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: 'build'
+
+  deploy:
+    name: Deploy Job ( Prod )
+    needs:
+      - vars
+      - build
+    if: needs.vars.outputs.environment == 'production'
+    uses: ./.github/workflows/_prod_deploy.yml
+    with:
+      instance-id: ${{ needs.vars.outputs.instance-id }}
+      aws-region: ${{ needs.vars.outputs.aws-region }}
+      aws-access-key-id: ${{ needs.vars.outputs.aws-access-key-id }}
+      aws-secret-access-key: ${{ needs.vars.outputs.aws-secret-access-key }}
+      app-path: ${{ needs.vars.outputs.app-path }}
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}

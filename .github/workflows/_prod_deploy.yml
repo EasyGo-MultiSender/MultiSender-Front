@@ -36,12 +36,15 @@ jobs:
     name: Deploy to Production
     runs-on: ubuntu-latest
     steps:
+      - name: debug
+        run: "echo ${{ aws-region }}"
+    steps:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ inputs.aws-access-key-id }}
           aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
-          aws-region: "${{ inputs.aws-region }}"
+          aws-region: ${{ inputs.aws-region }}
 
       - name: Download build artifacts
         uses: actions/download-artifact@v4
