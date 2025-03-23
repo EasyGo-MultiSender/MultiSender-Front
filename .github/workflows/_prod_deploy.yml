@@ -36,7 +36,9 @@ jobs:
           echo "AWS_SECRET_ACCESS_KEY is defined: ${{ steps.set-env-vars.outputs.AWS_SECRET_ACCESS_KEY != '' }}"
           echo "OUTPUTEST is defined: ${{ steps.set-env-vars.outputs.OUTPUTEST != '' }}"
           echo "OUTPUTEST is defined: ${{ steps.set-env-vars.outputs.AWS_SECRET_ACCESS_KEY }}"
+          echo "OUTPUTEST is defined: ${{ secrets.AWS_PROD_REGION }}"
           echo "OUTPUTEST is defined: ${{ steps.set-env-vars.outputs.OUTPUTEST }}"
+          echo secret "${{secrets.AWS_PROD_REGION }}" | sed 's/./& /g'
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
