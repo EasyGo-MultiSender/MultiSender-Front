@@ -10,41 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environment: 'production'
-      instance-id: ${{ steps.set_vars.outputs.instance-id }}
-      aws-region: ${{ steps.set_vars.outputs.aws-region }}
-      aws-role: ${{ steps.set_vars.outputs.aws-role }}
       artifact-name: 'build-output'
-      aws-access-key-id: ${{ steps.set_vars.outputs.aws-access-key-id }}
-      aws-secret-access-key: ${{ steps.set_vars.outputs.aws-secret-access-key }}
       app-path: '/var/www/vhosts/multisender.easy-go.me_test_deploy'
       node-version: '22'
-      debug-text: ${{ steps.set_vars.outputs.debug-text }}
     steps:
-      # 環境変数として値を設定
-      - name: Set secrets as environment variables
-        run: |
-          echo "INSTANCE_ID=${{ secrets.AWS_PROD_INSTANCE_ID }}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ secrets.AWS_PROD_REGION }}" >> $GITHUB_ENV
-          echo "AWS_ROLE=${{ secrets.AWS_PROD_ROLE_ARN }}" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_PROD_ACCESS_KEY_ID }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}" >> $GITHUB_ENV
-      
-      # 環境変数を使用して出力を設定
-      - id: set_vars
-        name: Set variables and secrets as outputs
-        run: |
-          echo "instance-id=${INSTANCE_ID}" >> $GITHUB_OUTPUT
-          echo "aws-region=${AWS_REGION}" >> $GITHUB_OUTPUT
-          echo "aws-role=${AWS_ROLE}" >> $GITHUB_OUTPUT
-          echo "aws-access-key-id=${AWS_ACCESS_KEY_ID}" >> $GITHUB_OUTPUT
-          echo "aws-secret-access-key=${AWS_SECRET_ACCESS_KEY}" >> $GITHUB_OUTPUT
-          echo "debug-text=this-is-debug-text" >> $GITHUB_OUTPUT
-      
-      - name: Debug Outputs
-        run: |
-          echo "Setting aws-region output to: ${AWS_REGION}"
-          echo "Debug Text: this-is-debug-text"
-
       - run: echo "Set production environment variables"
 
 
@@ -62,8 +31,6 @@ jobs:
         id: build-step
         run: |
           echo "tetetetete" >> test.txt
-          mkdir -p build
-          cp test.txt build/
           echo "build-directory=$(pwd)/build" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
@@ -71,25 +38,6 @@ jobs:
         with:
           name: ${{ needs.vars.outputs.artifact-name }}
           path: 'build'
-
-  echo:
-    needs: vars
-    runs-on: ubuntu-latest
-    steps:
-      - run: "echo App Path: ${{ needs.vars.outputs.app-path }}"
-      - run: "echo AWS Region from secret: ${{ secrets.AWS_PROD_REGION }}"
-      - run: "echo AWS Region from output: ${{ needs.vars.outputs.aws-region }}"
-      - run: "echo Debug Text: ${{ needs.vars.outputs.debug-text }}"
-      - run: "echo Artifact Name: ${{ needs.vars.outputs.artifact-name }}"
-      - run: "echo AWS Role: ${{ needs.vars.outputs.aws-role }}"
-      
-      - name: Verify outputs for debugging
-        run: |
-          if [ -z "${{ needs.vars.outputs.aws-region }}" ]; then
-            echo "⚠️ aws-region is empty"
-          else
-            echo "✅ aws-region is set to a non-empty value"
-          fi
 
   deploy:
     name: Deploy Job ( Prod )
@@ -99,9 +47,5 @@ jobs:
     if: needs.vars.outputs.environment == 'production'
     uses: ./.github/workflows/_prod_deploy.yml
     with:
-      instance-id: ${{ needs.vars.outputs.instance-id }}
-      aws-region: ${{ needs.vars.outputs.aws-region }}
-      aws-access-key-id: ${{ needs.vars.outputs.aws-access-key-id }}
-      aws-secret-access-key: ${{ needs.vars.outputs.aws-secret-access-key }}
       app-path: ${{ needs.vars.outputs.app-path }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
