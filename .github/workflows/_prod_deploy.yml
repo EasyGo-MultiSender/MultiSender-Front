@@ -24,8 +24,12 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
+    env:
+      AWS_JOBTEST: ${{ secrets.AWS_PROD_REGION }}
     steps:
       - run: echo ${{ env.AWS_ACCESS_KEY_ID }}
+      - run: echo ${{ secrets.AWS_PROD_ACCESS_KEY_ID }}
+      - run: echo ${{ env.AWS_JOBTEST }}
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
