@@ -21,7 +21,7 @@ jobs:
     name: Echo Job
     runs-on: ubuntu-latest
     steps:
-      - run: echo ${{ github }}
+      - run: echo -A ${{ github }}
 
   dummy_build:
     needs: vars
