@@ -11,9 +11,16 @@ on:
         options:
           - staging
           - production
-      
-jobs:
+      app-path:
+        description: 'Select App Path'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - '/var/www/vhosts/multisender.easy-go.me'
+          - '/var/www/vhosts/multisender.easy-go.me_test_deploy'
 
+jobs:
   vars:
     name: Vars Job
     runs-on: ubuntu-latest
@@ -22,7 +29,7 @@ jobs:
       environment: ${{ github.event.inputs.environment }}
       artifact-name: 'build-output'
       node-version: '22'
-      app-path: '/var/www/vhosts/multisender.easy-go.me'
+      app-path: ${{ github.event.inputs.app-path }}
     steps:
       - run: echo "Set production environment variables"
         
