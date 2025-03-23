@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build-directory: ${{ steps.build-step.outputs.build-directory }}
-      artifact-url: ${{ steps.get-artifact-url.outputs.artifact_url }}
+      artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,6 +36,7 @@ jobs:
           echo "build-directory=$(pwd)/build" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
+        id: upload-artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ needs.vars.outputs.artifact-name }}
