@@ -47,7 +47,7 @@ jobs:
     name: Deploy Job ( Prod )
     needs:
       - vars
-      - build
+      - dummy_build
     if: needs.vars.outputs.environment == 'production'
     uses: ./.github/workflows/_prod_deploy.yml
     with:
