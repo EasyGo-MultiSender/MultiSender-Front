@@ -27,7 +27,8 @@ jobs:
     if: github.event.inputs.environment == 'production'
     outputs:
       environment: ${{ github.event.inputs.environment }}
-      artifact-name: 'build-output'
+      artifact-name: 'dist'
+      artifact-path: 'build'
       node-version: '22'
       app-path: ${{ github.event.inputs.app-path }}
     steps:
@@ -40,7 +41,7 @@ jobs:
     with:
       node-version: ${{ needs.vars.outputs.node-version }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
-      artifact-path: 'build'
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
 
   deploy:
     name: Deploy Job
@@ -52,4 +53,5 @@ jobs:
     with:
       app-path: ${{ needs.vars.outputs.app-path }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
     secrets: inherit

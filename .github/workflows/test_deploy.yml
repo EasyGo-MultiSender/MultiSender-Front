@@ -10,6 +10,7 @@ jobs:
     outputs:
       environment: 'production'
       artifact-name: 'build-output'
+      artifact-path: 'build'
       app-path: '/var/www/vhosts/multisender.easy-go.me_test_deploy'
       node-version: '22'
     steps:
@@ -49,4 +50,5 @@ jobs:
     with:
       app-path: ${{ needs.vars.outputs.app-path }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
     secrets: inherit

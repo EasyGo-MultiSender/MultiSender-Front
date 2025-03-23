@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: 'build-output'
+      artifact-path:
+        description: 'Path to the artifact to download'
+        required: false
+        type: string
+        default: 'build'
         
 jobs:
   deploy:
@@ -38,12 +43,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ inputs.artifact-name }}
-          path: ./build
+          path: ${{ inputs.artifact-path }}
 
       - name: Create deployment package
         id: create-package
         run: |
-          cd build
+          cd ${{ inputs.artifact-path }}
           # デプロイパッケージをbase64エンコード
           CONTENT=$(tar -cz * | base64 -w0)
           echo "package_content=${CONTENT}" >> $GITHUB_OUTPUT
