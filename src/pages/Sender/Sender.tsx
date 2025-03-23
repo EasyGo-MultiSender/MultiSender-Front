@@ -159,7 +159,7 @@ const Sender: React.FC = () => {
   const lastParsedAddressesRef = useRef<string>('');
 
   // 色付けする行番号の配列（例：[1, 3, 5]は1行目、3行目、5行目を赤くする）
-  const [highlightedLines, setHighlightedLines] = useState<number[]>([2, 4]); // 例として2行目と4行目
+  const [highlightedLines, setHighlightedLines] = useState<number[]>([]);
 
   // コンポーネントマウント時にトークンメタデータを取得
   useEffect(() => {
