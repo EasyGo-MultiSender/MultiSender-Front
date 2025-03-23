@@ -51,11 +51,9 @@ jobs:
           cd ${{ inputs.artifact-path }}
           # デプロイパッケージをtarに圧縮して一時ファイルとして保存
           tar -czf ../deployment-package.tar.gz *
-          # GitHub Artifactのダウンロード用URLを生成（注：GitHub Actionsでは直接取得できないため対応が必要）
-          GITHUB_API_URL="https://api.github.com/repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts"
-          echo "artifacts_api_url=${GITHUB_API_URL}" >> $GITHUB_OUTPUT
-          echo "run_id=${GITHUB_RUN_ID}" >> $GITHUB_OUTPUT
-          echo "repository=${GITHUB_REPOSITORY}" >> $GITHUB_OUTPUT
+          # GitHubのリポジトリとランID情報を設定
+          echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
+          echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
 
       - name: Deploy using SSM
         run: |
@@ -68,15 +66,21 @@ jobs:
                 "sudo su deploy",
                 "cd ${{ inputs.app-path }}",
                 "rm -rf ./* || true",
-                "# GitHubアーティファクトからダウンロード",
+                "# GitHubアーティファクトのダウンロード",
                 "TOKEN=\"${{ secrets.GITHUB_TOKEN }}\"",
                 "REPO=\"${{ steps.create-package.outputs.repository }}\"",
                 "RUN_ID=\"${{ steps.create-package.outputs.run_id }}\"",
                 "ARTIFACT_NAME=\"${{ inputs.artifact-name }}\"",
-                "# Artifactのダウンロード（認証付き）",
-                "curl -L -H \"Authorization: token ${TOKEN}\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/${REPO}/actions/artifacts\" | jq \".artifacts[] | select(.name==\\\"${ARTIFACT_NAME}\\\") | .archive_download_url\" -r | xargs curl -L -H \"Authorization: token ${TOKEN}\" --output artifact.zip",
+                "# 直接アーティファクトURLを取得",
+                "ARTIFACT_URL=\"https://github.com/${REPO}/actions/runs/${RUN_ID}/artifacts\"",
+                "echo \"アーティファクトページURL: ${ARTIFACT_URL}\"",
+                "# GitHubのREST APIを使用してアーティファクトのダウンロードURLを取得",
+                "DOWNLOAD_URL=$(curl -s -H \"Authorization: token ${TOKEN}\" -H \"Accept: application/vnd.github+json\" \"https://api.github.com/repos/${REPO}/actions/artifacts\" | jq -r \".artifacts[] | select(.name==\\\"${ARTIFACT_NAME}\\\") | .archive_download_url\")",
+                "echo \"ダウンロードURL: ${DOWNLOAD_URL}\"",
+                "# URLからアーティファクトをダウンロード",
+                "curl -L -H \"Authorization: token ${TOKEN}\" \"${DOWNLOAD_URL}\" --output artifact.zip",
                 "# 展開",
-                "unzip artifact.zip",
+                "unzip -q artifact.zip",
                 "rm artifact.zip",
                 "# アプリケーション再起動",
                 "pm2 restart npm --name multisender-pm2 -- run prod",
