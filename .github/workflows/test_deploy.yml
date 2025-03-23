@@ -30,7 +30,7 @@ jobs:
       - name: Build
         id: build-step
         run: |
-          echo "tetetetete" >> test.txt
+          echo "tetetetete" >> build/test.txt
           echo "build-directory=$(pwd)/build" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
