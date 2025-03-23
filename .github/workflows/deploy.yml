@@ -27,8 +27,8 @@ jobs:
     if: github.event.inputs.environment == 'production'
     outputs:
       environment: ${{ github.event.inputs.environment }}
-      artifact-name: 'dist'
-      artifact-path: 'build'
+      artifact-name: 'node_dist'
+      artifact-path: 'dist'
       node-version: '22'
       app-path: ${{ github.event.inputs.app-path }}
     steps:
