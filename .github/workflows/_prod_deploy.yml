@@ -7,7 +7,7 @@ on:
         description: 'Path to the application on the target server'
         required: false
         type: string
-        default: '/var/www/vhosts/multisender.easy-go.me'
+        default: '/var/www/vhosts/multisender.easy-go.me/public'
       artifact-name:
         description: 'Name of the artifact to download'
         required: false
@@ -121,7 +121,8 @@ jobs:
             --output text --query "Command.CommandId")
           
           echo "SSMコマンドID: ${COMMAND_ID}"
-          echo "コマンド実行状況確認中..."
+
+          echo "::group::コマンド実行状況確認中..."
           
           # コマンド実行完了を待機
           aws ssm wait command-executed --command-id ${COMMAND_ID} --instance-id ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }}

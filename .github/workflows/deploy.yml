@@ -17,8 +17,8 @@ on:
         default: 'staging'
         type: choice
         options:
-          - '/var/www/vhosts/multisender.easy-go.me'
-          - '/var/www/vhosts/multisender.easy-go.me_test_deploy'
+          - '/var/www/vhosts/multisender.easy-go.me/public'
+          - '/var/www/vhosts/multisender.easy-go.me_test_deploy/public'
 
 jobs:
   vars:
