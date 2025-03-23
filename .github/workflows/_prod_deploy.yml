@@ -93,7 +93,8 @@ jobs:
                 "echo \"デプロイ先ディレクトリ: ${{ inputs.app-path }}\"",
                 
                 "# ディレクトリ準備",
-                "cd ${{ inputs.app-path }}",
+                "sudo su deploy",
+                "mkdir -p cd ${{ inputs.app-path }} && cd \"$_\"",
                 "echo \"既存ファイルのクリーンアップ中...\"",
                 "rm -rf ./* || true",
                 
