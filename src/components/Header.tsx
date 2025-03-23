@@ -14,7 +14,6 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import MenuIcon from '@mui/icons-material/Menu';
 import { Link } from 'react-router-dom';
@@ -25,7 +24,7 @@ import { NetworkSelector } from '@/components/NetworkSelector';
 import { useTranslation } from 'react-i18next';
 import TranslateSelector from '@/components/TranslateSelector';
 import HeaderDrawer from '@/components/HeaderDrawer';
-
+import { COLORS } from '@/constants/color';
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック
   const [navValue, setNavValue] = useState<string | false>(false);
@@ -99,10 +98,22 @@ const Header = memo(() => {
     <Box>
       <AppBar
         position="fixed"
-        sx={{ backgroundColor: '#17062e', height: '8vh' }}
+        sx={{
+          backgroundColor: COLORS.PURPLE.DARK,
+          height: '8vh',
+          boxSizing: 'border-box',
+        }}
       >
-        <Toolbar sx={{ minHeight: '8vh !important' }}>
-          {/* <IconButton
+        <Toolbar
+          sx={{
+            minHeight: '8vh !important',
+            padding: '0 20px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <IconButton
             edge="start"
             color="inherit"
             aria-label="logo"
@@ -110,10 +121,12 @@ const Header = memo(() => {
             to="/"
             sx={{ padding: '4px' }}
           >
-            <RocketLaunchIcon
-              sx={{ color: '#47dded', fontSize: '1.2rem', ml: 1 }}
+            <img
+              src="/symbolmark.svg"
+              alt="logo"
+              style={{ width: '1.6rem', marginLeft: '4px' }}
             />
-          </IconButton> */}
+          </IconButton>
 
           <Typography
             variant="h6"
@@ -138,21 +151,20 @@ const Header = memo(() => {
               value={navValue}
               onChange={navHandleChange}
               textColor="inherit"
-              indicatorColor="secondary"
               aria-label="navigation tabs"
               sx={{
                 position: 'absolute',
-                left: '50%',
+                left: '42%',
                 transform: 'translateX(-50%)',
                 minHeight: '6vh',
                 '& .MuiTabs-indicator': {
                   backgroundColor: '#47dded',
                   transition: 'none',
                 },
-                '& .Mui-selected': { color: '#47dded' },
                 '& .MuiTab-root': {
                   minHeight: '6vh',
-                  padding: '0 16px',
+                  padding: '0',
+                  paddingRight: '16px',
                   fontSize: '1rem',
                 },
                 '& .MuiTab-root:not(.Mui-selected):hover': {
@@ -164,21 +176,73 @@ const Header = memo(() => {
               <Tab
                 disableRipple
                 value="Multi Sender"
-                label="Multi Sender"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <img
+                      src="/icons/sender-active.svg"
+                      alt="sender"
+                      style={{
+                        width: '1rem',
+                        marginRight: '0.3rem',
+                        filter:
+                          navValue !== 'Multi Sender'
+                            ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                            : 'none',
+                      }}
+                    />
+                    <span
+                      style={{
+                        color:
+                          navValue === 'Multi Sender'
+                            ? COLORS.BLUE.TURQUOISE
+                            : COLORS.PURPLE.LIGHT,
+                      }}
+                    >
+                      Multi Sender
+                    </span>
+                  </Box>
+                }
                 component={Link}
                 to="/sender"
                 sx={{
                   fontSize: '0.8rem !important',
+                  marginRight: '4rem',
                 }}
               />
               <Tab
                 disableRipple
                 value="History"
-                label="History"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <img
+                      src={'/icons/history-active.svg'}
+                      alt="history"
+                      style={{
+                        width: '1rem',
+                        marginRight: '0.3rem',
+                        filter:
+                          navValue !== 'History'
+                            ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                            : 'none',
+                      }}
+                    />
+                    <span
+                      style={{
+                        color:
+                          navValue === 'History'
+                            ? COLORS.BLUE.TURQUOISE
+                            : COLORS.PURPLE.LIGHT,
+                      }}
+                    >
+                      History
+                    </span>
+                  </Box>
+                }
                 component={Link}
                 to="/history"
                 sx={{
                   fontSize: '0.8rem !important',
+                  marginRight: '2rem',
                 }}
               />
             </Tabs>
@@ -187,7 +251,7 @@ const Header = memo(() => {
           {!isMobile && (
             <>
               <TranslateSelector />
-              <Box sx={{ mx: 1 }}>
+              <Box sx={{ mx: 2 }}>
                 <NetworkSelector />
               </Box>
             </>
@@ -196,36 +260,9 @@ const Header = memo(() => {
           {/* Wallet button - completely redesigned for mobile */}
           <WalletMultiButton
             style={{
-              backgroundColor: '#78c1fd',
-              color: '#06234e',
-              transition: 'all 0.2s ease',
-              fontSize: '16px',
-              // 共通のスタイル
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: connected ? 'center' : 'flex-start',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-
-              // 条件に基づいてスタイルをまとめて適用
-              ...(isMobile
-                ? {
-                    // モバイル用スタイル
-                    width: '40px',
-                    height: '40px',
-                    minWidth: '40px',
-                    padding: 0,
-                    borderRadius: '8px',
-                    marginRight: '10px',
-                  }
-                : {
-                    // デスクトップ用スタイル
-                    minWidth: connected ? '140px' : '180px',
-                    width: connected ? '140px' : '180px',
-                    height: '36px',
-                    padding: connected ? '0px' : '0px 10px',
-                    borderRadius: '6px',
-                  }),
+              // スタイルをCSSに移動したので、ここでは最低限のものだけ残す
+              marginRight: isMobile ? '10px' : '0',
+              alignSelf: 'center',
             }}
           >
             {getWalletButtonContent()}

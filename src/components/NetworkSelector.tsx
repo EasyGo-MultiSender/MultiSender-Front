@@ -13,6 +13,7 @@ import {
   TextField,
 } from '@mui/material';
 import NetworkCheckIcon from '@mui/icons-material/NetworkCheck';
+import COLORS from '@/constants/color';
 
 export const NetworkSelector = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -72,18 +73,68 @@ export const NetworkSelector = () => {
     <>
       <Button
         onClick={handleClick}
-        startIcon={<NetworkCheckIcon />}
+        startIcon={
+          <NetworkCheckIcon
+            sx={{
+              marginRight: '2px',
+              fontSize: '1.4rem !important',
+            }}
+          />
+        }
         sx={{
-          color: '#47dded',
-          marginRight: 2,
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          padding: '0 12px',
+          gap: '6px',
+
+          width: '160px',
+          height: '36px',
+
+          background: COLORS.GRADIENTS.BLUE_TO_TEAL,
+          borderRadius: '8px',
+
+          color: COLORS.GRAY.LIGHT,
+          fontWeight: 600,
+          textTransform: 'none',
+          fontSize: '0.9rem',
+
           '&:hover': {
-            backgroundColor: 'rgba(71, 221, 237, 0.1)',
+            background: COLORS.GRADIENTS.BLUE_TO_TEAL,
+            boxShadow: '0 4px 10px rgba(2, 215, 183, 0.4)',
           },
         }}
       >
         {getDisplayNetwork()}
       </Button>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        sx={{
+          '& .MuiPaper-root': {
+            backgroundColor: COLORS.PURPLE.MEDIUM,
+            color: COLORS.GRAY.LIGHT,
+            borderRadius: '8px',
+            minWidth: '160px',
+          },
+          '& .MuiMenuItem-root': {
+            fontSize: '1rem',
+            fontWeight: 500,
+            padding: '8px 12px',
+            '&:hover': {
+              backgroundColor: 'rgba(3, 176, 228, 0.1)',
+            },
+            '&.Mui-selected': {
+              backgroundColor: 'rgba(3, 176, 228, 0.2)',
+              '&:hover': {
+                backgroundColor: 'rgba(3, 176, 228, 0.3)',
+              },
+            },
+          },
+        }}
+      >
         <MenuItem
           onClick={() => handleNetworkChange(WalletAdapterNetwork.Mainnet)}
           selected={currentNetwork === WalletAdapterNetwork.Mainnet}
