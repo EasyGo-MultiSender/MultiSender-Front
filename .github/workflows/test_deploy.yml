@@ -23,6 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       build-directory: ${{ steps.build-step.outputs.build-directory }}
+      artifact-url: ${{ steps.get-artifact-url.outputs.artifact_url }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -58,6 +59,5 @@ jobs:
     uses: ./.github/workflows/_prod_deploy.yml
     with:
       app-path: ${{ needs.vars.outputs.app-path }}
-      artifact-name: ${{ needs.vars.outputs.artifact-name }}
-      artifact-path: ${{ needs.vars.outputs.artifact-path }}
+      artifact-url: ${{ needs.dummy_build.outputs.artifact-url }}
     secrets: inherit

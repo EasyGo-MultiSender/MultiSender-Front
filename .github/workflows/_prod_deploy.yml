@@ -8,16 +8,10 @@ on:
         required: false
         type: string
         default: '/var/www/vhosts/multisender.easy-go.me'
-      artifact-name:
-        description: 'Name of the artifact to download'
+      artifact-url:
+        description: 'URL of the artifact to download'
         required: false
         type: string
-        default: 'build-output'
-      artifact-path:
-        description: 'Path to the artifact to download'
-        required: false
-        type: string
-        default: 'build'
         
 jobs:
   deploy:
@@ -39,33 +33,6 @@ jobs:
           aws-secret-access-key: ${{ steps.set-env-vars.outputs.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ steps.set-env-vars.outputs.AWS_REGION }}
 
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.artifact-name }}
-          path: ${{ inputs.artifact-path }}
-
-      - name: Create deployment package
-        id: create-package
-        run: |
-          cd ${{ inputs.artifact-path }}
-          # デプロイパッケージをtarに圧縮して一時ファイルとして保存
-          tar -czf ../deployment-package.tar.gz *
-          # GitHubのリポジトリとランID情報を設定
-          echo "repository=${{ github.repository }}" >> $GITHUB_OUTPUT
-          echo "run_id=${{ github.run_id }}" >> $GITHUB_OUTPUT
-
-      - name: Get artifact URL
-        id: get-artifact-url
-        run: |
-          # 必要な変数を設定
-          REPO="${{ github.repository }}"
-          ARTIFACT_NAME="${{ inputs.artifact-name }}"
-          # GitHubトークンを使用してアーティファクトURLを取得
-          echo "artifact_url=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ github.workflow }}\"" >> $GITHUB_OUTPUT
-          # トークンを出力変数に設定
-          echo "token=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_OUTPUT
-
       - name: Deploy using SSM
         run: |
           # SSMを使用してデプロイスクリプトを実行
@@ -78,7 +45,7 @@ jobs:
                 "cd ${{ inputs.app-path }}",
                 "rm -rf ./* || true",
                 "# URLからアーティファクトをダウンロード",
-                "curl -L -H \"Authorization: token ${{ steps.get-artifact-url.outputs.token }}\" \"${{ steps.get-artifact-url.outputs.artifact_url }}\" --output artifact.zip",
+                "curl -L -H \"Authorization: token ${{ secrets.GITHUB_TOKEN }}\" \"${{ inputs.artifact-url }}\" --output artifact.zip",
                 "# 展開",
                 "unzip -q artifact.zip",
                 "rm artifact.zip",
