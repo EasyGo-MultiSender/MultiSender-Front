@@ -45,7 +45,7 @@ jobs:
                 "cd ${{ inputs.app-path }}",
                 "rm -rf ./* || true",
                 "# URLからアーティファクトをダウンロード",
-                "curl -L -H \"Authorization: token ${{ secrets.GITHUB_TOKEN }}\" \"${{ inputs.artifact-url }}\" --output artifact.zip",
+                "curl -L -H \"Authorization: token ${{ secrets.GITHUB_TOKEN }} ${{ inputs.artifact-url }} --output artifact.zip",
                 "# 展開",
                 "unzip -q artifact.zip",
                 "rm artifact.zip",
