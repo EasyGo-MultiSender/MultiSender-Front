@@ -13,6 +13,15 @@ on:
         required: false
         type: string
         default: 'build-output'
+    secrets:
+      AWS_REGION:
+        required: true
+      AWS_INSTANCE_ID:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
 
 jobs:
   deploy:
