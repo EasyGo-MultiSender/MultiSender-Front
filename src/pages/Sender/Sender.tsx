@@ -1971,7 +1971,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.invalidLineNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`invalid-summary-${lineNum}`}
@@ -2017,7 +2017,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.invalidAddressNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`duplicate-summary-${lineNum}`}
@@ -2063,7 +2063,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.duplicateLineNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`duplicate-summary-${lineNum}`}
@@ -2108,7 +2108,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.invalidSolNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`duplicate-summary-${lineNum}`}
@@ -2154,7 +2154,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.belowMinimumSolLineNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`below-sol-summary-${lineNum}`}
