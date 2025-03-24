@@ -2293,10 +2293,12 @@ const Sender: React.FC = () => {
               </Box>
               <Typography
                 variant="caption"
-                color="primary"
-                fontWeight="bold"
+                color={COLORS.PINK.HOT}
+                fontWeight={700}
+                fontSize="0.9rem"
                 display="block"
                 textAlign="right"
+                mt={1}
               >
                 {t('Total amount')}: {totalAmount.toFixed(6)}{' '}
                 {selectedTokenInfo.symbol}
