@@ -1488,10 +1488,10 @@ const Sender: React.FC = () => {
                       sx={{
                         ...(selectedTokenInfo.symbol === 'SOL'
                           ? {
-                              width: '27px',
-                              height: '27px',
-                              marginRight: '0',
-                              bgcolor: 'background.paper',
+                              width: '32px',
+                              height: '32px',
+                              marginRight: '8px',
+                              bgcolor: COLORS.GRAY.DARK,
                               '& img': {
                                 width: '19.5px',
                                 height: '19.5px',
@@ -1500,8 +1500,8 @@ const Sender: React.FC = () => {
                               },
                             }
                           : {
-                              width: 32,
-                              height: 32,
+                              width: '32px',
+                              height: '32px',
                               marginRight: '8px',
                             }),
                       }}
@@ -1518,10 +1518,10 @@ const Sender: React.FC = () => {
                       src="/solana-logo.png"
                       alt="SOL"
                       sx={{
-                        width: '27px',
-                        height: '27px',
+                        width: '32px',
+                        height: '32px',
                         marginRight: '0',
-                        bgcolor: 'background.paper',
+                        bgcolor: COLORS.GRAY.DARK,
                         '& img': {
                           width: '19.5px',
                           height: '19.5px',
@@ -1562,7 +1562,15 @@ const Sender: React.FC = () => {
                         <Avatar
                           src={token.metadata?.uri || '/token-placeholder.png'}
                           alt={token.metadata?.symbol || 'Token'}
-                          sx={{ width: 24, height: 24 }}
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            ...(token.metadata?.uri ===
+                              '/token-placeholder.png' && {
+                              margin: '0',
+                              objectFit: 'contain',
+                            }),
+                          }}
                         />
                       </ListItemAvatar>
                       <ListItemText
@@ -2445,7 +2453,6 @@ const Sender: React.FC = () => {
                       )}
                     </Box>
                   </Box>
-
                   {selectedToken !== 'SOL' && (
                     <Box display="flex" justifyContent="space-between">
                       <Typography variant="body2">
