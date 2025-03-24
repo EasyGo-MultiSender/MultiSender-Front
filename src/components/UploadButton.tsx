@@ -2,6 +2,7 @@ import { FileUpload } from '@mui/icons-material';
 import { Button } from '@mui/material';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { COLORS } from '../constants/color';
 
 // 受取人情報の型定義
 interface Recipient {
@@ -111,7 +112,7 @@ const Upload: React.FC<UploadProps> = ({ onRecipientsLoaded }) => {
         height: '32px',
         gap: '5px',
         marginTop: '8px',
-        background: '#2D2CCE',
+        background: COLORS.BLUE.DARK,
         borderRadius: '6px',
         textTransform: 'none',
       }}
