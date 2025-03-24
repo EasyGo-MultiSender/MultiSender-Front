@@ -40,6 +40,50 @@ h1 {
   border-radius: 20px !important;
 }
 
+.MuiMenuItem-root {
+  color: #ffffff !important;
+  transition: all 0.1s ease;
+}
+
+.MuiMenuItem-root:hover {
+  background-color: #362d7e !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+  background-color: #4b3daf !important;
+  color: #ffffff !important;
+}
+
+/* MUIリップルエフェクトのカスタマイズ */
+.MuiTouchRipple-root {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.MuiTouchRipple-rippleVisible {
+  animation-duration: 400ms !important;
+}
+
+.MuiTouchRipple-child {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ドロップダウンメニュー全体の背景色 */
+.MuiPaper-root.MuiMenu-paper,
+.MuiPaper-root.MuiPopover-paper {
+  border-radius: 8px !important;
+  background-color: #292352 !important;
+  border: 1px solid #7867ea !important;
+  box-shadow: 0 4px 12px rgba(106, 63, 234, 0.25) !important;
+}
+
+/* MenuListの背景色も設定
+.MuiList-root.MuiMenu-list,
+.MuiList-root.MuiMenuList-root {
+  background-color: rgba(120, 103, 234, 0.08) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+} */
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
