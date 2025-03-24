@@ -1466,10 +1466,20 @@ const Sender: React.FC = () => {
                   '&.Mui-focused fieldset': {
                     borderColor: 'rgb(179, 172, 227)',
                   },
+                  '& .MuiSelect-icon': {
+                    color: COLORS.PURPLE.LIGHT, // 矢印アイコンを白色に変更
+                  },
                 },
               }}
             >
-              <InputLabel sx={{ color: COLORS.PURPLE.LIGHT }}>
+              <InputLabel
+                sx={{
+                  color: COLORS.PURPLE.LIGHT,
+                  '&.Mui-focused': {
+                    color: COLORS.PURPLE.LIGHT,
+                  },
+                }}
+              >
                 {t('Select Token')}
               </InputLabel>
               <Select
@@ -1534,6 +1544,11 @@ const Sender: React.FC = () => {
                   <ListItemText
                     primary="SOL - Solana"
                     secondary="Native Token"
+                    sx={{
+                      '& .MuiListItemText-secondary': {
+                        color: COLORS.PURPLE.LIGHT,
+                      },
+                    }}
                   />
                 </MenuItem>
 
@@ -1576,6 +1591,11 @@ const Sender: React.FC = () => {
                       <ListItemText
                         primary={`${token.metadata?.symbol || 'Unknown'} - ${token.metadata?.name || 'Unknown Token'}`}
                         secondary={`${token.account.mint.slice(0, 6)}...${token.account.mint.slice(-6)}`}
+                        sx={{
+                          '& .MuiListItemText-secondary': {
+                            color: COLORS.PURPLE.LIGHT,
+                          },
+                        }}
                       />
                     </MenuItem>
                   ))
