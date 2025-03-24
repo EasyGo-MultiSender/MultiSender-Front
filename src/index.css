@@ -72,8 +72,7 @@ h1 {
 .MuiPaper-root.MuiPopover-paper {
   border-radius: 8px !important;
   background-color: #292352 !important;
-  border: 1px solid #7867ea !important;
-  box-shadow: 0 4px 12px rgba(106, 63, 234, 0.25) !important;
+  border: 0.05px solid #7867ea6a !important;
 }
 
 /* MenuListの背景色も設定
