@@ -1378,7 +1378,7 @@ const Sender: React.FC = () => {
         {/* SOL Balance & Address */}
         <Card sx={{ my: 4 }}>
           <CardContent>
-            <Typography variant="h6" mb={2} textAlign="center">
+            <Typography variant="h6" mb={2} textAlign="center" fontWeight={600}>
               {t('SOL Balance')}
             </Typography>
             {!connected ? (
@@ -1432,7 +1432,7 @@ const Sender: React.FC = () => {
         ) : (
           <Card sx={{ mb: 4 }}>
             <CardContent>
-              <Typography variant="h6" textAlign="center">
+              <Typography variant="h6" textAlign="center" fontWeight={600}>
                 {t('SPL Tokens')}
               </Typography>
               <Box textAlign="center" p={2} color={COLORS.PURPLE.LIGHT}>
@@ -1445,7 +1445,7 @@ const Sender: React.FC = () => {
         {/* Transfer Form */}
         <Card sx={{ mb: 4 }}>
           <CardContent>
-            <Typography variant="h6" textAlign="center" mb={2}>
+            <Typography variant="h6" textAlign="center" mb={2} fontWeight={600}>
               {t('Token Transfer')}
             </Typography>
 
@@ -1643,21 +1643,31 @@ const Sender: React.FC = () => {
 
             {/* Recipient Addresses with Amounts */}
             <Box mb={3}>
-              <Typography variant="body2" fontWeight="bold" mb={1}>
+              <Typography
+                variant="body2"
+                fontWeight={600}
+                mb={1}
+                color={COLORS.PURPLE.LIGHT}
+              >
                 {t('Recipient Addresses and Amounts')}
                 <br />
                 {t(
                   'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
                 )}
               </Typography>
+
               <Typography
                 variant="caption"
-                color="text.secondary"
+                color={COLORS.PURPLE.LIGHT}
+                mt={2}
                 mb={1}
                 display="block"
+                fontSize={16}
+                fontWeight={500}
               >
                 {t('Format: address,amount (one entry per line)')}
               </Typography>
+
               <Box position="relative">
                 {/* 行番号付きテキストフィールド */}
                 <Box
@@ -1937,6 +1947,7 @@ const Sender: React.FC = () => {
                         borderCollapse: 'collapse',
                         fontSize: '0.75rem',
                         mt: 0.5,
+                        color: COLORS.PURPLE.LIGHT,
                       }}
                     >
                       {invalidEntries.length > 0
@@ -1988,10 +1999,14 @@ const Sender: React.FC = () => {
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                mt={1}
+                mt={0.5}
               >
                 <Box>
-                  <Typography variant="caption" color="gray">
+                  <Typography
+                    variant="caption"
+                    color={COLORS.PURPLE.LIGHT}
+                    fontWeight={600}
+                  >
                     {t('Valid entries')}: {parsedEntries.length}
                   </Typography>
                   {(invalidEntries.length > 0 ||
@@ -2279,7 +2294,7 @@ const Sender: React.FC = () => {
 
             {/* Token simulation */}
             <Box mb={3}>
-              <Typography variant="body2" fontWeight="bold" mb={2}>
+              <Typography variant="body2" fontWeight={600} mb={2}>
                 {t('Transaction Simulation')}
               </Typography>
               <Box

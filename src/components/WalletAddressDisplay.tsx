@@ -26,7 +26,7 @@ const WalletAddressDisplay = memo(() => {
 
   return (
     <>
-      <Typography variant="h6" mb={1} textAlign="center">
+      <Typography variant="h6" mb={1} textAlign="center" fontWeight={600}>
         {t('Wallet Address')}
       </Typography>
       <Box
