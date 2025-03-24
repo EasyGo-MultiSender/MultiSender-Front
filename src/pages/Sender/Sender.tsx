@@ -1405,7 +1405,18 @@ const Sender: React.FC = () => {
               </Typography>
             )}
 
-            <Divider sx={{ my: 2 }} />
+            <Divider
+              variant="fullWidth"
+              sx={{
+                my: 2,
+                borderColor: '#7867EA',
+                borderWidth: 1,
+                width: 'calc(95% + 15px)',
+                position: 'relative',
+                left: '50%',
+                transform: 'translateX(-50%)',
+              }}
+            />
 
             <WalletAddressDisplay />
           </CardContent>
