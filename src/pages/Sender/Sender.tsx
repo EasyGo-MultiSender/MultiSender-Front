@@ -58,6 +58,7 @@ import {
 } from '@/types/transactionTypes';
 import { RecaptchaVerificationResult } from '@/hooks/useRecaptcha';
 import { CSVValidationResult } from '@/hooks/interfaces/transfer.ts';
+import COLORS from '@/constants/color';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -1384,7 +1385,7 @@ const Sender: React.FC = () => {
               <Typography
                 variant="h4"
                 fontWeight="bold"
-                color="text.secondary"
+                color={COLORS.PURPLE.LIGHT}
                 textAlign="center"
               >
                 0.00000000 SOL
@@ -1397,7 +1398,7 @@ const Sender: React.FC = () => {
               <Typography
                 variant="h4"
                 fontWeight="bold"
-                color="green"
+                color={COLORS.PURPLE.LIGHT}
                 textAlign="center"
               >
                 {balance?.toFixed(8) ?? '0.00000000'} SOL
