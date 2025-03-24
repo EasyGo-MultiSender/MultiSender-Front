@@ -1,4 +1,4 @@
-import { FileUpload } from '@mui/icons-material';
+import FileUploadOutlinedIcon from '@mui/icons-material/FileUploadOutlined';
 import { Button } from '@mui/material';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -99,7 +99,7 @@ const Upload: React.FC<UploadProps> = ({ onRecipientsLoaded }) => {
   return (
     <Button
       onClick={handleUpload}
-      startIcon={<FileUpload />}
+      startIcon={<FileUploadOutlinedIcon fontSize="small" />}
       disabled={isProcessing}
       variant="contained"
       sx={{
@@ -108,13 +108,16 @@ const Upload: React.FC<UploadProps> = ({ onRecipientsLoaded }) => {
         justifyContent: 'center',
         alignItems: 'center',
         padding: '5px 10px',
-        width: '100px',
+        width: '110px',
         height: '32px',
         gap: '5px',
         marginTop: '8px',
         background: COLORS.BLUE.DARK,
         borderRadius: '6px',
         textTransform: 'none',
+        '&:hover': {
+          background: `${COLORS.BLUE.DARK}cc`,
+        },
       }}
     >
       {isProcessing ? t('Processing...') : t('CSV')}

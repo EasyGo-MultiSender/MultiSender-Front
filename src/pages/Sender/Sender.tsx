@@ -1,5 +1,6 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
 import { ContentPaste, Download } from '@mui/icons-material';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import {
   Box,
   Container,
@@ -35,9 +36,14 @@ import SerializerList from '@/components/SerializerList';
 import TokenList, { TokenListRef } from '@/components/TokenList';
 import UploadButton from '@/components/UploadButton';
 import WalletAddressDisplay from '@/components/WalletAddressDisplay';
+import COLORS from '@/constants/color';
+import { CSVValidationResult } from '@/hooks/interfaces/transfer.ts';
 import { useBalance } from '@/hooks/useBalance';
 import { useConnection } from '@/hooks/useConnection';
-import { useRecaptcha } from '@/hooks/useRecaptcha';
+import {
+  useRecaptcha,
+  RecaptchaVerificationResult,
+} from '@/hooks/useRecaptcha';
 import { useTokenListMetadata } from '@/hooks/useTokenListMetadata';
 import { useTokenTransfer } from '@/hooks/useTokenTransfer';
 import {
@@ -56,9 +62,6 @@ import {
   AddressEntry,
   Serializer,
 } from '@/types/transactionTypes';
-import { RecaptchaVerificationResult } from '@/hooks/useRecaptcha';
-import { CSVValidationResult } from '@/hooks/interfaces/transfer.ts';
-import COLORS from '@/constants/color';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -2254,21 +2257,29 @@ const Sender: React.FC = () => {
                     </Box>
                   )}
                 </Box>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box display="flex" alignItems="center" gap={3}>
                   <Tooltip title="download" arrow placement="top">
                     <Button
                       onClick={downloadTemplate}
                       size="small"
-                      startIcon={<Download fontSize="small" />}
+                      startIcon={<FileDownloadOutlinedIcon fontSize="small" />}
+                      variant="contained"
                       sx={{
                         textTransform: 'none',
                         color: 'inherit',
+                        borderRadius: '6px',
                         minWidth: 'auto',
-                        padding: '4px 8px',
-                        fontSize: '0.75rem',
+                        padding: '5px 10px',
+                        width: '110px',
+                        height: '32px',
+                        marginTop: '8px',
+                        background: COLORS.PURPLE.MEDIUM_BRIGHT,
+                        '&:hover': {
+                          background: `${COLORS.PURPLE.MEDIUM_BRIGHT}cc`,
+                        },
                       }}
                     >
-                      {t('template')}
+                      {t('Template')}
                     </Button>
                   </Tooltip>
                   <Tooltip title="upload" arrow placement="top">
