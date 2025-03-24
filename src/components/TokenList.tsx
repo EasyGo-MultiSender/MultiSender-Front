@@ -1,12 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  memo,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import { ExpandMore } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -16,12 +8,21 @@ import {
   Button,
   Avatar,
 } from '@mui/material';
-import { ExpandMore } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { TokenMetadata, useTokenMetadata } from '@/hooks/useTokenMetadata';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  memo,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+} from 'react';
+import { useTranslation } from 'react-i18next';
+import COLORS from '@/constants/color';
 import { useTokenAccounts } from '@/hooks/useTokenAccounts';
+import { TokenMetadata, useTokenMetadata } from '@/hooks/useTokenMetadata';
 
 // グローバルキャッシュ - コンポーネントのマウント間で保持される
 const CACHED_TOKEN_DATA = new Map<string, any>();
@@ -65,7 +66,7 @@ const TokenDisplay = memo(
         display="flex"
         alignItems="center"
         justifyContent="space-between"
-        borderTop="1px solid #eee"
+        borderTop="1px solid rgba(120, 103, 234, 0.5)"
         py={1}
         px={1}
       >
@@ -75,11 +76,11 @@ const TokenDisplay = memo(
             alt={metadata?.symbol || 'Token'}
             sx={{ width: 32, height: 32 }}
           />
-          <Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography variant="body1" fontWeight="bold">
               {metadata?.symbol || 'Unknown'}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color={COLORS.PURPLE.LIGHT}>
               {metadata?.name || 'Unknown Token'}
             </Typography>
           </Box>
@@ -253,7 +254,7 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
     return (
       <Card sx={{ mb: 4 }}>
         <CardContent>
-          <Typography variant="h6" textAlign="center">
+          <Typography variant="h6" textAlign="center" mb={1}>
             {t('SPL Tokens')}
           </Typography>
           {loading ? (
@@ -282,8 +283,9 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
                     variant="text"
                     size="small"
                     sx={{
+                      color: COLORS.BLUE.TURQUOISE,
                       ':hover': {
-                        color: '#2824f9',
+                        color: `${COLORS.BLUE.TURQUOISE}b2`,
                         transition: 'all 0.3s',
                         backgroundColor: 'transparent',
                       },
