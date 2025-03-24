@@ -1455,6 +1455,8 @@ const Sender: React.FC = () => {
               sx={{
                 mb: 3,
                 '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  p: 0,
                   '& fieldset': {
                     borderColor: COLORS.PURPLE.LIGHT,
                   },
@@ -1498,12 +1500,13 @@ const Sender: React.FC = () => {
                               },
                             }
                           : {
-                              width: 24,
-                              height: 24,
+                              width: 32,
+                              height: 32,
+                              marginRight: '8px',
                             }),
                       }}
                     />
-                    <Typography>
+                    <Typography color={COLORS.GRAY.LIGHT} fontSize={16}>
                       {selectedTokenInfo.symbol} - {selectedTokenInfo.name}
                     </Typography>
                   </Box>
