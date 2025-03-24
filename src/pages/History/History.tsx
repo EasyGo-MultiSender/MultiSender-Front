@@ -50,13 +50,12 @@ const History = () => {
     >
       <Container maxWidth="md" sx={{ flex: 1 }}>
         {/* Wallet address display card */}
-        {connected && (
-          <Card sx={{ my: 4 }}>
-            <CardContent>
-              <WalletAddressDisplay />
-            </CardContent>
-          </Card>
-        )}
+
+        <Card sx={{ my: 4 }}>
+          <CardContent>
+            <WalletAddressDisplay />
+          </CardContent>
+        </Card>
 
         {/* History display card */}
         {connected && (
