@@ -252,7 +252,7 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
     const loading = isLoading();
 
     return (
-      <Card sx={{ mb: 4 }}>
+      <Card sx={{ mb: 4, px: 1 }}>
         <CardContent>
           <Typography variant="h6" textAlign="center" mb={1}>
             {t('SPL Tokens')}

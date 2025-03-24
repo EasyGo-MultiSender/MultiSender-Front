@@ -1,5 +1,5 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, Download } from '@mui/icons-material';
+import { ContentPaste } from '@mui/icons-material';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import {
   Box,
@@ -1433,7 +1433,7 @@ const Sender: React.FC = () => {
             onDataLoaded={handleTokenDataLoaded}
           />
         ) : (
-          <Card sx={{ mb: 4 }}>
+          <Card sx={{ mb: 4, px: 1 }}>
             <CardContent>
               <Typography variant="h6" textAlign="center" fontWeight={600}>
                 {t('SPL Tokens')}
@@ -1446,7 +1446,7 @@ const Sender: React.FC = () => {
         )}
 
         {/* Transfer Form */}
-        <Card sx={{ mb: 4 }}>
+        <Card sx={{ mb: 4, px: 1.6 }}>
           <CardContent>
             <Typography variant="h6" textAlign="center" mb={2} fontWeight={600}>
               {t('Token Transfer')}
@@ -2382,18 +2382,14 @@ const Sender: React.FC = () => {
                       },
                     }}
                   >
-                    <Typography
-                      variant="h4"
-                      fontWeight="bold"
-                      color="rgb(0, 0, 0)"
-                    >
+                    <Typography variant="h4" fontWeight="bold" color="#3E0059">
                       {item.value}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="#5542AD">
                       {t(item.title)}
                     </Typography>
                     {item.subText && (
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="#5542AD">
                         {item.subText}
                       </Typography>
                     )}
@@ -2543,7 +2539,13 @@ const Sender: React.FC = () => {
                     </Box>
                   )}
 
-                  <Divider sx={{ my: 1 }} />
+                  <Divider
+                    sx={{
+                      my: 1,
+                      borderColor: COLORS.PURPLE.LIGHT,
+                      opacity: 0.5,
+                    }}
+                  />
 
                   <Box display="flex" justifyContent="space-between">
                     <Typography variant="body1" fontWeight="bold">
@@ -2553,7 +2555,7 @@ const Sender: React.FC = () => {
                       <Typography
                         variant="body1"
                         fontWeight="bold"
-                        color="primary.main"
+                        color={COLORS.BLUE.TURQUOISE}
                       >
                         {feeEstimation.totalFee.toFixed(6)} SOL
                       </Typography>
@@ -2593,8 +2595,9 @@ const Sender: React.FC = () => {
                         >
                           <Typography
                             variant="body1"
-                            fontWeight="bold"
-                            color="error.main"
+                            fontWeight={600}
+                            fontSize="1rem"
+                            color={COLORS.BLUE.TURQUOISE}
                           >
                             {(feeEstimation.totalFee + totalAmount).toFixed(6)}{' '}
                             SOL
@@ -2620,8 +2623,9 @@ const Sender: React.FC = () => {
                     accountsNeedingCreation.length > 0 && (
                       <Typography
                         variant="caption"
-                        color="text.secondary"
+                        color={COLORS.PINK.HOT}
                         mt={0.5}
+                        sx={{ fontWeight: 500 }}
                       >
                         * {t('Creating')} {accountsNeedingCreation.length}{' '}
                         {t('new token accounts')}
@@ -2632,7 +2636,7 @@ const Sender: React.FC = () => {
                   {selectedToken == 'SOL' && (
                     <Typography
                       variant="caption"
-                      color="text.secondary"
+                      color={COLORS.PURPLE.LIGHT}
                       mt={0.5}
                     >
                       {t('Total amount')}: {totalAmount.toFixed(6)}{' '}
@@ -2644,35 +2648,67 @@ const Sender: React.FC = () => {
             </Box>
 
             {/* Transfer Button */}
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={handleTransfer}
-              disabled={
-                !connected ||
-                transferring ||
-                parsedEntries.length === 0 ||
-                invalidEntries.length > 0 ||
-                duplicateAddresses.length > 0 ||
-                (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-              }
-            >
-              {transferLoading ? (
-                <>
-                  <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
-                  {t(processingMessage)}...
-                </>
-              ) : (
-                t('Transfer')
-              )}
-            </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleTransfer}
+                disabled={
+                  !connected ||
+                  transferring ||
+                  parsedEntries.length === 0 ||
+                  invalidEntries.length > 0 ||
+                  duplicateAddresses.length > 0 ||
+                  (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                }
+                sx={{
+                  mt: 1,
+                  py: 1,
+                  mx: 'auto',
+                  position: 'relative',
+                  width: '80%',
+                  height: '50px',
+                  fontWeight: 600,
+                  fontSize: '1.3rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)',
+                  background: COLORS.GRADIENTS.PURPLE_TO_LAVENDER,
+                  '&.Mui-disabled': {
+                    background: COLORS.GRAY.MEDIUM,
+                  },
+                }}
+              >
+                <img
+                  src={
+                    !connected ||
+                    transferring ||
+                    parsedEntries.length === 0 ||
+                    invalidEntries.length > 0 ||
+                    duplicateAddresses.length > 0 ||
+                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                      ? '/icons/transfer-button-inactive.svg'
+                      : '/icons/transfer-button-active.svg'
+                  }
+                  alt="Transfer"
+                  style={{ width: '26px', height: '26px', marginRight: '16px' }}
+                />
+                {transferLoading ? (
+                  <>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    {t(processingMessage)}...
+                  </>
+                ) : (
+                  t('Transfer')
+                )}
+              </Button>
+            </Box>
             <Typography
               variant="caption"
-              color="text.secondary"
+              color={COLORS.PURPLE.LIGHT}
               mt={1}
               textAlign="center"
               display="block"
+              fontWeight={500}
             >
               {t(
                 'The lowest across the network, each transaction only requires 0.0075 SOL.'
