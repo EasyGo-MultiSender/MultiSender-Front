@@ -1435,8 +1435,8 @@ const Sender: React.FC = () => {
               <Typography variant="h6" textAlign="center">
                 {t('SPL Tokens')}
               </Typography>
-              <Box textAlign="center" color={COLORS.GRAY.LIGHT} p={2}>
-                {t('No SPL tokens found')}
+              <Box textAlign="center" p={2} color={COLORS.PURPLE.LIGHT}>
+                {t('Connect your wallet to view your tokens')}
               </Box>
             </CardContent>
           </Card>
