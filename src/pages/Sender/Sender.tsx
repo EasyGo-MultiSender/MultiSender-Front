@@ -2294,9 +2294,16 @@ const Sender: React.FC = () => {
 
             {/* Token simulation */}
             <Box mb={3}>
-              <Typography variant="body2" fontWeight={600} mb={2}>
-                {t('Transaction Simulation')}
-              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <img
+                  src="/icons/transaction-result.svg"
+                  alt="Transaction Result"
+                  width={20}
+                />
+                <Typography variant="body2" fontWeight={600} my={1.5}>
+                  {t('Transaction Simulation')}
+                </Typography>
+              </Box>
               <Box
                 sx={{
                   display: 'grid',
@@ -2662,9 +2669,12 @@ const Sender: React.FC = () => {
             {/* Transaction Results */}
             {allSerializer.length > 0 && (
               <Box mt={3}>
-                <Typography variant="h6" gutterBottom>
-                  {t('Recent Transactions')}
-                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="h6" gutterBottom>
+                    {t('Recent Transactions')}
+                  </Typography>
+                </Box>
+
                 {allSerializer.map((serializer, index) => (
                   <SerializerList
                     key={`${serializer.uuid}-${index}`}
