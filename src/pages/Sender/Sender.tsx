@@ -1435,7 +1435,7 @@ const Sender: React.FC = () => {
               <Typography variant="h6" textAlign="center">
                 {t('SPL Tokens')}
               </Typography>
-              <Box textAlign="center" p={2}>
+              <Box textAlign="center" color={COLORS.GRAY.LIGHT} p={2}>
                 {t('No SPL tokens found')}
               </Box>
             </CardContent>
@@ -1450,8 +1450,26 @@ const Sender: React.FC = () => {
             </Typography>
 
             {/* Token Selection - 改善版 */}
-            <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>{t('Select Token')}</InputLabel>
+            <FormControl
+              fullWidth
+              sx={{
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: COLORS.PURPLE.LIGHT,
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'rgb(220, 215, 254)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'rgb(179, 172, 227)',
+                  },
+                },
+              }}
+            >
+              <InputLabel sx={{ color: COLORS.PURPLE.LIGHT }}>
+                {t('Select Token')}
+              </InputLabel>
               <Select
                 value={selectedToken}
                 label={t('Select Token')}
