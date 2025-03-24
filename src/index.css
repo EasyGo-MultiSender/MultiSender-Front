@@ -103,17 +103,17 @@ h1 {
   flex-direction: row;
   justify-content: flex-start;
   align-items: center;
-  padding: 0 12px;
-  gap: 2px;
+  padding: 0;
+  gap: 1px;
 
-  width: 160px;
+  width: 170px;
   height: 36px;
 
   background: linear-gradient(90deg, #fc00ff 0%, #6a3fea 100%);
   border-radius: 8px;
 
   color: white;
-  font-weight: 600;
+  font-weight: 500;
   transition: all 0.3s ease;
   font-size: 14.4px;
 }
@@ -127,12 +127,16 @@ h1 {
 
 /* Phantomアイコンのスタイル調整 */
 .wallet-adapter-button-start-icon {
-  margin-right: 6px !important;
-  margin-left: 2px !important;
+  margin-right: 8px !important;
+  margin-left: 12px !important;
   padding-left: 0 !important;
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.wallet-adapter-button-trigger span {
+  margin-left: 4px !important;
 }
 
 /* 接続済み状態では標準のアイコンを非表示にする */

@@ -77,6 +77,7 @@ export const NetworkSelector = () => {
           <NetworkCheckIcon
             sx={{
               marginRight: '2px',
+              marginLeft: '12px',
               fontSize: '1.4rem !important',
             }}
           />
@@ -86,17 +87,17 @@ export const NetworkSelector = () => {
           flexDirection: 'row',
           justifyContent: 'flex-start',
           alignItems: 'center',
-          padding: '0 12px',
+          padding: '0px',
           gap: '6px',
 
-          width: '160px',
+          width: '170px',
           height: '36px',
 
           background: COLORS.GRADIENTS.BLUE_TO_TEAL,
           borderRadius: '8px',
 
           color: COLORS.GRAY.LIGHT,
-          fontWeight: 600,
+          fontWeight: 500,
           textTransform: 'none',
           fontSize: '0.9rem',
 

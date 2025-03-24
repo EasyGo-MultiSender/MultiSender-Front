@@ -57,7 +57,7 @@ const Header = memo(() => {
         <>
           <AccountBalanceWalletIcon
             sx={{
-              mr: isMobile ? 0 : 1,
+              mx: 'auto',
               fontSize: isMobile ? '1.2rem' : '1.4rem',
             }}
           />

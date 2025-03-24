@@ -16,16 +16,19 @@
       href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
+
+    <style>
+      /* Google reCAPTCHAバッジを非表示 */
+      .grecaptcha-badge {
+        visibility: hidden !important;
+      }
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
-<style>
-  /* Google reCAPTCHAバッジを非表示 */
-  .grecaptcha-badge {
-    visibility: hidden !important;
-  }
-</style>
