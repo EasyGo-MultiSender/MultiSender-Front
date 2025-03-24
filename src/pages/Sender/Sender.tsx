@@ -2351,8 +2351,8 @@ const Sender: React.FC = () => {
                   <Box
                     key={index}
                     sx={{
-                      background:
-                        'linear-gradient(135deg, rgba(120, 193, 253, 0.15) 0%, rgba(255, 255, 255, 0.9) 100%)',
+                      background: COLORS.GRADIENTS.LIGHT_PURPLE,
+                      opacity: 0.75,
                       borderRadius: 2,
                       p: 2,
                       textAlign: 'center',
