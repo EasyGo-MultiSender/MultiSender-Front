@@ -38,6 +38,10 @@ const WalletAddressDisplay = memo(() => {
           borderRadius: 1,
           p: 1,
           height: 36,
+          width: '95%',
+          mx: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
         }}
       >
         <Typography
@@ -45,7 +49,7 @@ const WalletAddressDisplay = memo(() => {
           sx={{
             flex: 1,
             textAlign: 'center',
-            color: !connected ? 'text.secondary' : 'inherit',
+            color: !connected ? COLORS.GRAY.LIGHT : 'inherit',
           }}
         >
           {connected
