@@ -57,12 +57,14 @@ const Header = memo(() => {
         <>
           <AccountBalanceWalletIcon
             sx={{
-              mx: 'auto',
+              ml: '10px',
               fontSize: isMobile ? '1.2rem' : '1.4rem',
             }}
           />
           {!isMobile && (
-            <span style={{ whiteSpace: 'nowrap' }}>Connect Wallet</span>
+            <span style={{ whiteSpace: 'nowrap', marginRight: '12px' }}>
+              Connect Wallet
+            </span>
           )}
         </>
       );
