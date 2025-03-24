@@ -60,7 +60,7 @@ h1 {
   justify-content: flex-start;
   align-items: center;
   padding: 0 12px;
-  gap: 6px;
+  gap: 2px;
 
   width: 160px;
   height: 36px;
@@ -71,7 +71,7 @@ h1 {
   color: white;
   font-weight: 600;
   transition: all 0.3s ease;
-  font-size: 0.8rem;
+  font-size: 14.4px;
 }
 
 /* ウォレット接続後のボタンスタイル */
