@@ -2678,27 +2678,34 @@ const Sender: React.FC = () => {
                   },
                 }}
               >
-                <img
-                  src={
-                    !connected ||
-                    transferring ||
-                    parsedEntries.length === 0 ||
-                    invalidEntries.length > 0 ||
-                    duplicateAddresses.length > 0 ||
-                    (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-                      ? '/icons/transfer-button-inactive.svg'
-                      : '/icons/transfer-button-active.svg'
-                  }
-                  alt="Transfer"
-                  style={{ width: '26px', height: '26px', marginRight: '16px' }}
-                />
                 {transferLoading ? (
                   <>
                     <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
                     {t(processingMessage)}...
                   </>
                 ) : (
-                  t('Transfer')
+                  <>
+                    <img
+                      src={
+                        !connected ||
+                        transferring ||
+                        parsedEntries.length === 0 ||
+                        invalidEntries.length > 0 ||
+                        duplicateAddresses.length > 0 ||
+                        (selectedToken === 'SOL' &&
+                          belowMinSolEntries.length > 0)
+                          ? '/icons/transfer-button-inactive.svg'
+                          : '/icons/transfer-button-active.svg'
+                      }
+                      alt="Transfer"
+                      style={{
+                        width: '26px',
+                        height: '26px',
+                        marginRight: '16px',
+                      }}
+                    />
+                    {t('Transfer')}
+                  </>
                 )}
               </Button>
             </Box>
