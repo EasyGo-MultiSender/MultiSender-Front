@@ -8,9 +8,9 @@ import {
 } from '@mui/material';
 import { memo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import COLORS from '@/constants/color';
 import { useWallet } from '@/hooks/useWallet';
 import { handleCopy } from '@/hooks/util/copy';
-
 const WalletAddressDisplay = memo(() => {
   const { t } = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
@@ -67,6 +67,7 @@ const WalletAddressDisplay = memo(() => {
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
+                color: COLORS.GRAY.LIGHT,
                 width: 38,
                 height: 38,
                 padding: 0,
