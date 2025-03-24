@@ -14,8 +14,6 @@ import {
 } from '@mui/material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
 import CloseIcon from '@mui/icons-material/Close';
-import HistoryIcon from '@mui/icons-material/History';
-import SendIcon from '@mui/icons-material/Send';
 import { Link } from 'react-router-dom';
 import { memo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -173,7 +171,17 @@ const HeaderDrawer = memo(
                 minWidth: 40,
               }}
             >
-              <SendIcon />
+              <img
+                src="/icons/sender-active.svg"
+                alt="sender"
+                style={{
+                  width: '1.2rem',
+                  filter:
+                    navValue !== 'Multi Sender'
+                      ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                      : 'none',
+                }}
+              />
             </ListItemIcon>
             <ListItemText
               primary={t('Multi Sender')}
@@ -205,7 +213,17 @@ const HeaderDrawer = memo(
                 minWidth: 40,
               }}
             >
-              <HistoryIcon />
+              <img
+                src="/icons/history-active.svg"
+                alt="history"
+                style={{
+                  width: '1.2rem',
+                  filter:
+                    navValue !== 'History'
+                      ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                      : 'none',
+                }}
+              />
             </ListItemIcon>
             <ListItemText
               primary={t('History')}

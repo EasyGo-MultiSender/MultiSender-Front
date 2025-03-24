@@ -1,6 +1,6 @@
 import { Box } from '@mui/material';
-import Header from '@/components/Header';
 import { useTranslation } from 'react-i18next';
+import Header from '@/components/Header';
 
 const NotFound = () => {
   const { t } = useTranslation();

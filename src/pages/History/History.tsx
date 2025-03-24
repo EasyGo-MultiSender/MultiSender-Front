@@ -16,6 +16,7 @@ import WalletAddressDisplay from '@/components/WalletAddressDisplay';
 import { getHistoryFiles } from '@/hooks/getHistoryFiles';
 import { useConnection } from '@/hooks/useConnection';
 import { useWallet } from '@/hooks/useWallet';
+import { Serializer } from '@/types/transactionTypes';
 
 const History = () => {
   const { t } = useTranslation();
@@ -38,34 +39,16 @@ const History = () => {
   return (
     <Box
       sx={{
-        height: 'calc(100vh - 8vh - 8vh)', // Subtract header (6vh) and footer (64px) heights
-        backgroundImage: `url("/image.webp")`,
-        backgroundSize: '120%',
-        backgroundPosition: '0% 80%',
-        bgcolor: '#2b2e45',
+        height: 'calc(100vh - 8vh - 8vh)', // ヘッダー(8vh)とフッター(8vh)引く
+        backgroundImage: `url("/bg.webp")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
         position: 'relative',
         overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
       }}
     >
       <Container maxWidth="md" sx={{ flex: 1 }}>
-        {/* Card shown when wallet is not connected */}
-        {!connected && (
-          <Card sx={{ mt: 2, p: 3, bgcolor: '#ffffff' }}>
-            <Typography
-              variant="h4"
-              sx={{
-                textAlign: 'center',
-                fontWeight: 'bold',
-                color: '#000000',
-              }}
-            >
-              {t('Please connect your wallet in the header')}
-            </Typography>
-          </Card>
-        )}
-
         {/* Wallet address display card */}
         {connected && (
           <Card sx={{ my: 4 }}>
@@ -155,7 +138,7 @@ const History = () => {
 
               {!loading && !error && serializers.length > 0 && (
                 <Box>
-                  {serializers.map((serializer) => (
+                  {serializers.map((serializer: Serializer) => (
                     <SerializerList
                       key={serializer.uuid}
                       serializer={serializer}

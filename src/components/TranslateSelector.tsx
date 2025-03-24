@@ -34,7 +34,11 @@ const TranslateSelector = () => {
           },
         }}
       >
-        <TranslateIcon />
+        <img
+          src="icons/translate.svg"
+          alt="translate"
+          style={{ width: '27px', height: '27px' }}
+        />
       </IconButton>
       <Menu anchorEl={anchorEl} open={open} onClose={handleMenuClose}>
         {availableLanguages.map((language) => (
