@@ -17,6 +17,7 @@ import {
   Serializer as SerializerType,
 } from '@/types/transactionTypes';
 import { TransactionResultItem } from '@/components/TransactionResultItem';
+import COLORS from '@/constants/color';
 
 interface SerializerListProps {
   serializer: SerializerType;
@@ -115,7 +116,7 @@ const SerializerList: React.FC<SerializerListProps> = ({
                   sx={{
                     fontSize: '1.1rem',
                     fontWeight: 600,
-                    color: (theme) => theme.palette.text.primary,
+                    color: COLORS.GRAY.LIGHT,
                   }}
                 >
                   Serializer ({token})
@@ -125,7 +126,7 @@ const SerializerList: React.FC<SerializerListProps> = ({
                 variant="caption"
                 sx={{
                   ml: 5,
-                  color: (theme) => theme.palette.text.secondary,
+                  color: COLORS.GRAY.LIGHT,
                   fontSize: '0.8rem',
                   lineHeight: 1.2,
                 }}
