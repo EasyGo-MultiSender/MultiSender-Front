@@ -71,13 +71,16 @@ const WalletAddressDisplay = memo(() => {
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                color: COLORS.GRAY.LIGHT,
+                color: COLORS.PURPLE.LIGHT,
                 width: 38,
                 height: 38,
                 padding: 0,
               }}
             >
-              <ContentCopy fontSize="small" sx={{ mt: -0.5 }} />
+              <ContentCopy
+                fontSize="small"
+                sx={{ mt: -0.5, color: COLORS.PURPLE.LIGHT }}
+              />
               <Typography
                 variant="caption"
                 sx={{
@@ -86,6 +89,7 @@ const WalletAddressDisplay = memo(() => {
                   left: '50%',
                   transform: 'translateX(-50%)',
                   fontSize: '0.6rem',
+                  color: COLORS.PURPLE.LIGHT,
                 }}
               >
                 copy

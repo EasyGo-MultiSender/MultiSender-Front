@@ -236,7 +236,7 @@ export const TransactionResultItem = ({
           >
             <ContentCopy
               fontSize="small"
-              sx={{ mt: -0.5, color: COLORS.GRAY.LIGHT }}
+              sx={{ mt: -0.5, color: COLORS.PURPLE.LIGHT }}
             />
             <Typography
               variant="caption"
@@ -246,7 +246,7 @@ export const TransactionResultItem = ({
                 left: '50%',
                 transform: 'translateX(-50%)',
                 fontSize: '0.6rem',
-                color: COLORS.GRAY.LIGHT,
+                color: COLORS.PURPLE.LIGHT,
               }}
             >
               copy
@@ -289,7 +289,7 @@ export const TransactionResultItem = ({
                 startIcon={
                   <ContentCopy
                     fontSize="small"
-                    sx={{ color: COLORS.GRAY.LIGHT }}
+                    sx={{ color: COLORS.PURPLE.LIGHT }}
                   />
                 }
                 onClick={() => {
@@ -306,7 +306,7 @@ export const TransactionResultItem = ({
                   textTransform: 'none',
                   minWidth: 'auto',
                   p: '2px 8px',
-                  color: COLORS.GRAY.LIGHT,
+                  color: COLORS.PURPLE.LIGHT,
                   '&:hover': {
                     backgroundColor: 'rgba(0, 0, 0, 0.04)',
                   },

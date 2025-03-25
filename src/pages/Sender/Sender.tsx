@@ -1975,7 +1975,7 @@ const Sender: React.FC = () => {
                     }}
                   >
                     <IconButton onClick={pasteAddresses}>
-                      <ContentPaste sx={{ color: COLORS.GRAY.LIGHT }} />
+                      <ContentPaste sx={{ color: COLORS.PURPLE.LIGHT }} />
                       <Typography
                         variant="caption"
                         sx={{
@@ -1984,7 +1984,7 @@ const Sender: React.FC = () => {
                           left: '50%',
                           transform: 'translateX(-50%)',
                           fontSize: '0.6rem',
-                          color: COLORS.GRAY.LIGHT,
+                          color: COLORS.PURPLE.LIGHT,
                         }}
                       >
                         Paste
