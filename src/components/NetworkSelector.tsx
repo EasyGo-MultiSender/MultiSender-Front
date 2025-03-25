@@ -113,17 +113,30 @@ export const NetworkSelector = () => {
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleClose}
+        TransitionProps={{
+          onExiting: (node) => {
+            node.style.animation = 'dropdownFadeOut 0.2s ease';
+          },
+        }}
         sx={{
           '& .MuiPaper-root': {
             backgroundColor: COLORS.PURPLE.MEDIUM,
             color: COLORS.GRAY.LIGHT,
             borderRadius: '8px',
             minWidth: '160px',
+            border: '0.05px solid #7867ea6a',
+            padding: '0 8px',
+            gap: '4px',
+            marginTop: '8px',
+            animation: 'dropdownFadeIn 0.2s ease',
+            transformOrigin: 'top',
           },
           '& .MuiMenuItem-root': {
             fontSize: '1rem',
             fontWeight: 500,
             padding: '8px 12px',
+            borderRadius: '4px',
+            transition: 'background-color 0.2s ease',
             '&:hover': {
               backgroundColor: 'rgba(3, 176, 228, 0.1)',
             },
@@ -132,6 +145,26 @@ export const NetworkSelector = () => {
               '&:hover': {
                 backgroundColor: 'rgba(3, 176, 228, 0.3)',
               },
+            },
+          },
+          '@keyframes dropdownFadeIn': {
+            from: {
+              opacity: 0,
+              transform: 'scaleY(0.9)',
+            },
+            to: {
+              opacity: 1,
+              transform: 'scaleY(1)',
+            },
+          },
+          '@keyframes dropdownFadeOut': {
+            from: {
+              opacity: 1,
+              transform: 'scaleY(1)',
+            },
+            to: {
+              opacity: 0,
+              transform: 'scaleY(0.9)',
             },
           },
         }}

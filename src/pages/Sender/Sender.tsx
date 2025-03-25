@@ -62,6 +62,8 @@ import {
   AddressEntry,
   Serializer,
 } from '@/types/transactionTypes';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -1421,7 +1423,47 @@ const Sender: React.FC = () => {
               }}
             />
 
-            <WalletAddressDisplay />
+            {!connected ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  gap: 2,
+                }}
+              >
+                <WalletMultiButton
+                  style={{
+                    width: '280px',
+                    height: '36px',
+                    padding: '0 12px',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    background: 'transparent',
+                    borderRadius: '8px',
+                  }}
+                >
+                  <span
+                    style={{
+                      whiteSpace: 'nowrap',
+                      fontSize: '14px',
+                      lineHeight: '36px',
+                    }}
+                  >
+                    Please connect your wallet
+                  </span>
+                </WalletMultiButton>
+              </Box>
+            ) : (
+              <WalletAddressDisplay />
+            )}
           </CardContent>
         </Card>
 
@@ -2747,6 +2789,48 @@ const Sender: React.FC = () => {
         onClose={() => setSnackbarOpen(false)}
         message={snackbarMessage}
       />
+
+      <style>
+        {`
+          .wallet-adapter-button img {
+            width: 20px !important;
+            height: 20px !important;
+          }
+          .wallet-adapter-button-trigger {
+            background: ${COLORS.GRADIENTS.PURPLE_TO_LAVENDER} !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+            transition: all 0.2s ease !important;
+          }
+          .wallet-adapter-button-trigger:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
+          }
+          .wallet-adapter-dropdown {
+            background-color: ${COLORS.PURPLE.MEDIUM} !important;
+          }
+          .wallet-adapter-dropdown-list {
+            background-color: ${COLORS.PURPLE.MEDIUM} !important;
+            color: ${COLORS.GRAY.LIGHT} !important;
+            border-radius: 8px !important;
+            border: 0.05px solid #7867ea6a !important;
+            padding: 8px !important;
+            gap: 4px !important;
+          }
+          .wallet-adapter-dropdown-list-item {
+            font-size: 1rem !important;
+            font-weight: 500 !important;
+            padding: 8px 12px !important;
+            border-radius: 4px !important;
+            background-color: transparent !important;
+            transition: all 0.1s ease !important;
+          }
+          .wallet-adapter-dropdown-list-item:hover {
+            background-color: rgba(3, 176, 228, 0.1) !important;
+          }
+        `}
+      </style>
     </Box>
   );
 };
