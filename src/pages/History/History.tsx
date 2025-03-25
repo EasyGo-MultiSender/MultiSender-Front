@@ -176,7 +176,7 @@ const History = () => {
                     <HistoryIcon sx={{ fontSize: 48, color: '#aaa', mb: 2 }} />
                     <Typography
                       variant="body1"
-                      color="text.secondary"
+                      sx={{ color: COLORS.PURPLE.LIGHT }}
                       gutterBottom
                     >
                       {t('No transaction history found')}
