@@ -498,7 +498,7 @@ export const TransactionResultItem = ({
                           fontWeight: 500,
                           height: '40px',
                           width: '30%',
-                          color: COLORS.GRAY.LIGHT,
+                          color: COLORS.PURPLE.LIGHT,
                         }}
                       >
                         {recipient.amount} {result.token}
