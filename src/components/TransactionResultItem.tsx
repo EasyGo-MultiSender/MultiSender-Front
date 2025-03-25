@@ -18,6 +18,7 @@ import {
 import { useState } from 'react';
 import { downloadTransactionsCSV } from '@/hooks/util/csv';
 import { Serializer, TransactionResult } from '@/types/transactionTypes';
+import COLORS from '@/constants/color';
 
 interface TransactionResultItemProps {
   result: TransactionResult;
@@ -103,7 +104,7 @@ export const TransactionResultItem = ({
         alignItems: 'flex-start',
         p: 2,
         backgroundColor: 'rgba(0, 0, 0, 0.05)',
-        border: '0.3px solid rgba(0, 0, 0, 0.2)',
+        border: `0.3px solid ${COLORS.PURPLE.LIGHT}`,
         boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
         width: '97%',
         mx: 'auto',
@@ -124,7 +125,7 @@ export const TransactionResultItem = ({
             size="small"
             sx={{ mr: 1 }}
           />
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color={COLORS.GRAY.LIGHT}>
             {new Date(result.timestamp).toLocaleString()}
           </Typography>
         </Box>
@@ -188,6 +189,7 @@ export const TransactionResultItem = ({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                color: COLORS.GRAY.LIGHT,
               }}
             >
               {`${result.signature.slice(0, 20)}...${result.signature.slice(-20)}`}
@@ -232,7 +234,10 @@ export const TransactionResultItem = ({
               padding: 0,
             }}
           >
-            <ContentCopy fontSize="small" sx={{ mt: -0.5 }} />
+            <ContentCopy
+              fontSize="small"
+              sx={{ mt: -0.5, color: COLORS.GRAY.LIGHT }}
+            />
             <Typography
               variant="caption"
               sx={{
@@ -241,6 +246,7 @@ export const TransactionResultItem = ({
                 left: '50%',
                 transform: 'translateX(-50%)',
                 fontSize: '0.6rem',
+                color: COLORS.GRAY.LIGHT,
               }}
             >
               copy
@@ -280,7 +286,12 @@ export const TransactionResultItem = ({
               <Button
                 variant="text"
                 size="small"
-                startIcon={<ContentCopy fontSize="small" />}
+                startIcon={
+                  <ContentCopy
+                    fontSize="small"
+                    sx={{ color: COLORS.GRAY.LIGHT }}
+                  />
+                }
                 onClick={() => {
                   const dataToCopy = result.recipients
                     .map(
@@ -295,7 +306,7 @@ export const TransactionResultItem = ({
                   textTransform: 'none',
                   minWidth: 'auto',
                   p: '2px 8px',
-                  color: 'text.secondary',
+                  color: COLORS.GRAY.LIGHT,
                   '&:hover': {
                     backgroundColor: 'rgba(0, 0, 0, 0.04)',
                   },
@@ -311,7 +322,7 @@ export const TransactionResultItem = ({
               width: '%',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
               borderRadius: '6px',
-              border: '1px solid rgba(0, 0, 0, 0.16)',
+              border: `1px solid ${COLORS.PURPLE.LIGHT}`,
               overflow: 'hidden',
               mx: 'auto',
             }}
@@ -339,7 +350,7 @@ export const TransactionResultItem = ({
                       textAlign: 'left',
                       fontSize: '0.875rem',
                       fontWeight: 600,
-                      borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                      borderBottom: `2px solid ${COLORS.PURPLE.LIGHT}`,
                       width: '70%',
                     }}
                   >
@@ -353,13 +364,13 @@ export const TransactionResultItem = ({
                       <Typography
                         variant="body2"
                         fontWeight="bold"
-                        color="text.primary"
+                        color={COLORS.GRAY.LIGHT}
                       >
                         Wallet Addresses
                       </Typography>
                       <Typography
                         variant="caption"
-                        color="text.secondary"
+                        color={COLORS.GRAY.LIGHT}
                         sx={{ fontWeight: '600', ml: 0.5 }}
                       >
                         ({result.recipients.length} items)
@@ -372,7 +383,7 @@ export const TransactionResultItem = ({
                       textAlign: 'right',
                       fontSize: '0.875rem',
                       fontWeight: 600,
-                      borderBottom: '2px solid rgba(0, 0, 0, 0.08)',
+                      borderBottom: `2px solid ${COLORS.PURPLE.LIGHT}`,
                       width: '30%',
                     }}
                   >
@@ -386,13 +397,13 @@ export const TransactionResultItem = ({
                       <Typography
                         variant="body2"
                         fontWeight="bold"
-                        color="text.primary"
+                        color={COLORS.GRAY.LIGHT}
                       >
                         Amount
                       </Typography>
                       <Typography
                         variant="caption"
-                        color="text.secondary"
+                        color={COLORS.GRAY.LIGHT}
                         sx={{ fontWeight: '600', ml: 0.5 }}
                       >
                         (total:{' '}
@@ -442,7 +453,7 @@ export const TransactionResultItem = ({
                         display: 'table',
                         width: '100%',
                         tableLayout: 'fixed',
-                        borderBottom: '1px solid rgba(0, 0, 0, 0.08)',
+                        borderBottom: `1px solid ${COLORS.PURPLE.LIGHT}`,
                         backgroundColor:
                           index % 2 === 0
                             ? 'rgba(0, 0, 0, 0.02)'
@@ -469,7 +480,7 @@ export const TransactionResultItem = ({
                             variant="body2"
                             sx={{
                               fontFamily: 'monospace',
-                              color: 'rgba(0, 0, 0, 0.87)',
+                              color: COLORS.PURPLE.LIGHT,
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               maxWidth: 'calc(100% - 40px)',
@@ -487,6 +498,7 @@ export const TransactionResultItem = ({
                           fontWeight: 500,
                           height: '40px',
                           width: '30%',
+                          color: COLORS.GRAY.LIGHT,
                         }}
                       >
                         {recipient.amount} {result.token}

@@ -1683,13 +1683,13 @@ const Sender: React.FC = () => {
                       duplicateAddresses.length > 0 ||
                       (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
                         ? theme.palette.error.main
-                        : 'rgba(0, 0, 0, 0.23)',
+                        : COLORS.PURPLE.LIGHT,
                     borderRadius: 1,
                     '&:hover': {
-                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                      borderColor: COLORS.PURPLE.LIGHT,
                     },
                     '&:focus-within': {
-                      borderColor: (theme) => theme.palette.primary.main,
+                      borderColor: COLORS.PURPLE.LIGHT,
                       borderWidth: '2px',
                     },
                   }}
@@ -1721,8 +1721,8 @@ const Sender: React.FC = () => {
                       sx={{
                         width: '40px',
                         minWidth: '40px',
-                        bgcolor: (theme) => theme.palette.grey[100],
-                        color: (theme) => theme.palette.grey[600],
+                        bgcolor: COLORS.PURPLE.LIGHT_BRIGHT,
+                        color: COLORS.PURPLE.LIGHT,
                         borderRight: '1px solid rgba(0, 0, 0, 0.1)',
                         py: 1,
                         textAlign: 'right',
@@ -1744,17 +1744,20 @@ const Sender: React.FC = () => {
                             pr: 1,
                             height: '20px',
                             color: highlightedLines.includes(i + 1)
-                              ? 'red'
-                              : 'inherit', // ハイライト行の番号も赤くする
-                            cursor: 'pointer', // クリック可能であることを示す
+                              ? COLORS.PINK.HOT
+                              : COLORS.PURPLE.LIGHT,
+                            cursor: 'pointer',
                             backgroundColor: highlightedLines.includes(i + 1)
-                              ? 'rgba(255, 0, 0, 0.05)'
-                              : 'transparent', // ハイライト行の背景もわずかに色付け
-                            transition: 'background-color 0.2s ease',
+                              ? 'rgba(250, 23, 158, 0.1)'
+                              : 'transparent',
+                            transition: 'all 0.2s ease',
                             '&:hover': {
                               backgroundColor: highlightedLines.includes(i + 1)
-                                ? 'rgba(255, 0, 0, 0.1)'
-                                : 'rgba(0, 0, 0, 0.05)', // ホバー時の背景色
+                                ? 'rgba(250, 23, 158, 0.2)'
+                                : 'rgba(164, 156, 215, 0.1)',
+                              color: highlightedLines.includes(i + 1)
+                                ? COLORS.PINK.HOT
+                                : COLORS.PURPLE.BRIGHT,
                             },
                           }}
                           onClick={() => handleLineClick(i + 1)}
@@ -1778,21 +1781,13 @@ const Sender: React.FC = () => {
                               sx={{
                                 pr: 1,
                                 height: '20px',
+                                color: COLORS.PURPLE.LIGHT,
                                 cursor: 'pointer',
-                                backgroundColor: highlightedLines.includes(
-                                  i + recipientAddresses.split('\n').length + 1
-                                )
-                                  ? 'rgba(255, 0, 0, 0.05)'
-                                  : 'transparent',
-                                transition: 'background-color 0.2s ease',
+                                backgroundColor: 'transparent',
+                                transition: 'all 0.2s ease',
                                 '&:hover': {
-                                  backgroundColor: highlightedLines.includes(
-                                    i +
-                                      recipientAddresses.split('\n').length +
-                                      1
-                                  )
-                                    ? 'rgba(255, 0, 0, 0.1)'
-                                    : 'rgba(0, 0, 0, 0.05)',
+                                  backgroundColor: 'rgba(164, 156, 215, 0.1)',
+                                  color: COLORS.PURPLE.BRIGHT,
                                 },
                               }}
                               onClick={() =>
@@ -1980,7 +1975,7 @@ const Sender: React.FC = () => {
                     }}
                   >
                     <IconButton onClick={pasteAddresses}>
-                      <ContentPaste />
+                      <ContentPaste sx={{ color: COLORS.GRAY.LIGHT }} />
                       <Typography
                         variant="caption"
                         sx={{
@@ -1989,6 +1984,7 @@ const Sender: React.FC = () => {
                           left: '50%',
                           transform: 'translateX(-50%)',
                           fontSize: '0.6rem',
+                          color: COLORS.GRAY.LIGHT,
                         }}
                       >
                         Paste

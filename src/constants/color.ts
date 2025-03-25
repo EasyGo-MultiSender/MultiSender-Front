@@ -9,6 +9,7 @@ export const PURPLE = {
   LIGHT: '#A49CD7', // ライトパープル
   BRIGHT: '#9A07D9', // ブライトパープル
   MEDIUM_BRIGHT: '#5542AD', // ミディアムブライトパープル
+  LIGHT_BRIGHT: '#7867EA', // ライトブライトパープル
 };
 
 // グレー系
