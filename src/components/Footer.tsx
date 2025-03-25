@@ -1,8 +1,14 @@
-import React, { useState } from 'react';
-import { Box, Typography, IconButton, Button, Popover } from '@mui/material';
 import { Email, Info } from '@mui/icons-material';
 import RocketLaunchIcon from '@mui/icons-material/RocketLaunch';
-import SvgIcon from '@mui/material/SvgIcon';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Button,
+  Popover,
+  SvgIcon,
+} from '@mui/material';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { COLORS } from '@/constants/color';
 // Xのカスタムアイコン
@@ -90,14 +96,18 @@ const Footer: React.FC = () => {
         >
           <Typography
             variant="body2"
-            sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' }, mx: 1 }}
+            sx={{
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+              mx: 1,
+              color: COLORS.PURPLE.LIGHT,
+            }}
           >
             {t('This site is protected by reCAPTCHA and the Google')}{' '}
             <a
               href="https://policies.google.com/privacy"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#1976d2', textDecoration: 'none' }}
+              style={{ color: COLORS.GRAY.LIGHT, textDecoration: 'none' }}
             >
               {t('Privacy Policy')}
             </a>{' '}
@@ -106,7 +116,7 @@ const Footer: React.FC = () => {
               href="https://policies.google.com/terms"
               target="_blank"
               rel="noopener noreferrer"
-              style={{ color: '#1976d2', textDecoration: 'none' }}
+              style={{ color: COLORS.GRAY.LIGHT, textDecoration: 'none' }}
             >
               {t('Terms of Service')}
             </a>{' '}
