@@ -1,11 +1,16 @@
-import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import { ContentCopy } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
+import {
+  Box,
+  Typography,
+  IconButton,
+  Tooltip,
+  useMediaQuery,
+} from '@mui/material';
 import { memo, useState } from 'react';
-import { handleCopy } from '@/hooks/util/copy';
+import { useTranslation } from 'react-i18next';
+import COLORS from '@/constants/color';
 import { useWallet } from '@/hooks/useWallet';
-import { useMediaQuery } from '@mui/material';
-
+import { handleCopy } from '@/hooks/util/copy';
 const WalletAddressDisplay = memo(() => {
   const { t } = useTranslation();
   const [isCopied, setIsCopied] = useState(false);
@@ -21,7 +26,7 @@ const WalletAddressDisplay = memo(() => {
 
   return (
     <>
-      <Typography variant="h6" mb={1} textAlign="center">
+      <Typography variant="h6" mb={1} textAlign="center" fontWeight={600}>
         {t('Wallet Address')}
       </Typography>
       <Box
@@ -33,6 +38,10 @@ const WalletAddressDisplay = memo(() => {
           borderRadius: 1,
           p: 1,
           height: 36,
+          width: '95%',
+          mx: 0,
+          left: '50%',
+          transform: 'translateX(-50%)',
         }}
       >
         <Typography
@@ -40,7 +49,7 @@ const WalletAddressDisplay = memo(() => {
           sx={{
             flex: 1,
             textAlign: 'center',
-            color: !connected ? 'text.secondary' : 'inherit',
+            color: !connected ? COLORS.GRAY.LIGHT : 'inherit',
           }}
         >
           {connected
@@ -62,6 +71,7 @@ const WalletAddressDisplay = memo(() => {
               sx={{
                 display: 'flex',
                 flexDirection: 'column',
+                color: COLORS.GRAY.LIGHT,
                 width: 38,
                 height: 38,
                 padding: 0,

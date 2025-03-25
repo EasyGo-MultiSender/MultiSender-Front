@@ -2,6 +2,8 @@
 import { Buffer } from 'buffer';
 window.Buffer = Buffer;
 
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
   Toolbar,
@@ -14,17 +16,15 @@ import {
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Link } from 'react-router-dom';
-import { memo, useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useWallet } from '@/hooks/useWallet';
-import { NetworkSelector } from '@/components/NetworkSelector';
+import { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import TranslateSelector from '@/components/TranslateSelector';
+import { Link } from 'react-router-dom';
 import HeaderDrawer from '@/components/HeaderDrawer';
+import { NetworkSelector } from '@/components/NetworkSelector';
+import TranslateSelector from '@/components/TranslateSelector';
 import { COLORS } from '@/constants/color';
+import { useWallet } from '@/hooks/useWallet';
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック
   const [navValue, setNavValue] = useState<string | false>(false);
@@ -57,12 +57,14 @@ const Header = memo(() => {
         <>
           <AccountBalanceWalletIcon
             sx={{
-              mr: isMobile ? 0 : 1,
+              ml: '10px',
               fontSize: isMobile ? '1.2rem' : '1.4rem',
             }}
           />
           {!isMobile && (
-            <span style={{ whiteSpace: 'nowrap' }}>Connect Wallet</span>
+            <span style={{ whiteSpace: 'nowrap', marginRight: '12px' }}>
+              Connect Wallet
+            </span>
           )}
         </>
       );
