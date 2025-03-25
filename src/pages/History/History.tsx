@@ -65,6 +65,14 @@ const History = () => {
                   gap: 2,
                 }}
               >
+                <Typography
+                  variant="h6"
+                  mb={2}
+                  textAlign="center"
+                  fontWeight={600}
+                >
+                  {t('Wallet Address')}
+                </Typography>
                 <WalletMultiButton
                   style={{
                     width: '280px',
