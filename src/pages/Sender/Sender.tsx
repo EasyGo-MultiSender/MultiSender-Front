@@ -1913,7 +1913,7 @@ const Sender: React.FC = () => {
                           padding: '8px',
                           paddingTop: '5px',
                           color: 'transparent',
-                          caretColor: 'black', // カーソルだけ見えるように
+                          caretColor: COLORS.GRAY.LIGHT,
                           zIndex: 2,
                           fontWeight: 500,
                         }}
