@@ -33,6 +33,11 @@ jobs:
       app-path: ${{ github.event.inputs.app-path }}
     steps:
       - run: echo "Set production environment variables"
+
+  test_deploy:
+    name: Test Deploy Connections Job
+    needs: vars
+    uses: ./.github/workflows/test_deploy.yml
         
   build:
     name: Build Job
@@ -48,6 +53,7 @@ jobs:
     needs:
       - vars
       - build
+      - test_deploy
     if: needs.vars.outputs.environment == 'production'
     uses: ./.github/workflows/_prod_deploy.yml
     with:
