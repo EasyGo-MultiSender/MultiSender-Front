@@ -96,7 +96,7 @@ jobs:
                 "sudo su deploy",
                 "mkdir -p ${{ inputs.app-path }} && cd \"$_\"",
                 "echo \"既存ファイルのクリーンアップ中...\"",
-                "rm -rf ${{ inputs.app-path }}/* || true",
+                "rm -rf --preserve-root ${{ inputs.app-path }}/* || true",
                 
                 "# S3からデプロイパッケージをダウンロード",
                 "echo \"S3からデプロイパッケージをダウンロード中...\"",
