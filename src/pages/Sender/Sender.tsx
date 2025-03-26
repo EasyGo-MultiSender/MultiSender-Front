@@ -253,8 +253,15 @@ const Sender: React.FC = () => {
 
   // CSVからのインポート処理
   const handleRecipientsLoaded = useCallback((recipients: Recipient[]) => {
+    const maxLines = parseInt(
+      import.meta.env.VITE_WALLET_ADDRESS_LIMIT || '1000'
+    );
+
+    // 上限までのデータのみを取得
+    const limitedRecipients = recipients.slice(0, maxLines);
+
     // CSVからインポートされた受取人情報を変換して設定
-    const formattedAddresses = recipients
+    const formattedAddresses = limitedRecipients
       .map((r) => `${r.walletAddress},${r.amount}`)
       .join('\n');
 
@@ -267,8 +274,20 @@ const Sender: React.FC = () => {
   const pasteAddresses = async () => {
     try {
       const text = await navigator.clipboard.readText();
+      const maxLines = parseInt(
+        import.meta.env.VITE_WALLET_ADDRESS_LIMIT || '1000'
+      );
+
+      // クリップボードのテキストを行に分割
+      const lines = text.split('\n');
+
+      // 上限までの行のみを取得
+      const limitedLines = lines.slice(0, maxLines);
+
+      // 既存のテキストと新しいテキストを結合
+      const newText = limitedLines.join('\n');
       setRecipientAddresses((prev) =>
-        prev.length > 0 ? prev + '\n' + text : text
+        prev.length > 0 ? prev + '\n' + newText : newText
       );
       setIsPasted(true);
 
@@ -522,7 +541,18 @@ const Sender: React.FC = () => {
 
   // textareaでの編集をハンドリングする関数
   const handleTextAreaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setRecipientAddresses(e.target.value);
+    const lines = e.target.value.split('\n');
+    const maxLines = parseInt(
+      import.meta.env.VITE_WALLET_ADDRESS_LIMIT || '1000'
+    );
+
+    // 行数が上限を超える場合は、上限までの行のみを保持
+    if (lines.length > maxLines) {
+      const truncatedValue = lines.slice(0, maxLines).join('\n');
+      setRecipientAddresses(truncatedValue);
+    } else {
+      setRecipientAddresses(e.target.value);
+    }
   };
 
   // 特定の行のクリックイベントを処理（必要な場合）
@@ -1699,6 +1729,11 @@ const Sender: React.FC = () => {
                 {t(
                   'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
                 )}
+                {/* WalletAddress上限についてテキスト表示する
+                <br />
+                {t('The upper limit of the wallet address is')}{' '}
+                {import.meta.env.VITE_WALLET_ADDRESS_LIMIT}.
+                 */}
               </Typography>
 
               <Typography
