@@ -25,6 +25,7 @@ import {
   createTransferInstruction,
   getAssociatedTokenAddress,
 } from '@solana/spl-token';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { PublicKey, Transaction } from '@solana/web3.js';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -62,8 +63,6 @@ import {
   AddressEntry,
   Serializer,
 } from '@/types/transactionTypes';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
