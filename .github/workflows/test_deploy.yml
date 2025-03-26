@@ -32,7 +32,7 @@ jobs:
       - name: Build
         id: build-step
         run: |
-          mkdir build -p
+          mkdir -p build
           echo "tetetetete" >> build/test.txt
           echo "build-directory=$(pwd)/build" >> $GITHUB_OUTPUT
           
