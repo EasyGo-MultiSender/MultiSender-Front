@@ -31,4 +31,5 @@ export interface OperationFee {
   operationFeePerTx: number;
   estimatedTxCount: number;
   operationFees: number;
+  transactionFee: number;
 }

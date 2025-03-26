@@ -51,6 +51,7 @@ import {
   createAccountInstruction,
   createInstruction,
   getOperationFee,
+  calculateFees,
 } from '@/hooks/useTransactionFeeSimulation.ts';
 import { useWallet } from '@/hooks/useWallet';
 import {
@@ -1381,12 +1382,35 @@ const Sender: React.FC = () => {
   // 入力内容や選択トークンが変更されたら手数料シミュレーションを実行
   useEffect(() => {
     if (connection && publicKey && parsedEntries.length > 0) {
-      // 計算処理を少し遅延させて連続入力時の過負荷を防止
-      const timer = setTimeout(() => {
-        simulateTransactionFees();
-      }, 800);
+      // シミュレーションモードがONの場合のみシミュレーション実行
+      if (import.meta.env.VITE_SIMULATED_NETWORK === 'true') {
+        // 計算処理を少し遅延させて連続入力時の過負荷を防止
+        const timer = setTimeout(() => {
+          simulateTransactionFees();
+        }, 800);
 
-      return () => clearTimeout(timer);
+        return () => clearTimeout(timer);
+      } else {
+        // シミュレーションモードがOFFの場合は固定手数料計算
+        const feeEstimation = calculateFees(
+          DEPOSIT_SOL_AMOUNT,
+          parsedEntries,
+          BATCH_SIZE,
+          selectedToken
+        );
+
+        setFeeEstimation(feeEstimation);
+
+        // アカウント作成が必要な場合の概算（全アドレス分）
+        if (selectedToken !== 'SOL') {
+          const estimatedAccounts = Array(parsedEntries.length).fill(
+            'estimated'
+          );
+          setAccountsNeedingCreation(estimatedAccounts);
+        } else {
+          setAccountsNeedingCreation([]);
+        }
+      }
     }
   }, [
     parsedEntries,
