@@ -1900,7 +1900,7 @@ const Sender: React.FC = () => {
                           position: 'absolute',
                           top: 0,
                           left: 0,
-                          width: 'calc(100% - 16px)',
+                          width: 'calc(100% - 8px)',
                           height: 'calc(100% - 16px);',
                           border: 'none',
                           outline: 'none',
@@ -1911,11 +1911,13 @@ const Sender: React.FC = () => {
                           lineHeight: '20px',
                           padding: '8px',
                           paddingTop: '5px',
+                          paddingRight: '0px',
                           color: 'transparent',
                           caretColor: COLORS.GRAY.LIGHT,
                           zIndex: 2,
                           fontWeight: 500,
                         }}
+                        wrap=""
                         rows={
                           recipientAddresses.split('\n').length > 10
                             ? recipientAddresses.split('\n').length
