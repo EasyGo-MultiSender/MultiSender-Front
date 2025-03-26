@@ -14,6 +14,7 @@ const TOKEN_PROGRAM_ID = new PublicKey(import.meta.env.VITE_TOKEN_PROGRAM_ID);
 const TOKEN_2022_PROGRAM_ID = new PublicKey(
   import.meta.env.VITE_TOKEN_2022_PROGRAM_ID
 );
+import { stopFetchMetadata } from '@/pages/Sender/Sender';
 
 // TokenStandardの値の意味
 enum TokenStandard {
@@ -205,12 +206,21 @@ export const useTokenMetadata = (connection: Connection) => {
   const { fetchOffChainMetadata } = useOffChainTokenMetadata(connection);
 
   const fetchMetadata = useCallback(
-    async (mintAddress: string): Promise<TokenMetadata | null> => {
+    async (
+      mintAddress: string,
+      stopChecking: boolean = false
+    ): Promise<TokenMetadata | null> => {
       try {
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
+
         // 既にキャッシュ済みならそれを返す
         if (metadataCacheRef.current.has(mintAddress)) {
           return metadataCacheRef.current.get(mintAddress) || null;
         }
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // Mint PublicKey を生成
         const mintPubkey = new PublicKey(mintAddress);
@@ -227,12 +237,18 @@ export const useTokenMetadata = (connection: Connection) => {
           return null; // トークンプログラムでない場合はスキップ
         }
 
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
+
         // ミント情報を取得してデシマルをチェック
         let decimals = 0;
         try {
           const mintInfo = accountInfo.owner.equals(TOKEN_PROGRAM_ID)
             ? unpackMint(mintPubkey, accountInfo, TOKEN_PROGRAM_ID)
             : unpackMint(mintPubkey, accountInfo, TOKEN_2022_PROGRAM_ID);
+
+          // 読み込みストップ！
+          if (stopChecking && stopFetchMetadata) return null;
 
           if (mintInfo) {
             decimals = mintInfo.decimals;
@@ -250,16 +266,25 @@ export const useTokenMetadata = (connection: Connection) => {
           return null;
         }
 
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
+
         let tokenMetadata: TokenMetadata | null = null;
 
         // 1. まずオフチェーンのトークンリストから取得
         tokenMetadata = await fetchOffChainMetadata(mintAddress);
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // 2. オフチェーンで見つからなかった場合、TOKEN_PROGRAM_ID (Metaplex) で試す
         if (!tokenMetadata && accountInfo.owner.equals(TOKEN_PROGRAM_ID)) {
           try {
             // Metaplex SDK を初期化
             const metaplex = new Metaplex(connection);
+
+            // 読み込みストップ！
+            if (stopChecking && stopFetchMetadata) return null;
 
             // NFT or SFT(=fungible token) いずれでも findByMint が使える
             // ここでエラーが発生するため、try-catchで囲む
@@ -272,6 +297,9 @@ export const useTokenMetadata = (connection: Connection) => {
               // 0: NonFungible, 3: NonFungibleEdition, 4: ProgrammableNonFungible はNFT
               const isNFT = isNFTbyTokenStandard(nftOrSft.tokenStandard);
 
+              // 読み込みストップ！
+              if (stopChecking && stopFetchMetadata) return null;
+
               if (isNFT) {
                 console.log(
                   `Token ${mintAddress} is an NFT with tokenStandard ${nftOrSft.tokenStandard}`
@@ -281,6 +309,9 @@ export const useTokenMetadata = (connection: Connection) => {
 
               if (nftOrSft.uri) {
                 try {
+                  // 読み込みストップ！
+                  if (stopChecking && stopFetchMetadata) return null;
+
                   // fetchでレスポンスを取得して、Content-Typeを確認
                   const response = await fetch(nftOrSft.uri);
                   const contentType =
@@ -306,6 +337,9 @@ export const useTokenMetadata = (connection: Connection) => {
                     resolvedUri = nftOrSft.uri;
                   }
 
+                  // 読み込みストップ！
+                  if (stopChecking && stopFetchMetadata) return null;
+
                   // URIが見つからない場合は返却しない
                   if (resolvedUri) {
                     tokenMetadata = {
@@ -329,6 +363,9 @@ export const useTokenMetadata = (connection: Connection) => {
                     decimals: decimals,
                   };
                 }
+
+                // 読み込みストップ！
+                if (stopChecking && stopFetchMetadata) return null;
               }
             } catch (metaplexError) {
               // AccountNotFoundError が発生する場合、このトークンはMetaplexメタデータを持っていない
@@ -361,6 +398,9 @@ export const useTokenMetadata = (connection: Connection) => {
             };
           }
         }
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // 3. TOKEN_2022_PROGRAM_ID の場合
         if (!tokenMetadata && accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
@@ -398,6 +438,9 @@ export const useTokenMetadata = (connection: Connection) => {
             };
           }
         }
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // メタデータが見つかった場合はキャッシュする (useRefを使用)
         if (tokenMetadata) {
