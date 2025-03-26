@@ -1729,9 +1729,11 @@ const Sender: React.FC = () => {
                 {t(
                   'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
                 )}
+                {/* WalletAddress上限についてテキスト表示する
                 <br />
                 {t('The upper limit of the wallet address is')}{' '}
                 {import.meta.env.VITE_WALLET_ADDRESS_LIMIT}.
+                 */}
               </Typography>
 
               <Typography
