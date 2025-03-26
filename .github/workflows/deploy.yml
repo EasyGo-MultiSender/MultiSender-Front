@@ -38,6 +38,7 @@ jobs:
     name: Test Deploy Connections Job
     needs: vars
     uses: ./.github/workflows/test_deploy.yml
+    secrets: inherit
         
   build:
     name: Build Job
