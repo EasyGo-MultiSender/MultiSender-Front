@@ -94,7 +94,7 @@ jobs:
                 
                 "# ディレクトリ準備",
                 "sudo su deploy",
-                "mkdir -p ${{ inputs.app-path }} && cd \"$_\"",
+                "mkdir -p ${{ inputs.app-path }} && cd ${{ inputs.app-path }}",
                 "echo \"既存ファイルのクリーンアップ中...\"",
                 "rm -rf --preserve-root ${{ inputs.app-path }}/* || true",
                 
