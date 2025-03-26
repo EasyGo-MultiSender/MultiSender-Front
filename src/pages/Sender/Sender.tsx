@@ -1,5 +1,6 @@
 // メインのSenderコンポーネント（SPLトークン選択改善版）
-import { ContentPaste, Download } from '@mui/icons-material';
+import { ContentPaste } from '@mui/icons-material';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import {
   Box,
   Container,
@@ -35,9 +36,14 @@ import SerializerList from '@/components/SerializerList';
 import TokenList, { TokenListRef } from '@/components/TokenList';
 import UploadButton from '@/components/UploadButton';
 import WalletAddressDisplay from '@/components/WalletAddressDisplay';
+import COLORS from '@/constants/color';
+import { CSVValidationResult } from '@/hooks/interfaces/transfer.ts';
 import { useBalance } from '@/hooks/useBalance';
 import { useConnection } from '@/hooks/useConnection';
-import { useRecaptcha } from '@/hooks/useRecaptcha';
+import {
+  useRecaptcha,
+  RecaptchaVerificationResult,
+} from '@/hooks/useRecaptcha';
 import { useTokenListMetadata } from '@/hooks/useTokenListMetadata';
 import { useTokenTransfer } from '@/hooks/useTokenTransfer';
 import {
@@ -56,8 +62,8 @@ import {
   AddressEntry,
   Serializer,
 } from '@/types/transactionTypes';
-import { RecaptchaVerificationResult } from '@/hooks/useRecaptcha';
-import { CSVValidationResult } from '@/hooks/interfaces/transfer.ts';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 
 // SOL Validation Amount import
 const SOL_VALIDATION_AMOUNT = import.meta.env.VITE_DEPOSIT_MINIMUMS_SOL_AMOUNT;
@@ -159,7 +165,7 @@ const Sender: React.FC = () => {
   const lastParsedAddressesRef = useRef<string>('');
 
   // 色付けする行番号の配列（例：[1, 3, 5]は1行目、3行目、5行目を赤くする）
-  const [highlightedLines, setHighlightedLines] = useState<number[]>([2, 4]); // 例として2行目と4行目
+  const [highlightedLines, setHighlightedLines] = useState<number[]>([]);
 
   // コンポーネントマウント時にトークンメタデータを取得
   useEffect(() => {
@@ -1377,14 +1383,14 @@ const Sender: React.FC = () => {
         {/* SOL Balance & Address */}
         <Card sx={{ my: 4 }}>
           <CardContent>
-            <Typography variant="h6" mb={2} textAlign="center">
+            <Typography variant="h6" mb={2} textAlign="center" fontWeight={600}>
               {t('SOL Balance')}
             </Typography>
             {!connected ? (
               <Typography
                 variant="h4"
                 fontWeight="bold"
-                color="text.secondary"
+                color={COLORS.PURPLE.LIGHT}
                 textAlign="center"
               >
                 0.00000000 SOL
@@ -1397,16 +1403,67 @@ const Sender: React.FC = () => {
               <Typography
                 variant="h4"
                 fontWeight="bold"
-                color="green"
+                color={COLORS.PURPLE.LIGHT}
                 textAlign="center"
               >
                 {balance?.toFixed(8) ?? '0.00000000'} SOL
               </Typography>
             )}
 
-            <Divider sx={{ my: 2 }} />
+            <Divider
+              variant="fullWidth"
+              sx={{
+                my: 2,
+                borderColor: '#7867EA',
+                borderWidth: 1,
+                width: 'calc(95% + 15px)',
+                position: 'relative',
+                left: '50%',
+                transform: 'translateX(-50%)',
+              }}
+            />
 
-            <WalletAddressDisplay />
+            {!connected ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  gap: 2,
+                }}
+              >
+                <WalletMultiButton
+                  style={{
+                    width: '280px',
+                    height: '36px',
+                    padding: '0 12px',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    background: 'transparent',
+                    borderRadius: '8px',
+                  }}
+                >
+                  <span
+                    style={{
+                      whiteSpace: 'nowrap',
+                      fontSize: '14px',
+                      lineHeight: '36px',
+                    }}
+                  >
+                    Please connect your wallet
+                  </span>
+                </WalletMultiButton>
+              </Box>
+            ) : (
+              <WalletAddressDisplay />
+            )}
           </CardContent>
         </Card>
 
@@ -1418,28 +1475,58 @@ const Sender: React.FC = () => {
             onDataLoaded={handleTokenDataLoaded}
           />
         ) : (
-          <Card sx={{ mb: 4 }}>
+          <Card sx={{ mb: 4, px: 1 }}>
             <CardContent>
-              <Typography variant="h6" textAlign="center">
+              <Typography variant="h6" textAlign="center" fontWeight={600}>
                 {t('SPL Tokens')}
               </Typography>
-              <Box textAlign="center" p={2}>
-                {t('No SPL tokens found')}
+              <Box textAlign="center" p={2} color={COLORS.PURPLE.LIGHT}>
+                {t('Connect your wallet to view your tokens')}
               </Box>
             </CardContent>
           </Card>
         )}
 
         {/* Transfer Form */}
-        <Card sx={{ mb: 4 }}>
+        <Card sx={{ mb: 4, px: 1.6 }}>
           <CardContent>
-            <Typography variant="h6" textAlign="center" mb={2}>
+            <Typography variant="h6" textAlign="center" mb={2} fontWeight={600}>
               {t('Token Transfer')}
             </Typography>
 
             {/* Token Selection - 改善版 */}
-            <FormControl fullWidth sx={{ mb: 3 }}>
-              <InputLabel>{t('Select Token')}</InputLabel>
+            <FormControl
+              fullWidth
+              sx={{
+                mb: 3,
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  p: 0,
+                  '& fieldset': {
+                    borderColor: COLORS.PURPLE.LIGHT,
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'rgb(220, 215, 254)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: 'rgb(179, 172, 227)',
+                  },
+                  '& .MuiSelect-icon': {
+                    color: COLORS.PURPLE.LIGHT, // 矢印アイコンを白色に変更
+                  },
+                },
+              }}
+            >
+              <InputLabel
+                sx={{
+                  color: COLORS.PURPLE.LIGHT,
+                  '&.Mui-focused': {
+                    color: COLORS.PURPLE.LIGHT,
+                  },
+                }}
+              >
+                {t('Select Token')}
+              </InputLabel>
               <Select
                 value={selectedToken}
                 label={t('Select Token')}
@@ -1456,10 +1543,10 @@ const Sender: React.FC = () => {
                       sx={{
                         ...(selectedTokenInfo.symbol === 'SOL'
                           ? {
-                              width: '27px',
-                              height: '27px',
-                              marginRight: '0',
-                              bgcolor: 'background.paper',
+                              width: '32px',
+                              height: '32px',
+                              marginRight: '8px',
+                              bgcolor: COLORS.GRAY.DARK,
                               '& img': {
                                 width: '19.5px',
                                 height: '19.5px',
@@ -1468,12 +1555,13 @@ const Sender: React.FC = () => {
                               },
                             }
                           : {
-                              width: 24,
-                              height: 24,
+                              width: '32px',
+                              height: '32px',
+                              marginRight: '8px',
                             }),
                       }}
                     />
-                    <Typography>
+                    <Typography color={COLORS.GRAY.LIGHT} fontSize={16}>
                       {selectedTokenInfo.symbol} - {selectedTokenInfo.name}
                     </Typography>
                   </Box>
@@ -1485,10 +1573,10 @@ const Sender: React.FC = () => {
                       src="/solana-logo.png"
                       alt="SOL"
                       sx={{
-                        width: '27px',
-                        height: '27px',
+                        width: '32px',
+                        height: '32px',
                         marginRight: '0',
-                        bgcolor: 'background.paper',
+                        bgcolor: COLORS.GRAY.DARK,
                         '& img': {
                           width: '19.5px',
                           height: '19.5px',
@@ -1501,6 +1589,11 @@ const Sender: React.FC = () => {
                   <ListItemText
                     primary="SOL - Solana"
                     secondary="Native Token"
+                    sx={{
+                      '& .MuiListItemText-secondary': {
+                        color: COLORS.PURPLE.LIGHT,
+                      },
+                    }}
                   />
                 </MenuItem>
 
@@ -1529,12 +1622,25 @@ const Sender: React.FC = () => {
                         <Avatar
                           src={token.metadata?.uri || '/token-placeholder.png'}
                           alt={token.metadata?.symbol || 'Token'}
-                          sx={{ width: 24, height: 24 }}
+                          sx={{
+                            width: 32,
+                            height: 32,
+                            ...(token.metadata?.uri ===
+                              '/token-placeholder.png' && {
+                              margin: '0',
+                              objectFit: 'contain',
+                            }),
+                          }}
                         />
                       </ListItemAvatar>
                       <ListItemText
                         primary={`${token.metadata?.symbol || 'Unknown'} - ${token.metadata?.name || 'Unknown Token'}`}
                         secondary={`${token.account.mint.slice(0, 6)}...${token.account.mint.slice(-6)}`}
+                        sx={{
+                          '& .MuiListItemText-secondary': {
+                            color: COLORS.PURPLE.LIGHT,
+                          },
+                        }}
                       />
                     </MenuItem>
                   ))
@@ -1582,21 +1688,31 @@ const Sender: React.FC = () => {
 
             {/* Recipient Addresses with Amounts */}
             <Box mb={3}>
-              <Typography variant="body2" fontWeight="bold" mb={1}>
+              <Typography
+                variant="body2"
+                fontWeight={600}
+                mb={1}
+                color={COLORS.PURPLE.LIGHT}
+              >
                 {t('Recipient Addresses and Amounts')}
                 <br />
                 {t(
                   'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
                 )}
               </Typography>
+
               <Typography
                 variant="caption"
-                color="text.secondary"
+                color={COLORS.PURPLE.LIGHT}
+                mt={2}
                 mb={1}
                 display="block"
+                fontSize={16}
+                fontWeight={500}
               >
                 {t('Format: address,amount (one entry per line)')}
               </Typography>
+
               <Box position="relative">
                 {/* 行番号付きテキストフィールド */}
                 <Box
@@ -1609,13 +1725,13 @@ const Sender: React.FC = () => {
                       duplicateAddresses.length > 0 ||
                       (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
                         ? theme.palette.error.main
-                        : 'rgba(0, 0, 0, 0.23)',
+                        : COLORS.PURPLE.LIGHT,
                     borderRadius: 1,
                     '&:hover': {
-                      borderColor: 'rgba(0, 0, 0, 0.87)',
+                      borderColor: COLORS.PURPLE.LIGHT,
                     },
                     '&:focus-within': {
-                      borderColor: (theme) => theme.palette.primary.main,
+                      borderColor: COLORS.PURPLE.LIGHT,
                       borderWidth: '2px',
                     },
                   }}
@@ -1647,8 +1763,8 @@ const Sender: React.FC = () => {
                       sx={{
                         width: '40px',
                         minWidth: '40px',
-                        bgcolor: (theme) => theme.palette.grey[100],
-                        color: (theme) => theme.palette.grey[600],
+                        bgcolor: COLORS.PURPLE.LIGHT_BRIGHT,
+                        color: COLORS.PURPLE.LIGHT,
                         borderRight: '1px solid rgba(0, 0, 0, 0.1)',
                         py: 1,
                         textAlign: 'right',
@@ -1670,17 +1786,20 @@ const Sender: React.FC = () => {
                             pr: 1,
                             height: '20px',
                             color: highlightedLines.includes(i + 1)
-                              ? 'red'
-                              : 'inherit', // ハイライト行の番号も赤くする
-                            cursor: 'pointer', // クリック可能であることを示す
+                              ? COLORS.PINK.HOT
+                              : COLORS.PURPLE.LIGHT,
+                            cursor: 'pointer',
                             backgroundColor: highlightedLines.includes(i + 1)
-                              ? 'rgba(255, 0, 0, 0.05)'
-                              : 'transparent', // ハイライト行の背景もわずかに色付け
-                            transition: 'background-color 0.2s ease',
+                              ? 'rgba(250, 23, 158, 0.1)'
+                              : 'transparent',
+                            transition: 'all 0.2s ease',
                             '&:hover': {
                               backgroundColor: highlightedLines.includes(i + 1)
-                                ? 'rgba(255, 0, 0, 0.1)'
-                                : 'rgba(0, 0, 0, 0.05)', // ホバー時の背景色
+                                ? 'rgba(250, 23, 158, 0.2)'
+                                : 'rgba(164, 156, 215, 0.1)',
+                              color: highlightedLines.includes(i + 1)
+                                ? COLORS.PINK.HOT
+                                : COLORS.PURPLE.BRIGHT,
                             },
                           }}
                           onClick={() => handleLineClick(i + 1)}
@@ -1704,21 +1823,13 @@ const Sender: React.FC = () => {
                               sx={{
                                 pr: 1,
                                 height: '20px',
+                                color: COLORS.PURPLE.LIGHT,
                                 cursor: 'pointer',
-                                backgroundColor: highlightedLines.includes(
-                                  i + recipientAddresses.split('\n').length + 1
-                                )
-                                  ? 'rgba(255, 0, 0, 0.05)'
-                                  : 'transparent',
-                                transition: 'background-color 0.2s ease',
+                                backgroundColor: 'transparent',
+                                transition: 'all 0.2s ease',
                                 '&:hover': {
-                                  backgroundColor: highlightedLines.includes(
-                                    i +
-                                      recipientAddresses.split('\n').length +
-                                      1
-                                  )
-                                    ? 'rgba(255, 0, 0, 0.1)'
-                                    : 'rgba(0, 0, 0, 0.05)',
+                                  backgroundColor: 'rgba(164, 156, 215, 0.1)',
+                                  color: COLORS.PURPLE.BRIGHT,
                                 },
                               }}
                               onClick={() =>
@@ -1876,6 +1987,7 @@ const Sender: React.FC = () => {
                         borderCollapse: 'collapse',
                         fontSize: '0.75rem',
                         mt: 0.5,
+                        color: COLORS.PURPLE.LIGHT,
                       }}
                     >
                       {invalidEntries.length > 0
@@ -1905,7 +2017,7 @@ const Sender: React.FC = () => {
                     }}
                   >
                     <IconButton onClick={pasteAddresses}>
-                      <ContentPaste />
+                      <ContentPaste sx={{ color: COLORS.PURPLE.LIGHT }} />
                       <Typography
                         variant="caption"
                         sx={{
@@ -1914,6 +2026,7 @@ const Sender: React.FC = () => {
                           left: '50%',
                           transform: 'translateX(-50%)',
                           fontSize: '0.6rem',
+                          color: COLORS.PURPLE.LIGHT,
                         }}
                       >
                         Paste
@@ -1927,10 +2040,14 @@ const Sender: React.FC = () => {
                 display="flex"
                 justifyContent="space-between"
                 alignItems="center"
-                mt={1}
+                mt={0.5}
               >
                 <Box>
-                  <Typography variant="caption" color="gray">
+                  <Typography
+                    variant="caption"
+                    color={COLORS.PURPLE.LIGHT}
+                    fontWeight={600}
+                  >
                     {t('Valid entries')}: {parsedEntries.length}
                   </Typography>
                   {(invalidEntries.length > 0 ||
@@ -1970,7 +2087,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.invalidLineNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`invalid-summary-${lineNum}`}
@@ -2016,7 +2133,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.invalidAddressNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`duplicate-summary-${lineNum}`}
@@ -2062,7 +2179,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.duplicateLineNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`duplicate-summary-${lineNum}`}
@@ -2107,7 +2224,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.invalidSolNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`duplicate-summary-${lineNum}`}
@@ -2153,7 +2270,7 @@ const Sender: React.FC = () => {
                               }}
                             >
                               {validationCSVResult.belowMinimumSolLineNumbers.map(
-                                (lineNum, index) => (
+                                (lineNum) => (
                                   <Box
                                     component="span"
                                     key={`below-sol-summary-${lineNum}`}
@@ -2178,21 +2295,29 @@ const Sender: React.FC = () => {
                     </Box>
                   )}
                 </Box>
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box display="flex" alignItems="center" gap={3}>
                   <Tooltip title="download" arrow placement="top">
                     <Button
                       onClick={downloadTemplate}
                       size="small"
-                      startIcon={<Download fontSize="small" />}
+                      startIcon={<FileDownloadOutlinedIcon fontSize="small" />}
+                      variant="contained"
                       sx={{
                         textTransform: 'none',
                         color: 'inherit',
+                        borderRadius: '6px',
                         minWidth: 'auto',
-                        padding: '4px 8px',
-                        fontSize: '0.75rem',
+                        padding: '5px 10px',
+                        width: '110px',
+                        height: '32px',
+                        marginTop: '8px',
+                        background: COLORS.PURPLE.MEDIUM_BRIGHT,
+                        '&:hover': {
+                          background: `${COLORS.PURPLE.MEDIUM_BRIGHT}cc`,
+                        },
                       }}
                     >
-                      {t('template')}
+                      {t('Template')}
                     </Button>
                   </Tooltip>
                   <Tooltip title="upload" arrow placement="top">
@@ -2206,10 +2331,12 @@ const Sender: React.FC = () => {
               </Box>
               <Typography
                 variant="caption"
-                color="primary"
-                fontWeight="bold"
+                color={COLORS.PINK.HOT}
+                fontWeight={700}
+                fontSize="0.9rem"
                 display="block"
                 textAlign="right"
+                mt={1}
               >
                 {t('Total amount')}: {totalAmount.toFixed(6)}{' '}
                 {selectedTokenInfo.symbol}
@@ -2218,9 +2345,16 @@ const Sender: React.FC = () => {
 
             {/* Token simulation */}
             <Box mb={3}>
-              <Typography variant="body2" fontWeight="bold" mb={2}>
-                {t('Transaction Simulation')}
-              </Typography>
+              <Box display="flex" alignItems="center" gap={1}>
+                <img
+                  src="/icons/transaction-result.svg"
+                  alt="Transaction Result"
+                  width={20}
+                />
+                <Typography variant="body2" fontWeight={600} my={1.5}>
+                  {t('Transaction Simulation')}
+                </Typography>
+              </Box>
               <Box
                 sx={{
                   display: 'grid',
@@ -2255,8 +2389,8 @@ const Sender: React.FC = () => {
                   <Box
                     key={index}
                     sx={{
-                      background:
-                        'linear-gradient(135deg, rgba(120, 193, 253, 0.15) 0%, rgba(255, 255, 255, 0.9) 100%)',
+                      background: COLORS.GRADIENTS.LIGHT_PURPLE,
+                      opacity: 0.75,
                       borderRadius: 2,
                       p: 2,
                       textAlign: 'center',
@@ -2286,18 +2420,14 @@ const Sender: React.FC = () => {
                       },
                     }}
                   >
-                    <Typography
-                      variant="h4"
-                      fontWeight="bold"
-                      color="rgb(0, 0, 0)"
-                    >
+                    <Typography variant="h4" fontWeight="bold" color="#3E0059">
                       {item.value}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="#5542AD">
                       {t(item.title)}
                     </Typography>
                     {item.subText && (
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" color="#5542AD">
                         {item.subText}
                       </Typography>
                     )}
@@ -2412,7 +2542,6 @@ const Sender: React.FC = () => {
                       )}
                     </Box>
                   </Box>
-
                   {selectedToken !== 'SOL' && (
                     <Box display="flex" justifyContent="space-between">
                       <Typography variant="body2">
@@ -2448,7 +2577,13 @@ const Sender: React.FC = () => {
                     </Box>
                   )}
 
-                  <Divider sx={{ my: 1 }} />
+                  <Divider
+                    sx={{
+                      my: 1,
+                      borderColor: COLORS.PURPLE.LIGHT,
+                      opacity: 0.5,
+                    }}
+                  />
 
                   <Box display="flex" justifyContent="space-between">
                     <Typography variant="body1" fontWeight="bold">
@@ -2458,7 +2593,7 @@ const Sender: React.FC = () => {
                       <Typography
                         variant="body1"
                         fontWeight="bold"
-                        color="primary.main"
+                        color={COLORS.BLUE.TURQUOISE}
                       >
                         {feeEstimation.totalFee.toFixed(6)} SOL
                       </Typography>
@@ -2498,8 +2633,9 @@ const Sender: React.FC = () => {
                         >
                           <Typography
                             variant="body1"
-                            fontWeight="bold"
-                            color="error.main"
+                            fontWeight={600}
+                            fontSize="1rem"
+                            color={COLORS.BLUE.TURQUOISE}
                           >
                             {(feeEstimation.totalFee + totalAmount).toFixed(6)}{' '}
                             SOL
@@ -2525,8 +2661,9 @@ const Sender: React.FC = () => {
                     accountsNeedingCreation.length > 0 && (
                       <Typography
                         variant="caption"
-                        color="text.secondary"
+                        color={COLORS.PINK.HOT}
                         mt={0.5}
+                        sx={{ fontWeight: 500 }}
                       >
                         * {t('Creating')} {accountsNeedingCreation.length}{' '}
                         {t('new token accounts')}
@@ -2537,7 +2674,7 @@ const Sender: React.FC = () => {
                   {selectedToken == 'SOL' && (
                     <Typography
                       variant="caption"
-                      color="text.secondary"
+                      color={COLORS.PURPLE.LIGHT}
                       mt={0.5}
                     >
                       {t('Total amount')}: {totalAmount.toFixed(6)}{' '}
@@ -2549,35 +2686,74 @@ const Sender: React.FC = () => {
             </Box>
 
             {/* Transfer Button */}
-            <Button
-              variant="contained"
-              color="primary"
-              fullWidth
-              onClick={handleTransfer}
-              disabled={
-                !connected ||
-                transferring ||
-                parsedEntries.length === 0 ||
-                invalidEntries.length > 0 ||
-                duplicateAddresses.length > 0 ||
-                (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
-              }
-            >
-              {transferLoading ? (
-                <>
-                  <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
-                  {t(processingMessage)}...
-                </>
-              ) : (
-                t('Transfer')
-              )}
-            </Button>
+            <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={handleTransfer}
+                disabled={
+                  !connected ||
+                  transferring ||
+                  parsedEntries.length === 0 ||
+                  invalidEntries.length > 0 ||
+                  duplicateAddresses.length > 0 ||
+                  (selectedToken === 'SOL' && belowMinSolEntries.length > 0)
+                }
+                sx={{
+                  mt: 1,
+                  py: 1,
+                  mx: 'auto',
+                  position: 'relative',
+                  width: '80%',
+                  height: '50px',
+                  fontWeight: 600,
+                  fontSize: '1.3rem',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.15)',
+                  background: COLORS.GRADIENTS.PURPLE_TO_LAVENDER,
+                  '&.Mui-disabled': {
+                    background: COLORS.GRAY.MEDIUM,
+                  },
+                }}
+              >
+                {transferLoading ? (
+                  <>
+                    <CircularProgress size={20} sx={{ color: '#fff', mr: 1 }} />
+                    {t(processingMessage)}...
+                  </>
+                ) : (
+                  <>
+                    <img
+                      src={
+                        !connected ||
+                        transferring ||
+                        parsedEntries.length === 0 ||
+                        invalidEntries.length > 0 ||
+                        duplicateAddresses.length > 0 ||
+                        (selectedToken === 'SOL' &&
+                          belowMinSolEntries.length > 0)
+                          ? '/icons/transfer-button-inactive.svg'
+                          : '/icons/transfer-button-active.svg'
+                      }
+                      alt="Transfer"
+                      style={{
+                        width: '26px',
+                        height: '26px',
+                        marginRight: '16px',
+                      }}
+                    />
+                    {t('Transfer')}
+                  </>
+                )}
+              </Button>
+            </Box>
             <Typography
               variant="caption"
-              color="text.secondary"
+              color={COLORS.PURPLE.LIGHT}
               mt={1}
               textAlign="center"
               display="block"
+              fontWeight={500}
             >
               {t(
                 'The lowest across the network, each transaction only requires 0.0075 SOL.'
@@ -2587,9 +2763,12 @@ const Sender: React.FC = () => {
             {/* Transaction Results */}
             {allSerializer.length > 0 && (
               <Box mt={3}>
-                <Typography variant="h6" gutterBottom>
-                  {t('Recent Transactions')}
-                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="h6" gutterBottom>
+                    {t('Recent Transactions')}
+                  </Typography>
+                </Box>
+
                 {allSerializer.map((serializer, index) => (
                   <SerializerList
                     key={`${serializer.uuid}-${index}`}
@@ -2610,6 +2789,48 @@ const Sender: React.FC = () => {
         onClose={() => setSnackbarOpen(false)}
         message={snackbarMessage}
       />
+
+      <style>
+        {`
+          .wallet-adapter-button img {
+            width: 20px !important;
+            height: 20px !important;
+          }
+          .wallet-adapter-button-trigger {
+            background: ${COLORS.GRADIENTS.PURPLE_TO_LAVENDER} !important;
+            padding: 0 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
+            transition: all 0.2s ease !important;
+          }
+          .wallet-adapter-button-trigger:hover {
+            opacity: 0.9 !important;
+            transform: translateY(-1px) !important;
+          }
+          .wallet-adapter-dropdown {
+            background-color: ${COLORS.PURPLE.MEDIUM} !important;
+          }
+          .wallet-adapter-dropdown-list {
+            background-color: ${COLORS.PURPLE.MEDIUM} !important;
+            color: ${COLORS.GRAY.LIGHT} !important;
+            border-radius: 8px !important;
+            border: 0.05px solid #7867ea6a !important;
+            padding: 8px !important;
+            gap: 4px !important;
+          }
+          .wallet-adapter-dropdown-list-item {
+            font-size: 1rem !important;
+            font-weight: 500 !important;
+            padding: 8px 12px !important;
+            border-radius: 4px !important;
+            background-color: transparent !important;
+            transition: all 0.1s ease !important;
+          }
+          .wallet-adapter-dropdown-list-item:hover {
+            background-color: rgba(3, 176, 228, 0.1) !important;
+          }
+        `}
+      </style>
     </Box>
   );
 };

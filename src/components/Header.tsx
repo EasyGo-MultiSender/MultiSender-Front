@@ -2,6 +2,8 @@
 import { Buffer } from 'buffer';
 window.Buffer = Buffer;
 
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
   Toolbar,
@@ -9,22 +11,19 @@ import {
   IconButton,
   Tab,
   Tabs,
-  CircularProgress,
   Box,
   useMediaQuery,
   useTheme,
 } from '@mui/material';
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
-import MenuIcon from '@mui/icons-material/Menu';
-import { Link } from 'react-router-dom';
-import { memo, useEffect, useState } from 'react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { useWallet } from '@/hooks/useWallet';
-import { NetworkSelector } from '@/components/NetworkSelector';
+import { memo, useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import TranslateSelector from '@/components/TranslateSelector';
+import { Link } from 'react-router-dom';
 import HeaderDrawer from '@/components/HeaderDrawer';
+import { NetworkSelector } from '@/components/NetworkSelector';
+import TranslateSelector from '@/components/TranslateSelector';
 import { COLORS } from '@/constants/color';
+import { useWallet } from '@/hooks/useWallet';
 const Header = memo(() => {
   const { t } = useTranslation(); // 翻訳フック
   const [navValue, setNavValue] = useState<string | false>(false);
@@ -54,42 +53,83 @@ const Header = memo(() => {
   const getWalletButtonContent = () => {
     if (!connected && !connecting) {
       return (
-        <>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            width: '100%',
+            justifyContent: 'flex-start',
+            pl: 1,
+          }}
+        >
           <AccountBalanceWalletIcon
             sx={{
-              mr: isMobile ? 0 : 1,
-              fontSize: isMobile ? '1.2rem' : '1.4rem',
+              fontSize: '20px',
             }}
           />
-          {!isMobile && (
-            <span style={{ whiteSpace: 'nowrap' }}>Connect Wallet</span>
-          )}
-        </>
+          <span
+            style={{
+              whiteSpace: 'nowrap',
+              fontSize: '14px',
+            }}
+          >
+            Connect Wallet
+          </span>
+        </Box>
       );
     }
     if (connecting) {
       return (
-        <>
-          <CircularProgress
-            size={isMobile ? 16 : 20}
-            sx={{ mr: isMobile ? 0 : 1 }}
-          />
-          {!isMobile && (
-            <span style={{ whiteSpace: 'nowrap' }}>Connecting...</span>
-          )}
-        </>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%',
+            justifyContent: 'center',
+            boxSizing: 'border-box',
+            transform: 'translateX(-12px)',
+          }}
+        >
+          <span
+            style={{
+              whiteSpace: 'nowrap',
+              fontSize: '14px',
+              lineHeight: '36px',
+            }}
+          >
+            Connecting...
+          </span>
+        </Box>
       );
     }
 
     if (connected) {
       return (
-        <>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            width: '100%',
+            height: '100%',
+            justifyContent: 'center',
+            boxSizing: 'border-box',
+            transform: 'translateX(-12px)',
+          }}
+        >
           {!isMobile && (
-            <span style={{ whiteSpace: 'nowrap' }}>
+            <span
+              style={{
+                whiteSpace: 'nowrap',
+                fontSize: '14px',
+                lineHeight: '36px',
+              }}
+            >
               {walletInfo?.shortAddress}
             </span>
           )}
-        </>
+        </Box>
       );
     }
   };
@@ -260,13 +300,58 @@ const Header = memo(() => {
           {/* Wallet button - completely redesigned for mobile */}
           <WalletMultiButton
             style={{
-              // スタイルをCSSに移動したので、ここでは最低限のものだけ残す
               marginRight: isMobile ? '10px' : '0',
               alignSelf: 'center',
+              width: '160px',
+              height: '36px',
+              padding: '0 12px',
+              fontSize: isMobile ? '14px' : '16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
             }}
           >
             {getWalletButtonContent()}
           </WalletMultiButton>
+
+          <style>
+            {`
+              .wallet-adapter-button img {
+                width: 20px !important;
+                height: 20px !important;
+              }
+              .wallet-adapter-button-trigger {
+                background-color: transparent !important;
+                padding: 0 !important;
+              }
+              .wallet-adapter-dropdown {
+                background-color: ${COLORS.PURPLE.MEDIUM} !important;
+              }
+              .wallet-adapter-dropdown-list {
+                background-color: ${COLORS.PURPLE.MEDIUM} !important;
+                color: ${COLORS.GRAY.LIGHT} !important;
+                border-radius: 8px !important;
+                border: 0.05px solid #7867ea6a !important;
+                padding: 8px !important;
+                gap: 4px !important;
+              }
+              .wallet-adapter-dropdown-list-item {
+                font-size: 1rem !important;
+                font-weight: 500 !important;
+                padding: 8px 12px !important;
+                border-radius: 4px !important;
+                background-color: transparent !important;
+                transition: all 0.1s ease !important;
+              }
+              .wallet-adapter-dropdown-list-item:hover {
+                background-color: rgba(3, 176, 228, 0.1) !important;
+              }
+            `}
+          </style>
 
           {/* Hamburger menu on the right side */}
           {isMobile && (

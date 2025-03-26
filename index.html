@@ -2,21 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link data-n-head="1" rel="icon" type="image/x-icon" href="/easygofab1.png" />
+    <link
+      data-n-head="1"
+      rel="icon"
+      type="image/x-icon"
+      href="/easygofab1.png"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>easy go</title>
     <script src="https://www.google.com/recaptcha/api.js?render=6LfzAfkqAAAAAKwf7q_dv-mjifwRHAUlhQaQ5Bn4"></script>
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      /* Google reCAPTCHAバッジを非表示 */
+      .grecaptcha-badge {
+        visibility: hidden !important;
+      }
+      body {
+        font-family: 'Poppins', sans-serif;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-
-<style>
-  /* Google reCAPTCHAバッジを非表示 */
-  .grecaptcha-badge {
-    visibility: hidden !important;
-  }
-</style>
-
