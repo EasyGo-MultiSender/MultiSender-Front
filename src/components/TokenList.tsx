@@ -165,7 +165,7 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
 
         // Promise.allを使用して並列にメタデータを取得
         const metadataPromises = tokenAccounts.map((account) =>
-          fetchMetadata(account.mint)
+          fetchMetadata(account.mint, true)
             .then((metadata) => ({ account, metadata }))
             .catch(() => ({ account, metadata: null }))
         );

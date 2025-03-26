@@ -77,6 +77,8 @@ interface Recipient {
   amount: number;
 }
 
+export let stopFetchMetadata = false;
+
 const Sender: React.FC = () => {
   // Hooks
   const { connection } = useConnection();
@@ -133,6 +135,17 @@ const Sender: React.FC = () => {
   const [processingMessage, setProcessingMessage] = useState<string>(
     t('Processing')
   ); // 処理中メッセージ
+
+  // transferLoadingの状態が変わったらstopFetchMetadataも同じ値に設定
+  useEffect(() => {
+    stopFetchMetadata = transferLoading;
+
+    if (stopFetchMetadata) {
+      console.log('stopFetchMetadata is true');
+    } else {
+      console.log('stopFetchMetadata is false');
+    }
+  }, [transferLoading]);
 
   // TokenAccountの存在確認結果を保持するstate
   const [accountsNeedingCreation, setAccountsNeedingCreation] = useState<
@@ -604,6 +617,8 @@ const Sender: React.FC = () => {
 
   // トランザクションシミュレーションによる手数料計算
   const simulateTransactionFees = useCallback(async () => {
+    if (stopFetchMetadata) return;
+
     if (!connection || !publicKey || parsedEntries.length === 0) {
       // エントリがない場合は手数料なし
       setFeeEstimation({
@@ -621,6 +636,8 @@ const Sender: React.FC = () => {
       setAccountsNeedingCreation([]);
       return;
     }
+
+    if (stopFetchMetadata) return;
 
     console.log(
       '🔍 手数料シミュレーション開始: エントリ数=',
@@ -643,6 +660,8 @@ const Sender: React.FC = () => {
         step: '初期化中',
       },
     }));
+
+    if (stopFetchMetadata) return;
 
     try {
       // 手数料シミュレーション結果
@@ -675,6 +694,8 @@ const Sender: React.FC = () => {
           step: '運営手数料計算完了',
         },
       }));
+
+      if (stopFetchMetadata) return;
 
       // 少し待機して状態の更新が反映されるようにする
       await new Promise((resolve) => setTimeout(resolve, 100));
@@ -712,6 +733,8 @@ const Sender: React.FC = () => {
                 step: `SOL送金シミュレーション: ${i + 1}-${i + batch.length}/${maxEntries}`,
               },
             }));
+
+            if (stopFetchMetadata) return;
 
             const transaction = new Transaction();
 
@@ -790,6 +813,8 @@ const Sender: React.FC = () => {
               }
             }
 
+            if (stopFetchMetadata) return;
+
             // 少し待機して状態の更新が反映されるようにする
             await new Promise((resolve) => setTimeout(resolve, 50));
           }
@@ -815,6 +840,8 @@ const Sender: React.FC = () => {
             },
           }));
         }
+
+        if (stopFetchMetadata) return;
 
         // 残りのエントリの手数料を平均値から推定
         if (parsedEntries.length > maxSimulations) {
@@ -857,6 +884,8 @@ const Sender: React.FC = () => {
             `🪙 トークン情報: ${selectedTokenDetail.symbol}, デシマル=${tokenDecimals}`
           );
 
+          if (stopFetchMetadata) return;
+
           // 進捗状態を更新
           setFeeEstimation((prev) => ({
             ...prev,
@@ -877,6 +906,8 @@ const Sender: React.FC = () => {
 
           // 各受信者アドレスに対して処理
           for (let i = 0; i < maxEntries; i++) {
+            if (stopFetchMetadata) return;
+
             const entry = parsedEntries[i];
             try {
               console.log(
@@ -933,6 +964,8 @@ const Sender: React.FC = () => {
                   tokenMint,
                   connection
                 );
+
+                if (stopFetchMetadata) return;
 
                 try {
                   // アカウント作成シミュレーション実行
@@ -997,6 +1030,8 @@ const Sender: React.FC = () => {
                           step: `アカウント作成手数料: +${totalFee.toFixed(6)} SOL`,
                         },
                       }));
+
+                      if (stopFetchMetadata) return;
                     } else {
                       const fallbackFee = 0.00203928;
                       accountCreationFee += fallbackFee;
@@ -1020,6 +1055,8 @@ const Sender: React.FC = () => {
                       }));
                     }
                   }
+
+                  if (stopFetchMetadata) return;
                 } catch (err) {
                   console.error('❌ アカウント作成シミュレーション例外:', err);
                   accountCreationFeeFallback = true;
@@ -1042,6 +1079,8 @@ const Sender: React.FC = () => {
                   }));
                 }
               }
+
+              if (stopFetchMetadata) return;
 
               // 進捗状態を更新
               setFeeEstimation((prev) => ({
@@ -1072,6 +1111,8 @@ const Sender: React.FC = () => {
                 await connection.getLatestBlockhash('confirmed');
               transferTx.recentBlockhash = blockhash;
               transferTx.feePayer = publicKey;
+
+              if (stopFetchMetadata) return;
 
               try {
                 // 転送シミュレーション実行
@@ -1181,6 +1222,8 @@ const Sender: React.FC = () => {
                 }));
               }
 
+              if (stopFetchMetadata) return;
+
               // 少し待機して状態の更新が反映されるようにする
               await new Promise((resolve) => setTimeout(resolve, 50));
             } catch (err) {
@@ -1204,6 +1247,8 @@ const Sender: React.FC = () => {
               }));
             }
           }
+
+          if (stopFetchMetadata) return;
 
           // 残りのエントリの手数料を平均値から推定
           if (parsedEntries.length > maxSimulations) {
@@ -1284,6 +1329,8 @@ const Sender: React.FC = () => {
           setAccountsNeedingCreation(estimatedAccounts);
         }
       }
+
+      if (stopFetchMetadata) return;
 
       // 最終的なNaNチェック
       if (isNaN(totalEstimatedFee) || totalEstimatedFee <= 0) {
