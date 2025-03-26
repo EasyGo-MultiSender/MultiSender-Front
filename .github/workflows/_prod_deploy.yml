@@ -100,12 +100,12 @@ jobs:
                 
                 "# S3からデプロイパッケージをダウンロード",
                 "echo \"S3からデプロイパッケージをダウンロード中...\"",
-                "aws s3 cp s3://${{ steps.upload-to-s3.outputs.s3_bucket }}/${{ steps.upload-to-s3.outputs.s3_key }} ./deployment-package.tar.gz",
+                "aws s3 cp s3://${{ steps.upload-to-s3.outputs.s3_bucket }}/${{ steps.upload-to-s3.outputs.s3_key }} ${{ inputs.app-path }}/deployment-package.tar.gz",
                 
                 "# パッケージ展開",
                 "echo \"デプロイパッケージを展開中...\"",
-                "tar -xzf deployment-package.tar.gz",
-                "rm deployment-package.tar.gz",
+                "tar -xzf ${{ inputs.app-path }}/deployment-package.tar.gz",
+                "rm ${{ inputs.app-path }}/deployment-package.tar.gz",
                 
                 "# アプリケーション再起動",
                 "echo \"PM2でアプリケーション再起動中...\"",
