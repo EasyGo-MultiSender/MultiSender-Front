@@ -188,51 +188,40 @@ export function useTokenTransfer(
         }[] = [];
 
         // すべてのバッチを順次処理
-        await Promise.all(
-          batches.map(
-            (batch, batchIndex) =>
-              new Promise<void>(async (resolve) => {
-                // 各バッチを順番に遅延スタート（バッチごとに 1 秒遅延）
-                await new Promise((r) =>
-                  setTimeout(r, batchIndex * RPC_RATE_LIMIT)
-                );
+        for (const [batchIndex, batch] of batches.entries()) {
+          // 各バッチを順番に遅延スタート（バッチごとに RPC_RATE_LIMIT ms遅延
+          await new Promise((resolve) => setTimeout(resolve, RPC_RATE_LIMIT));
 
-                try {
-                  updateMessage(
-                    t('Checking balances...') +
-                      `[ ${batchIndex + 1}/${batches.length} ]`
-                  );
+          console.log(`Waiting for ${Number(RPC_RATE_LIMIT)} ms`);
 
-                  console.log(
-                    `[${batchIndex + 1}/${batches.length}] Processing batch with ${batch.length} recipients`
-                  );
+          try {
+            updateMessage(
+              t('Checking balances...') +
+                `[ ${batchIndex + 1}/${batches.length} ]`
+            );
 
-                  // バッチのトランザクション作成
-                  const transaction = await createBatchTransferTransaction(
-                    batch,
-                    publicKey,
-                    connection,
-                    mint
-                  );
+            console.log(
+              `[${batchIndex + 1}/${batches.length}] Processing batch with ${batch.length} recipients`
+            );
 
-                  console.log(
-                    `[${batchIndex + 1}/${batches.length}] Transaction created with ${transaction.transaction.message.compiledInstructions.length} instructions`
-                  );
+            // バッチのトランザクション作成
+            const transaction = await createBatchTransferTransaction(
+              batch,
+              publicKey,
+              connection,
+              mint
+            );
 
-                  transactions.push(transaction);
-                } catch (error) {
-                  console.error(
-                    `Batch ${batchIndex + 1} transfer failed:`,
-                    error
-                  );
-                }
+            console.log(
+              `[${batchIndex + 1}/${batches.length}] Transaction created with ${transaction.transaction.message.compiledInstructions.length} instructions`
+            );
 
-                resolve();
-              })
-          )
-        );
+            transactions.push(transaction);
+          } catch (error) {
+            console.error(`Batch ${batchIndex + 1} transfer failed:`, error);
+          }
+        }
 
-        // デバッグ: 作成されたトランザクション数を確認
         console.log(
           `Created ${transactions.length} transactions out of ${batches.length} batches`
         );
@@ -253,7 +242,7 @@ export function useTokenTransfer(
 
         // ウォレット署名は一度に多数のトランザクションを処理できない可能性がある
         // 25件ずつに分割して処理する
-        const MAX_SIGN_BATCH = 10;
+        const MAX_SIGN_BATCH = import.meta.env.VITE_MAX_SIGN_BATCH;
         let allSignedTransactions: Transaction[] = [];
 
         for (let i = 0; i < transactions.length; i += MAX_SIGN_BATCH) {
