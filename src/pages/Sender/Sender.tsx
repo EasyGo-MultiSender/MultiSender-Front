@@ -1915,6 +1915,7 @@ const Sender: React.FC = () => {
                           color: 'transparent',
                           caretColor: 'black', // カーソルだけ見えるように
                           zIndex: 2,
+                          fontWeight: 500,
                         }}
                         rows={
                           recipientAddresses.split('\n').length > 10
