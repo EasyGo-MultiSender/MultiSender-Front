@@ -13,12 +13,10 @@ on:
           - production
 
 jobs:
-  checkout:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Print selected environment
-        run: |
-          echo "Selected environment: ${{ github.event.inputs.environment }}"
+      
+  build:
+    uses: ./.github/workflows/_build.yml
+    with:
+      node-version: '22'
+      artifact-name: 'build-output'
+      artifact-path: 'build'
