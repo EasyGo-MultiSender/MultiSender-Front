@@ -123,6 +123,7 @@ jobs:
           
           echo "SSMコマンドID: ${COMMAND_ID}"
 
+          echo "::endgroup::" 
           echo "::group::コマンド実行状況確認中..."
           
           # コマンド実行完了を待機
@@ -134,4 +135,4 @@ jobs:
             --command-id ${COMMAND_ID} \
             --instance-id ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }} \
             --output text --query "StandardOutputContent"
-          echo "::endgroup::" 
+          echo "::endgroup::"
