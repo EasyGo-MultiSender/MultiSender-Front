@@ -259,7 +259,7 @@ const Header = memo(() => {
                               : COLORS.PURPLE.LIGHT,
                         }}
                       >
-                        Multi Sender
+                        {t('Multi Sender')}
                       </span>
                     </Box>
                   }
