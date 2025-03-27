@@ -22,6 +22,7 @@ on:
 jobs:
 
   env:
+    name: Get Environment Variables
     runs-on: ubuntu-latest
     steps:
       - name: Get Environment
