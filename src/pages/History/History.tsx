@@ -154,7 +154,7 @@ const History = () => {
                   <Alert severity="error" sx={{ width: '100%', mb: 2 }}>
                     {error}
                   </Alert>
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color={COLORS.GRAY.LIGHT}>
                     {t(
                       'Could not load transaction history. Please try again later.'
                     )}
