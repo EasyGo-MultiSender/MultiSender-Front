@@ -74,7 +74,7 @@ const Header = memo(() => {
               fontSize: '14px',
             }}
           >
-            Connect Wallet
+            {t('Connect Wallet')}
           </span>
         </Box>
       );
@@ -99,7 +99,7 @@ const Header = memo(() => {
               lineHeight: '36px',
             }}
           >
-            Connecting...
+            {t('Connecting...')}
           </span>
         </Box>
       );
@@ -274,7 +274,7 @@ const Header = memo(() => {
                             : COLORS.PURPLE.LIGHT,
                       }}
                     >
-                      History
+                      {t('History')}
                     </span>
                   </Box>
                 }
