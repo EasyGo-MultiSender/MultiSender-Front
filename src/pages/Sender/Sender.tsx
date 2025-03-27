@@ -1565,7 +1565,7 @@ const Sender: React.FC = () => {
                       lineHeight: '36px',
                     }}
                   >
-                    Please connect your wallet
+                    {t('Please connect your wallet')}
                   </span>
                 </WalletMultiButton>
               </Box>
@@ -1783,7 +1783,9 @@ const Sender: React.FC = () => {
                       justifyContent="center"
                     >
                       <Typography fontWeight="bold">
-                        {isLoading ? 'Refreshing...' : 'Refresh token list'}
+                        {isLoading
+                          ? t('Refreshing...')
+                          : t('Refresh token list')}
                       </Typography>
                       {isLoading && (
                         <CircularProgress size={16} sx={{ ml: 1 }} />
@@ -2424,7 +2426,6 @@ const Sender: React.FC = () => {
                         borderRadius: '6px',
                         minWidth: 'auto',
                         padding: '5px 10px',
-                        width: '110px',
                         height: '32px',
                         marginTop: '8px',
                         background: COLORS.PURPLE.MEDIUM_BRIGHT,
@@ -2872,7 +2873,8 @@ const Sender: React.FC = () => {
               fontWeight={500}
             >
               {t(
-                'The lowest across the network, each transaction only requires 0.0075 SOL.'
+                'The lowest across the network, each transaction only requires %n% SOL.',
+                { n: parseFloat(DEPOSIT_SOL_AMOUNT).toFixed(6) }
               )}
             </Typography>
 
