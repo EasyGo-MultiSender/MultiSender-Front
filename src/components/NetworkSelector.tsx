@@ -10,10 +10,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Box,
   TextField,
 } from '@mui/material';
 import NetworkCheckIcon from '@mui/icons-material/NetworkCheck';
 import COLORS from '@/constants/color';
+import { t } from 'i18next';
 
 export const NetworkSelector = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -107,7 +109,14 @@ export const NetworkSelector = () => {
           },
         }}
       >
-        {getDisplayNetwork()}
+        <Box
+          sx={{
+            textAlign: 'center',
+            width: '105px',
+          }}
+        >
+          {getDisplayNetwork()}
+        </Box>
       </Button>
       <Menu
         anchorEl={anchorEl}
@@ -182,7 +191,7 @@ export const NetworkSelector = () => {
           Devnet
         </MenuItem>
         <MenuItem onClick={() => setCustomRpcDialogOpen(true)}>
-          Custom RPC
+          {t('Custom RPC')}
         </MenuItem>
       </Menu>
 
@@ -190,7 +199,7 @@ export const NetworkSelector = () => {
         open={customRpcDialogOpen}
         onClose={() => setCustomRpcDialogOpen(false)}
       >
-        <DialogTitle>Enter Custom RPC URL</DialogTitle>
+        <DialogTitle>{t('Enter Custom RPC URL')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -204,8 +213,10 @@ export const NetworkSelector = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCustomRpcDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleCustomRpcSubmit}>Submit</Button>
+          <Button onClick={() => setCustomRpcDialogOpen(false)}>
+            {t('Cancel')}
+          </Button>
+          <Button onClick={handleCustomRpcSubmit}>{t('Submit')}</Button>
         </DialogActions>
       </Dialog>
     </>
