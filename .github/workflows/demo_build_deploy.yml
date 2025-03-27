@@ -44,7 +44,7 @@ jobs:
           ssh $DEPLOY_USER@$DEPLOY_HOST "mkdir -p $DEPLOY_PATH"
           
           # rsyncを使用してcurrentディレクトリの内容をデプロイ
-          rsync -av ./ $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/
+          rsync -av ./dist $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/
           
           # PM2のリロードを実行
           ssh $DEPLOY_USER@$DEPLOY_HOST "cd $DEPLOY_PATH && pm2 reload multisender-pm2"
