@@ -96,7 +96,7 @@ const History = () => {
                       lineHeight: '36px',
                     }}
                   >
-                    Please connect your wallet
+                    {t('Please connect your wallet')}
                   </span>
                 </WalletMultiButton>
               </Box>
