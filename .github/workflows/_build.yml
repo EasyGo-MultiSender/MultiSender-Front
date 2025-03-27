@@ -1,0 +1,83 @@
+name: Build Project
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        type: string
+        default: '18'
+      artifact-name:
+        description: 'Name of the artifact to upload'
+        required: false
+        type: string
+        default: 'build-artifact'
+      artifact-path:
+        description: 'Path to the directory to upload'
+        required: false
+        type: string
+        default: 'build'
+    outputs:
+      build-directory:
+        description: 'Path to the build directory'
+        value: ${{ jobs.build.outputs.build-directory }}
+      artifact-name:
+        description: 'Name of the uploaded artifact'
+        value: ${{ inputs.artifact-name }}
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skip test"
+
+  eslint:
+    name: ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skip eslint"
+
+  build:
+    name: Build
+    needs:
+      - test
+      - eslint
+    runs-on: ubuntu-latest
+    outputs:
+      build-directory: ${{ steps.build-step.outputs.build-directory }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '${{ inputs.node-version }}'
+          cache: 'npm'
+
+      - name: Copy .env
+        run: cp .env.production .env
+
+      - name: Clean npm cache
+        run: |
+          rm -rf node_modules package-lock.json
+          npm cache clean --force
+
+      - name: Install dependencies
+        run: |
+          npm install --legacy-peer-deps
+
+      - name: Build
+        id: build-step
+        run: |
+          export NODE_OPTIONS="--max_old_space_size=4096"
+          npm run build
+          echo "build-directory=$(pwd)/${{ inputs.artifact-path }}" >> $GITHUB_OUTPUT
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.artifact-path }} 

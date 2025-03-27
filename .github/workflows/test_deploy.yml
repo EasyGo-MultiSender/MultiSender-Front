@@ -1,0 +1,66 @@
+name: Test Deploy Connections
+on:
+  workflow_dispatch:
+  push:
+  workflow_call:
+
+jobs:
+
+  vars:
+    name: Vars Job
+    runs-on: ubuntu-latest
+    outputs:
+      environment: 'production'
+      artifact-name: 'build-output'
+      artifact-path: 'build'
+      app-path: '/var/www/vhosts/multisender.easy-go.me_test_deploy'
+      node-version: '22'
+    steps:
+      - run: echo "Set production environment variables"
+
+  dummy_build:
+    needs: vars
+    name: Build( Dummy )
+    runs-on: ubuntu-latest
+    outputs:
+      build-directory: ${{ steps.build-step.outputs.build-directory }}
+      artifact-url: ${{ steps.upload-artifact.outputs.artifact-url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build
+        id: build-step
+        run: |
+          mkdir -p build
+          echo "tetetetete" >> build/test.txt
+          echo "build-directory=$(pwd)/build" >> $GITHUB_OUTPUT
+          
+      - name: Upload build artifacts
+        id: upload-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ needs.vars.outputs.artifact-name }}
+          path: 'build'
+
+  echo:
+    needs:
+      - vars
+      - dummy_build
+    name: Echo Job
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo '${{ toJSON(github) }}'
+
+  deploy:
+    name: Deploy Job ( Prod )
+    needs:
+      - vars
+      - dummy_build
+    if: needs.vars.outputs.environment == 'production'
+    uses: ./.github/workflows/_prod_deploy.yml
+    with:
+      app-path: ${{ needs.vars.outputs.app-path }}
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
+    secrets: inherit
