@@ -1715,7 +1715,7 @@ const Sender: React.FC = () => {
                   </MenuItem>
                 ) : tokensWithMetadata.length === 0 && !isLoading ? (
                   <MenuItem disabled>
-                    <Typography color="text.secondary">
+                    <Typography color={COLORS.GRAY.LIGHT}>
                       SPLトークンが見つかりません
                     </Typography>
                   </MenuItem>
