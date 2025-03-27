@@ -14,11 +14,11 @@
   "Error occurred during processing": "処理中にエラーが発生しました",
   "Estimated results": "概算値",
   "Fee + Amount": "手数料 + 送金額",
-  "Format: address,amount (one entry per line)": "アドレス,金額（1行に1つずつ）",
+  "Format: address,amount (one entry per line)": "入力形式 : アドレス,金額（ 例: CKAd3fZnQMeSjsgdFs1JfKPWS9RDpqJAMf9MjKE7i9LS, 0.1 ）",
   "History": "履歴",
   "Language": "言語",
   "Loading token information...": "トークン情報を読み込んでいます...",
-  "Multi Sender": "",
+  "Multi Sender": "マルチ送信",
   "Multi Sender for Solana": "Solana用マルチ送信",
   "NAVIGATION": "ナビゲーション",
   "Network": "ネットワーク",
@@ -52,7 +52,7 @@
   "Show more_other": "さらに表示",
   "Signing batch...": "バッチ署名中...",
   "Simulated Network Fees": "シミュレートされたネットワーク手数料",
-  "Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.": "Solana送金は最大8桁の小数点をサポートしており、これを超えると失敗します。",
+  "Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.": "Solanaの送金は小数点第8桁まで対応しています。(9桁目以降の場合はエラーとなります)",
   "Terms of Service": "利用規約",
   "The lowest across the network, each transaction only requires %n% SOL.": "各トランザクションの手数料 : %n% SOL (Solanaネットワーク最安値)",
   "This site is protected by reCAPTCHA and the Google": "このサイトはreCAPTCHAによって保護されており、Googleの",
@@ -103,5 +103,8 @@
   "Copied !": "コピーしました！",
   "Copy Address": "アドレスをコピー",
   "Refresh token list": "トークンリストを更新",
-  "Refreshing...": "更新中..."
+  "Refreshing...": "更新中...",
+  "Loading more tokens...": "さらにトークンを読み込み中...",
+  "Unknown": "不明",
+  "Unknown Token": "不明なトークン"
 }
