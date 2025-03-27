@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm i
+          npm ci
 
       - name: Copy .env
         run: cp .env.demo .env
