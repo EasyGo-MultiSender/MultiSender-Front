@@ -1534,6 +1534,14 @@ const Sender: React.FC = () => {
                   gap: 2,
                 }}
               >
+                <Typography
+                  variant="h6"
+                  mb={2}
+                  textAlign="center"
+                  fontWeight={600}
+                >
+                  {t('Wallet Address')}
+                </Typography>
                 <WalletMultiButton
                   style={{
                     width: '280px',
@@ -1557,7 +1565,7 @@ const Sender: React.FC = () => {
                       lineHeight: '36px',
                     }}
                   >
-                    Please connect your wallet
+                    {t('Please connect your wallet')}
                   </span>
                 </WalletMultiButton>
               </Box>
@@ -1702,12 +1710,14 @@ const Sender: React.FC = () => {
                   <MenuItem disabled>
                     <Box display="flex" alignItems="center" py={1}>
                       <CircularProgress size={20} sx={{ mr: 2 }} />
-                      <Typography>トークンを読み込み中...</Typography>
+                      <Typography>
+                        {t('Loading token information...')}
+                      </Typography>
                     </Box>
                   </MenuItem>
                 ) : tokensWithMetadata.length === 0 && !isLoading ? (
                   <MenuItem disabled>
-                    <Typography color="text.secondary">
+                    <Typography color={COLORS.GRAY.LIGHT}>
                       SPLトークンが見つかりません
                     </Typography>
                   </MenuItem>
@@ -1734,7 +1744,7 @@ const Sender: React.FC = () => {
                         />
                       </ListItemAvatar>
                       <ListItemText
-                        primary={`${token.metadata?.symbol || 'Unknown'} - ${token.metadata?.name || 'Unknown Token'}`}
+                        primary={`${token.metadata?.symbol || t('Unknown')} - ${token.metadata?.name || t('Unknown Token')}`}
                         secondary={`${token.account.mint.slice(0, 6)}...${token.account.mint.slice(-6)}`}
                         sx={{
                           '& .MuiListItemText-secondary': {
@@ -1751,7 +1761,7 @@ const Sender: React.FC = () => {
                   <MenuItem disabled>
                     <Box display="flex" alignItems="center" py={1}>
                       <CircularProgress size={20} sx={{ mr: 2 }} />
-                      <Typography>さらにトークンを読み込み中...</Typography>
+                      <Typography>{t('Loading more tokens...')}</Typography>
                     </Box>
                   </MenuItem>
                 )}
@@ -1775,7 +1785,9 @@ const Sender: React.FC = () => {
                       justifyContent="center"
                     >
                       <Typography fontWeight="bold">
-                        {isLoading ? 'Refreshing...' : 'Refresh token list'}
+                        {isLoading
+                          ? t('Refreshing...')
+                          : t('Refresh token list')}
                       </Typography>
                       {isLoading && (
                         <CircularProgress size={16} sx={{ ml: 1 }} />
@@ -1795,10 +1807,17 @@ const Sender: React.FC = () => {
                 color={COLORS.PURPLE.LIGHT}
               >
                 {t('Recipient Addresses and Amounts')}
-                <br />
-                {t(
-                  'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
-                )}
+                <Typography
+                  variant="body2"
+                  fontWeight={400}
+                  mb={1}
+                  fontSize={12}
+                  color={COLORS.PURPLE.LIGHT}
+                >
+                  {t(
+                    'Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.'
+                  )}
+                </Typography>
                 {/* WalletAddress上限についてテキスト表示する
                 <br />
                 {t('The upper limit of the wallet address is')}{' '}
@@ -1812,7 +1831,7 @@ const Sender: React.FC = () => {
                 mt={2}
                 mb={1}
                 display="block"
-                fontSize={16}
+                fontSize={14}
                 fontWeight={500}
               >
                 {t('Format: address,amount (one entry per line)')}
@@ -2416,7 +2435,6 @@ const Sender: React.FC = () => {
                         borderRadius: '6px',
                         minWidth: 'auto',
                         padding: '5px 10px',
-                        width: '110px',
                         height: '32px',
                         marginTop: '8px',
                         background: COLORS.PURPLE.MEDIUM_BRIGHT,
@@ -2864,7 +2882,8 @@ const Sender: React.FC = () => {
               fontWeight={500}
             >
               {t(
-                'The lowest across the network, each transaction only requires 0.0075 SOL.'
+                'The lowest across the network, each transaction only requires %n% SOL.',
+                { n: parseFloat(DEPOSIT_SOL_AMOUNT).toFixed(6) }
               )}
             </Typography>
 
