@@ -58,7 +58,7 @@ const WalletAddressDisplay = memo(() => {
         </Typography>
         {connected && (
           <Tooltip
-            title={isCopied ? 'Copied !' : 'Copy Address'}
+            title={isCopied ? t('Copied !') : t('Copy Address')}
             arrow
             placement="top"
           >
@@ -92,7 +92,7 @@ const WalletAddressDisplay = memo(() => {
                   color: COLORS.PURPLE.LIGHT,
                 }}
               >
-                copy
+                {t('copy')}
               </Typography>
             </IconButton>
           </Tooltip>
