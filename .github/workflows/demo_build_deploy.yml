@@ -24,7 +24,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm ci
+          npm i
 
       - name: Copy .env
         run: cp .env.demo .env
@@ -41,7 +41,7 @@ jobs:
         env:
           DEPLOY_HOST: ${{ secrets.DEMO_DEPLOY_HOST }}
           DEPLOY_USER: ${{ secrets.DEMO_DEPLOY_USER }}
-          DEPLOY_PATH: '/var/www/vhosts/dev-multisender.gz-dev.com_test/public'
+          DEPLOY_PATH: '/var/www/vhosts/dev-multisender.gz-dev.com/public'
         run: |
           # ホストキーのチェックをスキップするための設定
           mkdir -p ~/.ssh
