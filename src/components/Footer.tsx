@@ -134,7 +134,7 @@ const Footer: React.FC = () => {
                 mr: 1.0,
               }}
             >
-              Contact Us
+              {t('Contact Us')}
             </Typography>
 
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.2 }}>
@@ -194,7 +194,7 @@ const Footer: React.FC = () => {
                 fontWeight: 500,
               }}
             >
-              Help Center
+              {t('Help Center')}
             </Typography>
           </Button>
         </Box>
