@@ -24,10 +24,15 @@ jobs:
   env:
     name: Get Environment Variables
     runs-on: ubuntu-latest
+    outputs:
+      AWS_PROD_REGION: ${{ steps.set-env-vars.outputs.AWS_PROD_REGION }}
+      AWS_PROD_INSTANCE_ID: ${{ steps.set-env-vars.outputs.AWS_PROD_INSTANCE_ID }}
+      AWS_PROD_ACCESS_KEY_ID: ${{ steps.set-env-vars.outputs.AWS_PROD_ACCESS_KEY_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
       - name: Get Environment
+        id: set-env-vars
         uses: ./.github/actions/env/aws/prod
 
   deploy:
