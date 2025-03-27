@@ -153,171 +153,199 @@ const Header = memo(() => {
             justifyContent: 'space-between',
           }}
         >
-          <IconButton
-            edge="start"
-            color="inherit"
-            aria-label="logo"
-            component={Link}
-            to="/"
-            sx={{ padding: '4px' }}
-          >
-            <img
-              src="/symbolmark.svg"
-              alt="logo"
-              style={{ width: '1.6rem', marginLeft: '4px' }}
-            />
-          </IconButton>
-
-          <Typography
-            variant="h6"
+          <Box
             sx={{
-              flexGrow: 1,
-              marginLeft: 2,
-              fontSize: isMobile ? '1.5rem' : '1.2rem',
-              display: 'flex',
-            }}
-          >
-            <Link
-              to="/sender"
-              onClick={() => setNavValue('Multi Sender')}
-              style={{ marginTop: '1rem' }}
-            >
-              <img src="/title.png" alt="logo" style={{ width: '100px' }} />
-            </Link>
-          </Typography>
-
-          {!isMobile && (
-            <Tabs
-              value={navValue}
-              onChange={navHandleChange}
-              textColor="inherit"
-              aria-label="navigation tabs"
-              sx={{
-                position: 'absolute',
-                left: '42%',
-                transform: 'translateX(-50%)',
-                minHeight: '6vh',
-                '& .MuiTabs-indicator': {
-                  backgroundColor: '#47dded',
-                  transition: 'none',
-                },
-                '& .MuiTab-root': {
-                  minHeight: '6vh',
-                  padding: '0',
-                  paddingRight: '16px',
-                  fontSize: '1rem',
-                },
-                '& .MuiTab-root:not(.Mui-selected):hover': {
-                  color: '#47dded',
-                  opacity: 0.7,
-                },
-              }}
-            >
-              <Tab
-                disableRipple
-                value="Multi Sender"
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <img
-                      src="/icons/sender-active.svg"
-                      alt="sender"
-                      style={{
-                        width: '1rem',
-                        marginRight: '0.3rem',
-                        filter:
-                          navValue !== 'Multi Sender'
-                            ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
-                            : 'none',
-                      }}
-                    />
-                    <span
-                      style={{
-                        color:
-                          navValue === 'Multi Sender'
-                            ? COLORS.BLUE.TURQUOISE
-                            : COLORS.PURPLE.LIGHT,
-                      }}
-                    >
-                      Multi Sender
-                    </span>
-                  </Box>
-                }
-                component={Link}
-                to="/sender"
-                sx={{
-                  fontSize: '0.8rem !important',
-                  marginRight: '4rem',
-                }}
-              />
-              <Tab
-                disableRipple
-                value="History"
-                label={
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <img
-                      src={'/icons/history-active.svg'}
-                      alt="history"
-                      style={{
-                        width: '1rem',
-                        marginRight: '0.3rem',
-                        filter:
-                          navValue !== 'History'
-                            ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
-                            : 'none',
-                      }}
-                    />
-                    <span
-                      style={{
-                        color:
-                          navValue === 'History'
-                            ? COLORS.BLUE.TURQUOISE
-                            : COLORS.PURPLE.LIGHT,
-                      }}
-                    >
-                      {t('History')}
-                    </span>
-                  </Box>
-                }
-                component={Link}
-                to="/history"
-                sx={{
-                  fontSize: '0.8rem !important',
-                  marginRight: '2rem',
-                }}
-              />
-            </Tabs>
-          )}
-
-          {!isMobile && (
-            <>
-              <TranslateSelector />
-              <Box sx={{ mx: 2 }}>
-                <NetworkSelector />
-              </Box>
-            </>
-          )}
-
-          {/* Wallet button - completely redesigned for mobile */}
-          <WalletMultiButton
-            style={{
-              marginRight: isMobile ? '10px' : '0',
-              alignSelf: 'center',
-              width: '160px',
-              height: '36px',
-              padding: '0 12px',
-              fontSize: isMobile ? '14px' : '16px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
               gap: '8px',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
             }}
           >
-            {getWalletButtonContent()}
-          </WalletMultiButton>
+            <IconButton
+              edge="start"
+              color="inherit"
+              aria-label="logo"
+              component={Link}
+              to="/"
+              sx={{ padding: '4px' }}
+            >
+              <img
+                src="/symbolmark.svg"
+                alt="logo"
+                style={{ width: '1.6rem', marginLeft: '4px' }}
+              />
+            </IconButton>
 
+            <Typography
+              sx={{
+                flexGrow: 1,
+                marginLeft: 2,
+                fontSize: isMobile ? '1.5rem' : '1.2rem',
+                display: 'flex',
+              }}
+            >
+              <Link
+                to="/sender"
+                onClick={() => setNavValue('Multi Sender')}
+                style={{ marginTop: '1rem' }}
+              >
+                <img src="/title.png" alt="logo" style={{ width: '100px' }} />
+              </Link>
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              width: '100%',
+              [`@media (max-width: 1200px)`]: {
+                justifyContent: 'flex-end',
+              },
+            }}
+          >
+            {!isMobile && (
+              <Tabs
+                value={navValue}
+                onChange={navHandleChange}
+                textColor="inherit"
+                aria-label="navigation tabs"
+                sx={{
+                  marginLeft: '50%',
+                  minHeight: '6vh',
+
+                  [`@media (max-width: 1200px)`]: {
+                    marginLeft: '20px',
+                  },
+
+                  '& .MuiTabs-indicator': {
+                    backgroundColor: '#47dded',
+                    transition: 'none',
+                  },
+                  '& .MuiTab-root': {
+                    minHeight: '6vh',
+                    padding: '0',
+                    paddingRight: '5px',
+                    fontSize: '1rem',
+                  },
+                  '& .MuiTab-root:not(.Mui-selected):hover': {
+                    color: COLORS.GRAY.LIGHT,
+                    opacity: 1,
+                  },
+                }}
+              >
+                <Tab
+                  disableRipple
+                  value="Multi Sender"
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <img
+                        src="/icons/sender-active.svg"
+                        alt="sender"
+                        style={{
+                          width: '1rem',
+                          marginRight: '0.3rem',
+                          filter:
+                            navValue !== 'Multi Sender'
+                              ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                              : 'none',
+                        }}
+                      />
+                      <span
+                        style={{
+                          color:
+                            navValue === 'Multi Sender'
+                              ? COLORS.BLUE.TURQUOISE
+                              : COLORS.PURPLE.LIGHT,
+                        }}
+                      >
+                        Multi Sender
+                      </span>
+                    </Box>
+                  }
+                  component={Link}
+                  to="/sender"
+                  sx={{
+                    fontSize: '0.8rem !important',
+                    marginRight: '2rem',
+                  }}
+                />
+                <Tab
+                  disableRipple
+                  value="History"
+                  label={
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                      <img
+                        src={'/icons/history-active.svg'}
+                        alt="history"
+                        style={{
+                          width: '1rem',
+                          marginRight: '0.3rem',
+                          filter:
+                            navValue !== 'History'
+                              ? `brightness(0) saturate(100%) invert(77%) sepia(11%) saturate(396%) hue-rotate(202deg) brightness(98%) contrast(87%)`
+                              : 'none',
+                        }}
+                      />
+                      <span
+                        style={{
+                          color:
+                            navValue === 'History'
+                              ? COLORS.BLUE.TURQUOISE
+                              : COLORS.PURPLE.LIGHT,
+                        }}
+                      >
+                        {t('History')}
+                      </span>
+                    </Box>
+                  }
+                  component={Link}
+                  to="/history"
+                  sx={{
+                    fontSize: '0.8rem !important',
+                  }}
+                />
+              </Tabs>
+            )}
+          </Box>
+
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            {!isMobile && (
+              <>
+                <TranslateSelector />
+                <Box sx={{ mx: 2 }}>
+                  <NetworkSelector />
+                </Box>
+              </>
+            )}
+
+            {/* Wallet button - completely redesigned for mobile */}
+            <WalletMultiButton
+              style={{
+                marginRight: isMobile ? '10px' : '0',
+                alignSelf: 'center',
+                width: '160px',
+                height: '36px',
+                padding: '0 12px',
+                fontSize: isMobile ? '14px' : '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
+              {getWalletButtonContent()}
+            </WalletMultiButton>
+          </Box>
           <style>
             {`
               .wallet-adapter-button img {
