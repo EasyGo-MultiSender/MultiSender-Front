@@ -3,6 +3,7 @@ import { NodeGlobalsPolyfillPlugin } from '@esbuild-plugins/node-globals-polyfil
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { splashScreen } from 'vite-plugin-splash-screen';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
@@ -16,6 +17,12 @@ export default defineConfig({
         Buffer: true,
         process: true,
       },
+    }),
+    splashScreen({
+      logoSrc: 'logo.html',
+      loaderType: 'dots',
+      loaderBg: '#ffffff',
+      splashBg: '#17062e',
     }),
   ],
   server: {

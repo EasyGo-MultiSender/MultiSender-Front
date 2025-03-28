@@ -1,7 +1,8 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family:
+    'Poppins', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: 500;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -13,13 +14,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+/* すべての要素にPoppinsフォントを強制適用 */
+* {
+  font-family:
+    'Poppins', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif !important;
 }
 
 body {
@@ -35,20 +33,55 @@ h1 {
   line-height: 1.1;
 }
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+.MuiCard-root {
+  background-color: #251c59 !important;
+  color: #ffffff !important;
+  border: 1px solid #7867ea !important;
+  border-radius: 20px !important;
 }
-button:hover {
-  border-color: #646cff;
+
+.MuiMenuItem-root {
+  color: #ffffff !important;
+  transition: all 0.1s ease;
 }
+
+.MuiMenuItem-root:hover {
+  background-color: #362d7e !important;
+}
+
+.MuiMenuItem-root.Mui-selected {
+  background-color: #4b3daf !important;
+  color: #ffffff !important;
+}
+
+/* MUIリップルエフェクトのカスタマイズ */
+.MuiTouchRipple-root {
+  color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.MuiTouchRipple-rippleVisible {
+  animation-duration: 400ms !important;
+}
+
+.MuiTouchRipple-child {
+  background-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* ドロップダウンメニュー全体の背景色 */
+.MuiPaper-root.MuiMenu-paper,
+.MuiPaper-root.MuiPopover-paper {
+  border-radius: 8px !important;
+  background-color: #292352 !important;
+  border: 0.05px solid #7867ea6a !important;
+}
+
+/* MenuListの背景色も設定
+.MuiList-root.MuiMenu-list,
+.MuiList-root.MuiMenuList-root {
+  background-color: rgba(120, 103, 234, 0.08) !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+} */
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -60,5 +93,84 @@ button:hover {
   }
   button {
     background-color: #f9f9f9;
+  }
+}
+
+/* Connect Wallet ボタンスタイル */
+.wallet-adapter-button.wallet-adapter-button-trigger {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0;
+  gap: 10px;
+
+  width: 170px;
+  height: 36px;
+
+  background: linear-gradient(90deg, #fc00ff 0%, #6a3fea 100%);
+  border-radius: 8px;
+
+  color: white;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 14.4px;
+}
+
+/* ウォレット接続後のボタンスタイル */
+.wallet-adapter-button.wallet-adapter-button-trigger.wallet-adapter-button-connected {
+  justify-content: center !important;
+  text-align: center;
+  padding: 0 12px !important;
+}
+
+/* Phantomアイコンのスタイル調整 */
+.wallet-adapter-button-start-icon {
+  margin-right: 8px !important;
+  margin-left: 12px !important;
+  padding-left: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallet-adapter-button-trigger span {
+  margin-left: 4px !important;
+}
+
+/* 接続済み状態では標準のアイコンを非表示にする */
+.wallet-adapter-button-connected .wallet-adapter-button-start-icon {
+  display: none !important;
+}
+
+.wallet-adapter-button.wallet-adapter-button-trigger:hover {
+  background: linear-gradient(90deg, #e700e6 0%, #5f37d5 100%) !important;
+  box-shadow: 0 4px 10px rgba(106, 63, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+/* モバイル時のヘッダーのwalletのphantomなどのボタンのスタイルを変更 */
+@media (max-width: 767px) {
+  .wallet-adapter-button-trigger span:not(.wallet-adapter-button-start-icon) {
+    display: none !important;
+  }
+
+  .wallet-adapter-button.wallet-adapter-button-trigger {
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    position: relative !important;
+    border-radius: 8px !important;
+  }
+
+  .wallet-adapter-button-trigger .wallet-adapter-button-start-icon {
+    margin: 0 !important;
+    position: absolute !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
   }
 }

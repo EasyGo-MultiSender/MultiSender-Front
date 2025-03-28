@@ -1,6 +1,5 @@
-// src/hooks/useBalance.ts
+import { Connection, PublicKey } from '@solana/web3.js';
 import { useState, useEffect, useCallback } from 'react';
-import { Connection, PublicKey } from "@solana/web3.js";
 
 export const useBalance = (
   connection: Connection,
@@ -20,7 +19,7 @@ export const useBalance = (
       const lamports = await connection.getBalance(publicKey);
       setBalance(lamports / 10 ** 9);
     } catch (error) {
-      console.error("Failed to fetch balance:", error);
+      console.error('Failed to fetch balance:', error);
       setBalance(null);
     } finally {
       setLoading(false);
@@ -37,7 +36,7 @@ export const useBalance = (
       (accountInfo) => {
         setBalance(accountInfo.lamports / 10 ** 9);
       },
-      "confirmed"
+      'confirmed'
     );
 
     // 初回残高取得

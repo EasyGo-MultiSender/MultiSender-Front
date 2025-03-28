@@ -1,0 +1,154 @@
+name: Staging Deployment
+
+on:
+  workflow_call:
+    inputs:
+      app-path:
+        description: 'Path to the application on the target server'
+        required: false
+        type: string
+        default: '/var/www/vhosts/stg-multisender.easy-go.me/public'
+      artifact-name:
+        description: 'Name of the artifact to download'
+        required: false
+        type: string
+        default: 'build-output'
+      artifact-path:
+        description: 'Path to the artifact to download'
+        required: false
+        type: string
+        default: 'build'
+
+jobs:
+
+  env:
+    name: Get Environment Variables
+    runs-on: ubuntu-latest
+    outputs:
+      AWS_STG_REGION: ${{ steps.set-env-vars.outputs.AWS_STG_REGION }}
+      AWS_STG_INSTANCE_ID: ${{ steps.set-env-vars.outputs.AWS_STG_INSTANCE_ID }}
+      AWS_STG_ACCESS_KEY_ID: ${{ steps.set-env-vars.outputs.AWS_STG_ACCESS_KEY_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Get Environment
+        id: set-env-vars
+        uses: ./.github/actions/env/aws/stg
+
+  deploy:
+    needs: env
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set Environment Variables
+        id: set-env-vars
+        run: |
+          echo "AWS_REGION=${{ needs.env.outputs.AWS_STG_REGION }}" >> $GITHUB_OUTPUT
+          echo "AWS_INSTANCE_ID=${{ needs.env.outputs.AWS_STG_INSTANCE_ID }}" >> $GITHUB_OUTPUT
+          echo "AWS_ACCESS_KEY_ID=${{ needs.env.outputs.AWS_STG_ACCESS_KEY_ID }}" >> $GITHUB_OUTPUT
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_STG_SECRET_ACCESS_KEY }}" >> $GITHUB_OUTPUT
+          echo "AWS_DEPLOY_BUCKET=multisender-deploy" >> $GITHUB_OUTPUT
+          echo "AWS_DEPLOY_PREFIX=deployments" >> $GITHUB_OUTPUT
+          
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ steps.set-env-vars.outputs.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ steps.set-env-vars.outputs.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ steps.set-env-vars.outputs.AWS_REGION }}
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact-name }}
+          path: ${{ inputs.artifact-path }}
+
+      - name: Upload to S3
+        id: upload-to-s3
+        run: |
+          echo "::group::S3へのアップロード"
+          cd ${{ inputs.artifact-path }}
+          
+          # ビルド成果物の確認（オプション）
+          echo "ビルド成果物のファイル一覧:"
+          ls -la
+          
+          # S3バケット名とデプロイキーを設定
+          DEPLOY_BUCKET="${{ steps.set-env-vars.outputs.AWS_DEPLOY_BUCKET }}"
+          TIMESTAMP=$(date +%Y%m%d%H%M%S)
+          DEPLOY_KEY="deployments/${TIMESTAMP}-deployment-package.tar.gz"
+          
+          echo "アップロード先: s3://${DEPLOY_BUCKET}/${DEPLOY_KEY}"
+          
+          # デプロイパッケージを直接圧縮してS3にアップロード
+          echo "デプロイパッケージを圧縮してS3にアップロード中..."
+          tar -czf - * | aws s3 cp - s3://${DEPLOY_BUCKET}/${DEPLOY_KEY}
+          
+          # アップロード確認
+          echo "アップロード確認中..."
+          aws s3 ls s3://${DEPLOY_BUCKET}/${DEPLOY_KEY}
+          echo "::endgroup::"
+          
+          # 出力として保存先のS3パスを設定
+          echo "s3_bucket=${DEPLOY_BUCKET}" >> $GITHUB_OUTPUT
+          echo "s3_key=${DEPLOY_KEY}" >> $GITHUB_OUTPUT
+          echo "timestamp=${TIMESTAMP}" >> $GITHUB_OUTPUT
+
+      - name: Deploy using SSM
+        run: |
+          echo "::group::SSMを使用したデプロイ実行"
+          # SSMを使用してデプロイスクリプトを実行
+          echo "SSMコマンド送信中... (インスタンスID: ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }})"
+          
+          COMMAND_ID=$(aws ssm send-command \
+            --instance-ids ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }} \
+            --document-name "AWS-RunShellScript" \
+            --parameters '{
+              "commands": [
+                "echo \"デプロイ開始: $(date)\"",
+                "echo \"デプロイ先ディレクトリ: ${{ inputs.app-path }}\"",
+                
+                "# ディレクトリ準備",
+                "sudo su deploy",
+                "mkdir -p ${{ inputs.app-path }} && cd ${{ inputs.app-path }}",
+                "echo \"既存ファイルのクリーンアップ中...\"",
+                "rm -rf --preserve-root ${{ inputs.app-path }}/* || true",
+                
+                "# S3からデプロイパッケージをダウンロード",
+                "echo \"S3からデプロイパッケージをダウンロード中...\"",
+                "aws s3 cp s3://${{ steps.upload-to-s3.outputs.s3_bucket }}/${{ steps.upload-to-s3.outputs.s3_key }} ${{ inputs.app-path }}/deployment-package.tar.gz",
+                
+                "# パッケージ展開",
+                "echo \"デプロイパッケージを展開中...\"",
+                "tar -xzf ${{ inputs.app-path }}/deployment-package.tar.gz",
+                "rm ${{ inputs.app-path }}/deployment-package.tar.gz",
+                
+                "# アプリケーション再起動",
+                "echo \"PM2でアプリケーション再起動中...\"",
+                "pm2 restart npm --name multisender-pm2 -- run stg",
+                "pm2 ls",
+                
+                "# クリーンアップ - 古いデプロイパッケージを削除",
+                "echo \"S3の一時ファイルをクリーンアップ中...\"",
+                "aws s3 rm s3://${{ steps.upload-to-s3.outputs.s3_bucket }}/${{ steps.upload-to-s3.outputs.s3_key }}",
+                
+                "echo \"デプロイ完了: $(date)\""
+              ]
+            }' \
+            --output text --query "Command.CommandId")
+          
+          echo "SSMコマンドID: ${COMMAND_ID}"
+
+          echo "::endgroup::" 
+          echo "::group::コマンド実行状況確認中..."
+          
+          # コマンド実行完了を待機
+          aws ssm wait command-executed --command-id ${COMMAND_ID} --instance-id ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }}
+          
+          # 結果の取得と表示
+          echo "コマンド実行結果:"
+          aws ssm get-command-invocation \
+            --command-id ${COMMAND_ID} \
+            --instance-id ${{ steps.set-env-vars.outputs.AWS_INSTANCE_ID }} \
+            --output text --query "StandardOutputContent"
+          echo "::endgroup::"

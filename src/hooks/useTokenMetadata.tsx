@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { Metaplex } from '@metaplex-foundation/js';
 import { Connection, PublicKey } from '@solana/web3.js';
 import {
   unpackMint,
@@ -7,17 +7,36 @@ import {
   ExtensionType,
 } from '@solana/spl-token';
 import { unpack as unpackToken2022Metadata } from '@solana/spl-token-metadata';
-import { Metaplex } from '@metaplex-foundation/js';
+import { useCallback, useRef } from 'react';
 
 // const METAPLEX_PROGRAM_ID = new PublicKey(import.meta.env.VITE_METAPLEX_PROGRAM_ID);
 const TOKEN_PROGRAM_ID = new PublicKey(import.meta.env.VITE_TOKEN_PROGRAM_ID);
 const TOKEN_2022_PROGRAM_ID = new PublicKey(
   import.meta.env.VITE_TOKEN_2022_PROGRAM_ID
 );
+import { stopFetchMetadata } from '@/pages/Sender/Sender';
 
-// SPL-Tokenの判別に使用するデシマル値の基準
-// NFTは通常デシマルが0
-const SPL_TOKEN_MIN_DECIMALS = 1;
+// TokenStandardの値の意味
+enum TokenStandard {
+  NonFungible = 0, // NFT
+  // Fungible = 1,            // SPL
+  // FungibleAsset = 2,       // SPL
+  NonFungibleEdition = 3, // NFT
+  ProgrammableNonFungible = 4, // NFT
+}
+
+// NFTかどうかを判断する関数
+function isNFTbyTokenStandard(
+  tokenStandard: number | null | undefined
+): boolean {
+  if (tokenStandard === null || tokenStandard === undefined) return false;
+
+  return (
+    tokenStandard === TokenStandard.NonFungible ||
+    tokenStandard === TokenStandard.NonFungibleEdition ||
+    tokenStandard === TokenStandard.ProgrammableNonFungible
+  );
+}
 
 export interface TokenMetadata {
   mint: PublicKey;
@@ -47,6 +66,8 @@ interface TokenList {
 
 // トークンリストのキャッシュ
 const tokenListCache = new Map<string, TokenList>();
+
+const SPL_TOKEN_MIN_DECIMALS = 1; // NFT判定用の最小デシマル値を定義
 
 // 1. @solana/spl-token の token-list(オフチェーン)からtokenのmetadataを取得
 export const useOffChainTokenMetadata = (connection: Connection) => {
@@ -81,6 +102,9 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
             if (mintInfo) {
               // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
               if (mintInfo.decimals < SPL_TOKEN_MIN_DECIMALS) {
+                console.log(
+                  `Token ${mintAddress} detected as NFT (decimals: ${mintInfo.decimals})`
+                );
                 return null;
               }
 
@@ -184,12 +208,21 @@ export const useTokenMetadata = (connection: Connection) => {
   const { fetchOffChainMetadata } = useOffChainTokenMetadata(connection);
 
   const fetchMetadata = useCallback(
-    async (mintAddress: string): Promise<TokenMetadata | null> => {
+    async (
+      mintAddress: string,
+      stopChecking: boolean = false
+    ): Promise<TokenMetadata | null> => {
       try {
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
+
         // 既にキャッシュ済みならそれを返す
         if (metadataCacheRef.current.has(mintAddress)) {
           return metadataCacheRef.current.get(mintAddress) || null;
         }
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // Mint PublicKey を生成
         const mintPubkey = new PublicKey(mintAddress);
@@ -206,6 +239,9 @@ export const useTokenMetadata = (connection: Connection) => {
           return null; // トークンプログラムでない場合はスキップ
         }
 
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
+
         // ミント情報を取得してデシマルをチェック
         let decimals = 0;
         try {
@@ -213,11 +249,17 @@ export const useTokenMetadata = (connection: Connection) => {
             ? unpackMint(mintPubkey, accountInfo, TOKEN_PROGRAM_ID)
             : unpackMint(mintPubkey, accountInfo, TOKEN_2022_PROGRAM_ID);
 
+          // 読み込みストップ！
+          if (stopChecking && stopFetchMetadata) return null;
+
           if (mintInfo) {
             decimals = mintInfo.decimals;
 
             // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
             if (decimals < SPL_TOKEN_MIN_DECIMALS) {
+              console.log(
+                `Token ${mintAddress} detected as NFT (decimals: ${decimals})`
+              );
               return null;
             }
           } else {
@@ -228,16 +270,25 @@ export const useTokenMetadata = (connection: Connection) => {
           return null;
         }
 
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
+
         let tokenMetadata: TokenMetadata | null = null;
 
         // 1. まずオフチェーンのトークンリストから取得
         tokenMetadata = await fetchOffChainMetadata(mintAddress);
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // 2. オフチェーンで見つからなかった場合、TOKEN_PROGRAM_ID (Metaplex) で試す
         if (!tokenMetadata && accountInfo.owner.equals(TOKEN_PROGRAM_ID)) {
           try {
             // Metaplex SDK を初期化
             const metaplex = new Metaplex(connection);
+
+            // 読み込みストップ！
+            if (stopChecking && stopFetchMetadata) return null;
 
             // NFT or SFT(=fungible token) いずれでも findByMint が使える
             // ここでエラーが発生するため、try-catchで囲む
@@ -246,8 +297,25 @@ export const useTokenMetadata = (connection: Connection) => {
                 .nfts()
                 .findByMint({ mintAddress: mintPubkey });
 
+              // tokenStandardでNFTかどうかを判断
+              // 0: NonFungible, 3: NonFungibleEdition, 4: ProgrammableNonFungible はNFT
+              const isNFT = isNFTbyTokenStandard(nftOrSft.tokenStandard);
+
+              // 読み込みストップ！
+              if (stopChecking && stopFetchMetadata) return null;
+
+              if (isNFT) {
+                console.log(
+                  `Token ${mintAddress} is an NFT with tokenStandard ${nftOrSft.tokenStandard}`
+                );
+                return null; // NFTの場合はnullを返してSPLリストに表示しない
+              }
+
               if (nftOrSft.uri) {
                 try {
+                  // 読み込みストップ！
+                  if (stopChecking && stopFetchMetadata) return null;
+
                   // fetchでレスポンスを取得して、Content-Typeを確認
                   const response = await fetch(nftOrSft.uri);
                   const contentType =
@@ -273,6 +341,9 @@ export const useTokenMetadata = (connection: Connection) => {
                     resolvedUri = nftOrSft.uri;
                   }
 
+                  // 読み込みストップ！
+                  if (stopChecking && stopFetchMetadata) return null;
+
                   // URIが見つからない場合は返却しない
                   if (resolvedUri) {
                     tokenMetadata = {
@@ -296,6 +367,9 @@ export const useTokenMetadata = (connection: Connection) => {
                     decimals: decimals,
                   };
                 }
+
+                // 読み込みストップ！
+                if (stopChecking && stopFetchMetadata) return null;
               }
             } catch (metaplexError) {
               // AccountNotFoundError が発生する場合、このトークンはMetaplexメタデータを持っていない
@@ -328,6 +402,9 @@ export const useTokenMetadata = (connection: Connection) => {
             };
           }
         }
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // 3. TOKEN_2022_PROGRAM_ID の場合
         if (!tokenMetadata && accountInfo.owner.equals(TOKEN_2022_PROGRAM_ID)) {
@@ -365,6 +442,9 @@ export const useTokenMetadata = (connection: Connection) => {
             };
           }
         }
+
+        // 読み込みストップ！
+        if (stopChecking && stopFetchMetadata) return null;
 
         // メタデータが見つかった場合はキャッシュする (useRefを使用)
         if (tokenMetadata) {
@@ -405,11 +485,6 @@ async function findToken2022Metadata(
   decimals: number
 ): Promise<TokenMetadata | null> {
   try {
-    // デシマルチェック - SPL_TOKEN_MIN_DECIMALS未満はNFTとみなしてスキップ
-    if (decimals < SPL_TOKEN_MIN_DECIMALS) {
-      return null;
-    }
-
     const accountInfo = await connection.getAccountInfo(mintPubkey);
     if (!accountInfo) return null;
 
