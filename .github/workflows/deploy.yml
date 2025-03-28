@@ -14,7 +14,7 @@ on:
       app-path:
         description: 'Select App Path'
         required: true
-        default: 'staging'
+        default: '/var/www/vhosts/multisender.easy-go.me_test_deploy/public'
         type: choice
         options:
           - '/var/www/vhosts/multisender.easy-go.me/public'

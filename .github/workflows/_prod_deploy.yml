@@ -18,18 +18,34 @@ on:
         required: false
         type: string
         default: 'build'
-        
+
 jobs:
+
+  env:
+    name: Get Environment Variables
+    runs-on: ubuntu-latest
+    outputs:
+      AWS_PROD_REGION: ${{ steps.set-env-vars.outputs.AWS_PROD_REGION }}
+      AWS_PROD_INSTANCE_ID: ${{ steps.set-env-vars.outputs.AWS_PROD_INSTANCE_ID }}
+      AWS_PROD_ACCESS_KEY_ID: ${{ steps.set-env-vars.outputs.AWS_PROD_ACCESS_KEY_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Get Environment
+        id: set-env-vars
+        uses: ./.github/actions/env/aws/prod
+
   deploy:
+    needs: env
     name: Deploy to Production
     runs-on: ubuntu-latest
     steps:
       - name: Set Environment Variables
         id: set-env-vars
         run: |
-          echo "AWS_REGION=${{ secrets.AWS_PROD_REGION }}" >> $GITHUB_OUTPUT
-          echo "AWS_INSTANCE_ID=${{ secrets.AWS_PROD_INSTANCE_ID }}" >> $GITHUB_OUTPUT
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_PROD_ACCESS_KEY_ID }}" >> $GITHUB_OUTPUT
+          echo "AWS_REGION=${{ needs.env.outputs.AWS_PROD_REGION }}" >> $GITHUB_OUTPUT
+          echo "AWS_INSTANCE_ID=${{ needs.env.outputs.AWS_PROD_INSTANCE_ID }}" >> $GITHUB_OUTPUT
+          echo "AWS_ACCESS_KEY_ID=${{ needs.env.outputs.AWS_PROD_ACCESS_KEY_ID }}" >> $GITHUB_OUTPUT
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_PROD_SECRET_ACCESS_KEY }}" >> $GITHUB_OUTPUT
           echo "AWS_DEPLOY_BUCKET=multisender-deploy" >> $GITHUB_OUTPUT
           echo "AWS_DEPLOY_PREFIX=deployments" >> $GITHUB_OUTPUT

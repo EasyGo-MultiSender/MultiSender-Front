@@ -54,7 +54,7 @@
   "Simulated Network Fees": "",
   "Solana transfers support a maximum of 8 decimal places, exceeding which will result in failure.": "",
   "Terms of Service": "",
-  "The lowest across the network, each transaction only requires 0.0075 SOL.": "",
+  "The lowest across the network, each transaction only requires %n% SOL.": "The lowest across the network, each transaction only requires %n% SOL.",
   "This site is protected by reCAPTCHA and the Google": "",
   "Token Account Creation Fees": "",
   "Token Transfer": "Token Transfer",
