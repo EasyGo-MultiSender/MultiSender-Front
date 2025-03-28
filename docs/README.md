@@ -6,18 +6,18 @@
 
 ### 1. 機能ドキュメント
 
-- [国際化(i18n)機能](./translation/README.md)
+- [国際化(i18n)機能](./translation/)
   - 言語切り替え機能の実装方法と使用方法
   - 翻訳キーの追加・管理方法
   - 新しい言語の追加手順
 
 ### 2. 運用・デプロイメント
 
-- [GitHub Actions セットアップ](./Actions/setup/README.md)
+- [GitHub Actions セットアップ](./Actions/setup/)
   - GitHub Actions用のシークレット設定
   - AWS IAM権限設定
   
-- [デプロイメント実行手順](./Actions/run/README.md)
+- [デプロイメント実行手順](./Actions/run/)
   - 本番環境・ステージング環境へのデプロイ方法
   - トラブルシューティング
 
