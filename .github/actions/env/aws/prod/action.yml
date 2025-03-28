@@ -1,0 +1,29 @@
+name: AWS Environment Variables
+author: hitsuzen-002
+description: AWS Environment Variables
+
+outputs:
+  AWS_PROD_ACCESS_KEY_ID:
+    description: 'AWS Production Access Key ID'
+    value: ${{ steps.set_env.outputs.AWS_PROD_ACCESS_KEY_ID }}
+  AWS_PROD_INSTANCE_ID:
+    description: 'AWS Production Instance ID'
+    value: ${{ steps.set_env.outputs.AWS_PROD_INSTANCE_ID }}
+  AWS_PROD_REGION:
+    description: 'AWS Production Region'
+    value: ${{ steps.set_env.outputs.AWS_PROD_REGION }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set AWS Production Environment Variables
+      id: set_env
+      env:
+        AWS_PROD_INSTANCE_ID : i-03645a95b70be4aed
+        AWS_PROD_REGION : us-east-1
+        AWS_PROD_ACCESS_KEY_ID : AKIAU72LF6A66T7M2HEJ
+      shell: bash
+      run: |
+        echo "AWS_PROD_INSTANCE_ID=${AWS_PROD_INSTANCE_ID}" >> $GITHUB_OUTPUT
+        echo "AWS_PROD_REGION=${AWS_PROD_REGION}" >> $GITHUB_OUTPUT
+        echo "AWS_PROD_ACCESS_KEY_ID=${AWS_PROD_ACCESS_KEY_ID}" >> $GITHUB_OUTPUT
