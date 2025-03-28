@@ -67,6 +67,8 @@ interface TokenList {
 // トークンリストのキャッシュ
 const tokenListCache = new Map<string, TokenList>();
 
+const SPL_TOKEN_MIN_DECIMALS = 1; // NFT判定用の最小デシマル値を定義
+
 // 1. @solana/spl-token の token-list(オフチェーン)からtokenのmetadataを取得
 export const useOffChainTokenMetadata = (connection: Connection) => {
   // キャッシュをuseRefに変更してレンダリングループを防ぐ
@@ -99,10 +101,12 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
 
             if (mintInfo) {
               // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
-              // tokenStandardを使用するためコメントアウト
-              // if (mintInfo.decimals < SPL_TOKEN_MIN_DECIMALS) {
-              //   return null;
-              // }
+              if (mintInfo.decimals < SPL_TOKEN_MIN_DECIMALS) {
+                console.log(
+                  `Token ${mintAddress} detected as NFT (decimals: ${mintInfo.decimals})`
+                );
+                return null;
+              }
 
               // Solana Token Listから情報を取得
               const tokenInfo = await fetchFromTokenList(mintAddress);
@@ -179,12 +183,10 @@ export const useOffChainTokenMetadata = (connection: Connection) => {
         );
 
         // デシマルを確認し、SPL_TOKEN_MIN_DECIMALS未満のトークン（NFT）を除外
-        // tokenStandardを使用するためコメントアウト
-        // if (
-        //   token &&
-        //   (!token.decimals || token.decimals >= SPL_TOKEN_MIN_DECIMALS)
-        // ) {
-        if (token) {
+        if (
+          token &&
+          (!token.decimals || token.decimals >= SPL_TOKEN_MIN_DECIMALS)
+        ) {
           return token;
         }
       }
@@ -254,10 +256,12 @@ export const useTokenMetadata = (connection: Connection) => {
             decimals = mintInfo.decimals;
 
             // NFTの場合はスキップ (デシマルが0のトークンはNFTと見なす)
-            // tokenStandardを使用するためコメントアウト
-            // if (decimals < SPL_TOKEN_MIN_DECIMALS) {
-            //   return null;
-            // }
+            if (decimals < SPL_TOKEN_MIN_DECIMALS) {
+              console.log(
+                `Token ${mintAddress} detected as NFT (decimals: ${decimals})`
+              );
+              return null;
+            }
           } else {
             return null; // ミント情報が取得できない場合はスキップ
           }
