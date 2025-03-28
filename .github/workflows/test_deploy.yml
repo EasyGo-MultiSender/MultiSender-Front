@@ -10,10 +10,8 @@ jobs:
     name: Vars Job
     runs-on: ubuntu-latest
     outputs:
-      environment: 'production'
       artifact-name: 'build-output'
       artifact-path: 'build'
-      app-path: '/var/www/vhosts/multisender.easy-go.me_test_deploy'
       node-version: '22'
     steps:
       - run: echo "Set production environment variables"
@@ -52,7 +50,7 @@ jobs:
     steps:
       - run: echo '${{ toJSON(github) }}'
 
-  deploy:
+  deploy_prod:
     name: Deploy Job ( Prod )
     needs:
       - vars
@@ -60,7 +58,19 @@ jobs:
     if: needs.vars.outputs.environment == 'production'
     uses: ./.github/workflows/_prod_deploy.yml
     with:
-      app-path: ${{ needs.vars.outputs.app-path }}
+      app-path: '/var/www/vhosts/multisender.easy-go.me_test_deploy'
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
+    secrets: inherit
+
+  deploy_stg:
+    name: Deploy Job ( Stg )
+    needs:
+      - vars
+      - dummy_build
+    uses: ./.github/workflows/_stg_deploy.yml
+    with:
+      app-path: '/var/www/vhosts/stg-multisender.easy-go.me_test_deploy'
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
       artifact-path: ${{ needs.vars.outputs.artifact-path }}
     secrets: inherit
