@@ -5,18 +5,19 @@ description: AWS Environment Variables
 outputs:
   AWS_PROD_ACCESS_KEY_ID:
     description: 'AWS Production Access Key ID'
-    value: ${{ inputs.AWS_PROD_ACCESS_KEY_ID }}
+    value: ${{ steps.set_env.outputs.AWS_PROD_ACCESS_KEY_ID }}
   AWS_PROD_INSTANCE_ID:
     description: 'AWS Production Instance ID'
-    value: ${{ inputs.AWS_PROD_INSTANCE_ID }}
+    value: ${{ steps.set_env.outputs.AWS_PROD_INSTANCE_ID }}
   AWS_PROD_REGION:
     description: 'AWS Production Region'
-    value: ${{ inputs.AWS_PROD_REGION }}
+    value: ${{ steps.set_env.outputs.AWS_PROD_REGION }}
 
 runs:
   using: "composite"
   steps:
     - name: Set AWS Production Environment Variables
+      id: set_env
       env:
         AWS_PROD_INSTANCE_ID : i-083489e73f725bded
         AWS_PROD_REGION : us-east-1
