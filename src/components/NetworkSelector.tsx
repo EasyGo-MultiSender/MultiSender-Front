@@ -33,10 +33,9 @@ export const NetworkSelector = () => {
   const handleNetworkChange = (network: WalletAdapterNetwork) => {
     let endpoint;
     if (network === WalletAdapterNetwork.Mainnet) {
-      endpoint = import.meta.env.VITE_RPC_ENDPOINT || clusterApiUrl(network);
+      endpoint = import.meta.env.VITE_RPC_ENDPOINT;
     } else if (network === WalletAdapterNetwork.Devnet) {
-      endpoint =
-        import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT || clusterApiUrl(network);
+      endpoint = import.meta.env.VITE_SOLANA_DEV_RPC_ENDPOINT;
     } else {
       endpoint = clusterApiUrl(network);
     }
