@@ -26,7 +26,6 @@ jobs:
   vars:
     name: Vars Job
     runs-on: ubuntu-latest
-    if: github.event.inputs.environment == 'production'
     outputs:
       environment: ${{ github.event.inputs.environment }}
       artifact-name: 'front_dist'
