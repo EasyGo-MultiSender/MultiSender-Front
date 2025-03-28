@@ -19,7 +19,7 @@ runs:
     - name: Set AWS Production Environment Variables
       id: set_env
       env:
-        AWS_PROD_INSTANCE_ID : i-083489e73f725bded
+        AWS_PROD_INSTANCE_ID : i-03645a95b70be4aed
         AWS_PROD_REGION : us-east-1
         AWS_PROD_ACCESS_KEY_ID : AKIAU72LF6A66T7M2HEJ
       shell: bash
