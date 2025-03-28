@@ -10,9 +10,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Box,
   TextField,
 } from '@mui/material';
 import NetworkCheckIcon from '@mui/icons-material/NetworkCheck';
+import COLORS from '@/constants/color';
+import { t } from 'i18next';
 
 export const NetworkSelector = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -72,18 +75,109 @@ export const NetworkSelector = () => {
     <>
       <Button
         onClick={handleClick}
-        startIcon={<NetworkCheckIcon />}
+        startIcon={
+          <NetworkCheckIcon
+            sx={{
+              marginRight: '2px',
+              marginLeft: '12px',
+              fontSize: '1.4rem !important',
+            }}
+          />
+        }
         sx={{
-          color: '#47dded',
-          marginRight: 2,
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'flex-start',
+          alignItems: 'center',
+          padding: '0px',
+          gap: '6px',
+
+          width: '170px',
+          height: '36px',
+
+          background: COLORS.GRADIENTS.BLUE_TO_TEAL,
+          borderRadius: '8px',
+
+          color: COLORS.GRAY.LIGHT,
+          fontWeight: 500,
+          textTransform: 'none',
+          fontSize: '0.9rem',
+
           '&:hover': {
-            backgroundColor: 'rgba(71, 221, 237, 0.1)',
+            background: COLORS.GRADIENTS.BLUE_TO_TEAL,
+            boxShadow: '0 4px 10px rgba(2, 215, 183, 0.4)',
           },
         }}
       >
-        {getDisplayNetwork()}
+        <Box
+          sx={{
+            textAlign: 'center',
+            width: '105px',
+          }}
+        >
+          {getDisplayNetwork()}
+        </Box>
       </Button>
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleClose}
+        TransitionProps={{
+          onExiting: (node) => {
+            node.style.animation = 'dropdownFadeOut 0.2s ease';
+          },
+        }}
+        sx={{
+          '& .MuiPaper-root': {
+            backgroundColor: COLORS.PURPLE.MEDIUM,
+            color: COLORS.GRAY.LIGHT,
+            borderRadius: '8px',
+            minWidth: '160px',
+            border: '0.05px solid #7867ea6a',
+            padding: '0 8px',
+            gap: '4px',
+            marginTop: '8px',
+            animation: 'dropdownFadeIn 0.2s ease',
+            transformOrigin: 'top',
+          },
+          '& .MuiMenuItem-root': {
+            fontSize: '1rem',
+            fontWeight: 500,
+            padding: '8px 12px',
+            borderRadius: '4px',
+            transition: 'background-color 0.2s ease',
+            '&:hover': {
+              backgroundColor: 'rgba(3, 176, 228, 0.1)',
+            },
+            '&.Mui-selected': {
+              backgroundColor: 'rgba(3, 176, 228, 0.2)',
+              '&:hover': {
+                backgroundColor: 'rgba(3, 176, 228, 0.3)',
+              },
+            },
+          },
+          '@keyframes dropdownFadeIn': {
+            from: {
+              opacity: 0,
+              transform: 'scaleY(0.9)',
+            },
+            to: {
+              opacity: 1,
+              transform: 'scaleY(1)',
+            },
+          },
+          '@keyframes dropdownFadeOut': {
+            from: {
+              opacity: 1,
+              transform: 'scaleY(1)',
+            },
+            to: {
+              opacity: 0,
+              transform: 'scaleY(0.9)',
+            },
+          },
+        }}
+      >
         <MenuItem
           onClick={() => handleNetworkChange(WalletAdapterNetwork.Mainnet)}
           selected={currentNetwork === WalletAdapterNetwork.Mainnet}
@@ -97,7 +191,7 @@ export const NetworkSelector = () => {
           Devnet
         </MenuItem>
         <MenuItem onClick={() => setCustomRpcDialogOpen(true)}>
-          Custom RPC
+          {t('Custom RPC')}
         </MenuItem>
       </Menu>
 
@@ -105,7 +199,7 @@ export const NetworkSelector = () => {
         open={customRpcDialogOpen}
         onClose={() => setCustomRpcDialogOpen(false)}
       >
-        <DialogTitle>Enter Custom RPC URL</DialogTitle>
+        <DialogTitle>{t('Enter Custom RPC URL')}</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -119,8 +213,10 @@ export const NetworkSelector = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setCustomRpcDialogOpen(false)}>Cancel</Button>
-          <Button onClick={handleCustomRpcSubmit}>Submit</Button>
+          <Button onClick={() => setCustomRpcDialogOpen(false)}>
+            {t('Cancel')}
+          </Button>
+          <Button onClick={handleCustomRpcSubmit}>{t('Submit')}</Button>
         </DialogActions>
       </Dialog>
     </>

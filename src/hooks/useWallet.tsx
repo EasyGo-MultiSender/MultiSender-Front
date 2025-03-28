@@ -9,14 +9,14 @@ export const useWallet = () => {
     connected,
     connecting,
     disconnecting,
-    disconnect: disconnectWallet
+    disconnect: disconnectWallet,
   } = useSolanaWallet();
-  
+
   const { setVisible } = useWalletModal();
 
   // ウォレットアドレスを短縮表示用のフォーマットに変換
   const shortenAddress = useCallback((address: string) => {
-    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+    return `${address.slice(0, 5)}...${address.slice(-4)}`;
   }, []);
 
   // ウォレット接続モーダルを表示
@@ -36,7 +36,7 @@ export const useWallet = () => {
   // 現在のウォレット情報
   const walletInfo = useMemo(() => {
     if (!connected || !publicKey) return null;
-    
+
     return {
       name: wallet?.adapter.name,
       address: publicKey.toString(),
@@ -45,12 +45,15 @@ export const useWallet = () => {
   }, [wallet, publicKey, connected, shortenAddress]);
 
   // ウォレットの状態
-  const walletState = useMemo(() => ({
-    isConnected: connected,
-    isConnecting: connecting,
-    isDisconnecting: disconnecting,
-    hasWallet: !!wallet,
-  }), [connected, connecting, disconnecting, wallet]);
+  const walletState = useMemo(
+    () => ({
+      isConnected: connected,
+      isConnecting: connecting,
+      isDisconnecting: disconnecting,
+      hasWallet: !!wallet,
+    }),
+    [connected, connecting, disconnecting, wallet]
+  );
 
   return {
     // State
@@ -60,7 +63,7 @@ export const useWallet = () => {
     connected,
     connecting,
     walletInfo,
-    
+
     // Methods
     connect,
     disconnect,

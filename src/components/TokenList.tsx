@@ -1,12 +1,4 @@
-import {
-  useState,
-  useEffect,
-  useCallback,
-  memo,
-  forwardRef,
-  useImperativeHandle,
-  useRef,
-} from 'react';
+import { ExpandMore } from '@mui/icons-material';
 import {
   Box,
   Card,
@@ -16,12 +8,21 @@ import {
   Button,
   Avatar,
 } from '@mui/material';
-import { ExpandMore } from '@mui/icons-material';
-import { useTranslation } from 'react-i18next';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey } from '@solana/web3.js';
-import { TokenMetadata, useTokenMetadata } from '../hooks/useTokenMetadata';
-import { useTokenAccounts } from '../hooks/useTokenAccounts';
+import {
+  useState,
+  useEffect,
+  useCallback,
+  memo,
+  forwardRef,
+  useImperativeHandle,
+  useRef,
+} from 'react';
+import { useTranslation } from 'react-i18next';
+import COLORS from '@/constants/color';
+import { useTokenAccounts } from '@/hooks/useTokenAccounts';
+import { TokenMetadata, useTokenMetadata } from '@/hooks/useTokenMetadata';
 
 // グローバルキャッシュ - コンポーネントのマウント間で保持される
 const CACHED_TOKEN_DATA = new Map<string, any>();
@@ -30,6 +31,7 @@ const CACHED_TOKEN_DATA = new Map<string, any>();
 export interface Account {
   mint: string;
   uiAmount: number;
+  decimals: number;
 }
 
 // メタデータを含む拡張トークン情報
@@ -64,7 +66,7 @@ const TokenDisplay = memo(
         display="flex"
         alignItems="center"
         justifyContent="space-between"
-        borderTop="1px solid #eee"
+        borderTop="1px solid rgba(120, 103, 234, 0.5)"
         py={1}
         px={1}
       >
@@ -74,17 +76,17 @@ const TokenDisplay = memo(
             alt={metadata?.symbol || 'Token'}
             sx={{ width: 32, height: 32 }}
           />
-          <Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column' }}>
             <Typography variant="body1" fontWeight="bold">
               {metadata?.symbol || 'Unknown'}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color={COLORS.PURPLE.LIGHT}>
               {metadata?.name || 'Unknown Token'}
             </Typography>
           </Box>
         </Box>
         <Typography variant="body2" fontWeight="bold">
-          {account.uiAmount} {metadata?.symbol || ''}
+          {account.uiAmount.toLocaleString()} {metadata?.symbol || ''}
         </Typography>
       </Box>
     );
@@ -163,14 +165,17 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
 
         // Promise.allを使用して並列にメタデータを取得
         const metadataPromises = tokenAccounts.map((account) =>
-          fetchMetadata(account.mint)
+          fetchMetadata(account.mint, true)
             .then((metadata) => ({ account, metadata }))
             .catch(() => ({ account, metadata: null }))
         );
 
-        const results = await Promise.all(metadataPromises);
+        let results = await Promise.all(metadataPromises);
         // 降順にソート
         results.sort((a, b) => b.account.uiAmount - a.account.uiAmount);
+
+        // Null排除
+        results = results.filter((r) => r.metadata !== null);
 
         // 結果をキャッシュと状態に保存
         CACHED_TOKEN_DATA.set(cacheKey, results);
@@ -247,9 +252,9 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
     const loading = isLoading();
 
     return (
-      <Card sx={{ mb: 4 }}>
+      <Card sx={{ mb: 4, px: 1 }}>
         <CardContent>
-          <Typography variant="h6" textAlign="center">
+          <Typography variant="h6" textAlign="center" mb={1}>
             {t('SPL Tokens')}
           </Typography>
           {loading ? (
@@ -278,8 +283,9 @@ const TokenList = forwardRef<TokenListRef, TokenListProps>(
                     variant="text"
                     size="small"
                     sx={{
+                      color: COLORS.BLUE.TURQUOISE,
                       ':hover': {
-                        color: '#2824f9',
+                        color: `${COLORS.BLUE.TURQUOISE}b2`,
                         transition: 'all 0.3s',
                         backgroundColor: 'transparent',
                       },

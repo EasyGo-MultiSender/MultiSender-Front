@@ -1,0 +1,79 @@
+name: Build & Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select Environment'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+      app-path:
+        description: 'Select App Path'
+        required: true
+        default: '/var/www/vhosts/multisender.easy-go.me_test_deploy/public'
+        type: choice
+        options:
+          - '/var/www/vhosts/multisender.easy-go.me/public'
+          - '/var/www/vhosts/multisender.easy-go.me_test_deploy/public'
+          - '/var/www/vhosts/stg-multisender.easy-go.me/public'
+          - '/var/www/vhosts/stg-multisender.easy-go.me_test_deploy/public'
+
+jobs:
+  vars:
+    name: Vars Job
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ github.event.inputs.environment }}
+      artifact-name: 'front_dist'
+      artifact-path: 'dist'
+      node-version: '22'
+      app-path: ${{ github.event.inputs.app-path }}
+    steps:
+      - run: echo "Set production environment variables"
+
+  test_deploy:
+    name: Test Deploy Connections Job
+    needs: vars
+    uses: ./.github/workflows/test_deploy.yml
+    secrets: inherit
+        
+  build:
+    name: Build Job
+    needs: vars
+    uses: ./.github/workflows/_build.yml
+    with:
+      node-version: ${{ needs.vars.outputs.node-version }}
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
+
+  deploy_prod:
+    name: Deploy Job ( Prod )
+    needs:
+      - vars
+      - build
+      - test_deploy
+    if: needs.vars.outputs.environment == 'production'
+    uses: ./.github/workflows/_prod_deploy.yml
+    with:
+      app-path: ${{ needs.vars.outputs.app-path }}
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
+    secrets: inherit
+
+  deploy_stg:
+    name: Deploy Job ( Stg )
+    needs:
+      - vars
+      - build
+      - test_deploy
+    if: needs.vars.outputs.environment == 'staging'
+    uses: ./.github/workflows/_stg_deploy.yml
+    with:
+      app-path: ${{ needs.vars.outputs.app-path }}
+      artifact-name: ${{ needs.vars.outputs.artifact-name }}
+      artifact-path: ${{ needs.vars.outputs.artifact-path }}
+    secrets: inherit
