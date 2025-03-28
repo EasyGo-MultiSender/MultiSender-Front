@@ -266,7 +266,7 @@ const Header = memo(() => {
                   component={Link}
                   to="/sender"
                   sx={{
-                    fontSize: '0.8rem !important',
+                    fontSize: '16px !important',
                     marginRight: '2rem',
                   }}
                 />
@@ -302,7 +302,7 @@ const Header = memo(() => {
                   component={Link}
                   to="/history"
                   sx={{
-                    fontSize: '0.8rem !important',
+                    fontSize: '16px !important',
                   }}
                 />
               </Tabs>
