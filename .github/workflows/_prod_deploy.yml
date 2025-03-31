@@ -112,7 +112,8 @@ jobs:
                 "sudo su deploy",
                 "mkdir -p ${{ inputs.app-path }} && cd ${{ inputs.app-path }}",
                 "echo \"既存ファイルのクリーンアップ中...\"",
-                "rm -rf --preserve-root ${{ inputs.app-path }}/* || true",
+                "shopt -s extglob",
+                "rm -rf --preserve-root ${{ inputs.app-path }}/!(csv) || true",
                 
                 "# S3からデプロイパッケージをダウンロード",
                 "echo \"S3からデプロイパッケージをダウンロード中...\"",
