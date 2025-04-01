@@ -49,6 +49,7 @@ jobs:
       node-version: ${{ needs.vars.outputs.node-version }}
       artifact-name: ${{ needs.vars.outputs.artifact-name }}
       artifact-path: ${{ needs.vars.outputs.artifact-path }}
+      env-file: ${{ needs.vars.outputs.environment == 'staging' && 'stg' || 'production' }}
 
   deploy_prod:
     name: Deploy Job ( Prod )

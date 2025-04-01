@@ -18,6 +18,11 @@ on:
         required: false
         type: string
         default: 'build'
+      env-file:
+        description: 'Environment file to use (production, stg, etc.)'
+        required: false
+        type: string
+        default: 'production'
     outputs:
       build-directory:
         description: 'Path to the build directory'
@@ -57,7 +62,7 @@ jobs:
           node-version: '${{ inputs.node-version }}'
 
       - name: Copy .env
-        run: cp .env.production .env
+        run: cp .env.${{ inputs.env-file }} .env
 
       - name: Clean npm cache
         run: |
@@ -72,7 +77,11 @@ jobs:
         id: build-step
         run: |
           export NODE_OPTIONS="--max_old_space_size=4096"
-          npm run build
+          if [ "${{ inputs.env-file }}" = "stg" ]; then
+            npm run build -- --mode staging
+          else
+            npm run build -- --mode production
+          fi
           echo "build-directory=$(pwd)/${{ inputs.artifact-path }}" >> $GITHUB_OUTPUT
 
       - name: Upload build artifacts
