@@ -169,7 +169,7 @@ const Footer: React.FC = () => {
           </Box>
 
           <Button
-            href="https://murasakibv.medium.com/"
+            href="https://murasakibv.medium.com/easygo-solana-multisender-fast-cheap-airdrops-how-to-guide-6607c079c446"
             target="_blank"
             sx={{
               bgcolor: COLORS.PURPLE.MEDIUM_BRIGHT,
