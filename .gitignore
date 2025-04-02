@@ -23,5 +23,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# TypeScript declaration files
+*.d.ts
+!src/vite-env.d.ts
+
 public/csv/**
 package-lock.json
