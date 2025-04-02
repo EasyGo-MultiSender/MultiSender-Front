@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { hideSplashScreen } from 'vite-plugin-splash-screen/runtime';
-import { AnalyticsProvider, usePageTracking } from './providers/AnalyticsProvider';
+import {
+  AnalyticsProvider,
+  PageTrackingComponent,
+} from './providers/AnalyticsProvider';
 import { WalletConnectionProvider } from './providers/WalletProvider';
 import { router } from './routes/router';
 import './App.css';
 
 function App() {
   const isAnalyticsEnabled = import.meta.env.VITE_GA_MEASUREMENT === 'true';
-  
+
   useEffect(() => {
     if (document.readyState === 'complete') {
       hideSplashScreen();
@@ -25,17 +28,15 @@ function App() {
     }
   }, []);
 
-  // Google Analyticsのページトラッキングを実装
-  usePageTracking(isAnalyticsEnabled);
-
   return (
     <>
       <WalletConnectionProvider>
-        <AnalyticsProvider 
+        <AnalyticsProvider
           measurementId={import.meta.env.VITE_GA_MEASUREMENT_ID}
           isEnabled={isAnalyticsEnabled}
         >
           <RouterProvider router={router} />
+          {/* PageTrackingComponentはrouterの設定内で使用する必要があります */}
         </AnalyticsProvider>
       </WalletConnectionProvider>
     </>
