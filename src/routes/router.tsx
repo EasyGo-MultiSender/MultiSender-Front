@@ -3,6 +3,18 @@ import Layout from '@/components/Layout';
 import NotFound from '@/pages/NotFound/NotFound';
 import Sender from '@/pages/Sender/Sender';
 import History from '@/pages/History/History';
+import { PageTrackingComponent } from '@/providers/AnalyticsProvider';
+
+// AnalyticsWrapperコンポーネントの作成
+const AnalyticsWrapper = ({ children }: { children: React.ReactNode }) => {
+  const isAnalyticsEnabled = import.meta.env.VITE_GA_MEASUREMENT === 'true';
+  return (
+    <>
+      <PageTrackingComponent isEnabled={isAnalyticsEnabled} />
+      {children}
+    </>
+  );
+};
 
 export const router = createBrowserRouter([
   {
@@ -12,25 +24,31 @@ export const router = createBrowserRouter([
   {
     path: '/sender',
     element: (
-      <Layout>
-        <Sender />
-      </Layout>
+      <AnalyticsWrapper>
+        <Layout>
+          <Sender />
+        </Layout>
+      </AnalyticsWrapper>
     ),
   },
   {
     path: '/history',
     element: (
-      <Layout>
-        <History />
-      </Layout>
+      <AnalyticsWrapper>
+        <Layout>
+          <History />
+        </Layout>
+      </AnalyticsWrapper>
     ),
   },
   {
     path: '*',
     element: (
-      <Layout>
-        <NotFound />
-      </Layout>
+      <AnalyticsWrapper>
+        <Layout>
+          <NotFound />
+        </Layout>
+      </AnalyticsWrapper>
     ),
   },
 ]);
