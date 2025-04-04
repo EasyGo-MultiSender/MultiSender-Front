@@ -1,7 +1,7 @@
 # <p align="center">EasyGo Multisender Front</p>
 ### <p align="center">The New Standard for Fast, Low-Cost Solana Airdrops</p>
-[![Test](https://github.com/pj-guzen/BulkSender-Front/actions/workflows/test.yml/badge.svg)](https://github.com/pj-guzen/BulkSender-Front/actions/workflows/test.yml)
-[![Test Deploy](https://github.com/pj-guzen/BulkSender-Front/actions/workflows/test_deploy.yml/badge.svg)](https://github.com/pj-guzen/BulkSender-Front/actions/workflows/test_deploy.yml)
+[![Test](https://github.com/EasyGo-MultiSender/MultiSender-Front/actions/workflows/test.yml/badge.svg)](https://github.com/EasyGo-MultiSender/MultiSender-Front/actions/workflows/test.yml)
+[![Test Deploy](https://github.com/EasyGo-MultiSender/MultiSender-Front/actions/workflows/test_deploy.yml/badge.svg)](https://github.com/EasyGo-MultiSender/MultiSender-Front/actions/workflows/test_deploy.yml)
 
 ## 機能一覧
 
