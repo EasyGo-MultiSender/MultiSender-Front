@@ -44,8 +44,7 @@ GitHub Actionsが適切なAWSリソースにアクセスできるように、IAM
 2. IAMサービスに移動します
 3. 「ユーザー」→「ユーザーを作成」をクリックします
 4. 以下の設定でユーザーを作成します：
-   - ユーザー名: `github-actions-prod`（本番環境用）または `github-actions-stg`（ステージング環境用）
-   - アクセスキーの種類: プログラムによるアクセス
+   - ユーザー名: `deploy`(共通) もしくは　`deploy-prod`（本番環境用）と `deploy-stg`（ステージング環境用
 
 ### 必要なIAMポリシーの設定
 
@@ -132,7 +131,7 @@ IAMユーザーには、デプロイプロセスに必要な以下の権限が�
 
 ## ワークフロー設定ファイルの確認
 
-`.github/actions/env/aws`ディレクトリには、環境ごとのAWS設定ファイルが格納されています。各環境の例です：
+`.github/actions/env/aws`ディレクトリには、環境ごとのAWS設定ファイルが格納されています。環境の例です：
 
 ### .github/actions/env/aws/〇〇/action.yml
 ```yaml
@@ -168,7 +167,7 @@ runs:
 
 ### 設定値の説明
 
-| 環境 | 設定項目 | 値 | 説明 |
+| 環境 | 設定項目 | 例 | 説明 |
 |-----|---------|----|------|
 | AWS_INSTANCE_ID | インスタンスID | i-07ca443c8a566e554 | EC2インスタンスID |
 | AWS_REGION | リージョン | us-east-1 | AWSリージョン |
@@ -205,9 +204,6 @@ EC2インスタンス上でデプロイが失敗した場合、以下のログ�
 
 1. SSMコマンド実行ログ
    - AWS Management Console > Systems Manager > Run Command > コマンド履歴
-   
-2. EC2インスタンス上のデプロイスクリプトログ
-   - 通常は `/var/log/deploy/` ディレクトリにログが保存されます
 
 ### ログの確認方法
 
