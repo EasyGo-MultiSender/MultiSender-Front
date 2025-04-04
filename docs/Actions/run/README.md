@@ -64,13 +64,17 @@ flowchart TD
 
 1. GitHub リポジトリにアクセスします
 2. 上部メニューから「Actions」タブをクリックします
-3. 左サイドバーから「Build & Deploy」ワークフローを選択します
-4. 右側の「Run workflow」ボタンをクリックします
-5. 以下のパラメータを設定します：
+![スクリーンショット 2025-04-04 12 38 31](https://github.com/user-attachments/assets/e0acf978-8911-4d24-8682-9295eabc3856)
+4. 左サイドバーから「Build & Deploy」ワークフローを選択します
+![スクリーンショット 2025-04-04 12 39 59](https://github.com/user-attachments/assets/a69db1e1-b8e5-45ef-b6e2-06fa933f0ba3)
+5. 右側の「Run workflow」ボタンをクリックします
+![スクリーンショット 2025-04-04 12 40 51](https://github.com/user-attachments/assets/1b6fa996-8699-4ac5-8267-69ab441f1ec9)
+7. 以下のパラメータを設定します：
    - **Use workflow from**: デプロイ元のブランチを選択（通常は `main` または `develop`）
    - **Select Environment**: デプロイ先の環境を選択（`production` または `staging`）
    - **Select App Path**: デプロイ先のパスを選択（必要に応じて）
-6. 緑色の「Run workflow」ボタンをクリックして実行開始
+![スクリーンショット 2025-04-04 12 42 11](https://github.com/user-attachments/assets/46c5b346-2ac0-4e01-91b5-972ebd2488c5)
+8. 緑色の「Run workflow」ボタンをクリックして実行開始
 
 ```mermaid
 sequenceDiagram
