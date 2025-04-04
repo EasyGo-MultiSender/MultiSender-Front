@@ -25,9 +25,11 @@ GitHub Actionsのワークフローで安全にAWSリソースにアクセスす
 1. GitHub リポジトリのページにアクセスします
 2. リポジトリの「Settings」タブをクリックします
 ![スクリーンショット 2025-04-04 12 43 23](https://github.com/user-attachments/assets/a821be51-c974-4cd0-aca2-3a7e3a6cf1e5)
-4. 左サイドバーから「Secrets and variables」→「Actions」を選択します
+3. 左サイドバーから「Secrets and variables」→「Actions」を選択します
+
 ![スクリーンショット 2025-04-04 12 44 06](https://github.com/user-attachments/assets/41b15a61-0642-4e54-9902-f8e6077e7452)
-6. 「New repository secret」ボタンをクリックして、以下のシークレットを追加します：
+
+4. 「New repository secret」ボタンをクリックして、以下のシークレットを追加します：
 ![スクリーンショット 2025-04-04 12 45 54](https://github.com/user-attachments/assets/231df039-9607-42b3-a230-ece31fef6518)
 
 | シークレット名 | 説明 | 例/フォーマット |
