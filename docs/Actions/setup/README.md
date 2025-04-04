@@ -1,6 +1,6 @@
 # GitHub Actions 初期設定ガイド
 
-このドキュメントでは、BulkSender-Frontプロジェクトの自動デプロイを実現するための GitHub Actions の初期設定方法について詳しく説明します。
+このドキュメントでは、`EasyGo-Front`および`EasyGo-Back`、プロジェクトの自動デプロイを実現するための GitHub Actions の初期設定方法について詳しく説明します。
 
 ## 目次
 
@@ -119,8 +119,6 @@ IAMユーザーには、デプロイプロセスに必要な以下の権限が�
 }
 ```
 
-> **重要**: 上記のポリシーは例です。実際のインスタンスID、バケット名、リージョン等は環境に合わせて変更してください。
-
 ### 各権限の説明
 
 | 権限 | 目的 | 関連リソース |
@@ -134,17 +132,47 @@ IAMユーザーには、デプロイプロセスに必要な以下の権限が�
 
 ## ワークフロー設定ファイルの確認
 
-プロジェクトリポジトリの `.github/workflows` ディレクトリにある設定ファイルを確認し、必要に応じて修正します：
+`.github/actions/env/aws`ディレクトリには、環境ごとのAWS設定ファイルが格納されています。各環境の例です：
 
-- `deploy.yml`: メインのデプロイワークフロー
-- `pr-check.yml`: プルリクエスト時の自動チェックワークフロー
+### .github/actions/env/aws/〇〇/action.yml
+```yaml
+name: AWS Environment Variables
+description: AWS Environment Variables
 
-### ワークフローファイルの重要な設定項目
+outputs:
+  AWS_〇〇_ACCESS_KEY_ID:
+    description: 'AWS Staging Access Key ID'
+    value: ${{ steps.set_env.outputs.AWS_〇〇_ACCESS_KEY_ID }}
+  AWS_〇〇_INSTANCE_ID:
+    description: 'AWS Staging Instance ID'
+    value: ${{ steps.set_env.outputs.AWS_〇〇_INSTANCE_ID }}
+  AWS_〇〇_REGION:
+    description: 'AWS Staging Region'
+    value: ${{ steps.set_env.outputs.AWS_〇〇_REGION }}
 
-1. **環境変数**: 環境ごとに設定される変数
-2. **入力パラメータ**: ワークフロー実行時に選択できるパラメータ
-3. **デプロイステップ**: 実際のデプロイコマンド
-4. **通知設定**: デプロイ結果の通知先
+runs:
+  using: "composite"
+  steps:
+    - name: Set AWS 〇〇 Environment Variables
+      id: set_env
+      env:
+        AWS_INSTANCE_ID : i-07ca443c8a566e554
+        AWS_REGION : us-east-1
+        AWS_ACCESS_KEY_ID : AKIAU72LF6A66T7M2HEJ
+      shell: bash
+      run: |
+        echo "AWS_STG_INSTANCE_ID=${AWS_INSTANCE_ID}" >> $GITHUB_OUTPUT
+        echo "AWS_STG_REGION=${AWS_REGION}" >> $GITHUB_OUTPUT
+        echo "AWS_STG_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" >> $GITHUB_OUTPUT
+```
+
+### 設定値の説明
+
+| 環境 | 設定項目 | 値 | 説明 |
+|-----|---------|----|------|
+| AWS_INSTANCE_ID | インスタンスID | i-07ca443c8a566e554 | EC2インスタンスID |
+| AWS_REGION | リージョン | us-east-1 | AWSリージョン |
+| AWS_ACCESS_KEY_ID | アクセスキーID | AKIAU72LF6A66T7M2HEJ | アクセスキーID |
 
 ## トラブルシューティング
 
